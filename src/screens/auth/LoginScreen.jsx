@@ -10,9 +10,11 @@ import {
 import { Switch } from 'react-native-paper';
 import { Column, FlatInput, LightStatusBar, PrimaryButton, Row, NormalText } from '../../components';
 import { colors, GLOBAL_KEYS } from '../../constants';
+import { AppGraph } from '../../layouts/graphs';
 
 
 const LoginScreen = props => {
+  const navigation = props.navigation
   const [maNv, setMaNv] = useState();
   const [password, setPassword] = useState();
   const [checked, setChecked] = useState();
@@ -66,7 +68,7 @@ const LoginScreen = props => {
             </Row>
             <PrimaryButton
               title="Đăng nhập"
-              onPress={() => console.log('đăng nhập')}
+              onPress={() => navigation.navigate(AppGraph.MAIN)}
               style={{ width: '100%' }}
             />
 

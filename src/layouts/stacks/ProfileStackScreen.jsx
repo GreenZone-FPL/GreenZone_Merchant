@@ -15,13 +15,6 @@ const ProfileStackScreen = () => {
         name={BottomGraph.ProfileScreen}
         component={ProfileScreen}
       />
-
-      <ProfileStack.Screen
-        name={AuthGraph.LoginScreen}
-        component={LoginScreen}
-      />
-
-
     </ProfileStack.Navigator>
   );
 };
