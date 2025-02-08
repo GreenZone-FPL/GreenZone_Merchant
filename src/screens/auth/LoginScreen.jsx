@@ -8,7 +8,7 @@ import {
   Text
 } from 'react-native';
 import { Switch } from 'react-native-paper';
-import { Column, FlatInput, LightStatusBar, PrimaryButton, Row, NormalText } from '../../components';
+import { Column, FlatInput, LightStatusBar, PrimaryButton, Row, NormalText, TitleText } from '../../components';
 import { colors, GLOBAL_KEYS } from '../../constants';
 import { AppGraph } from '../../layouts/graphs';
 
@@ -21,7 +21,9 @@ const LoginScreen = props => {
   const [isPasswordVisible, setIsPasswordVisible] = useState();
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+    showsVerticalScrollIndicator={false}
+    style={styles.container}>
       <KeyboardAvoidingView>
         <LightStatusBar />
         <Image
@@ -35,17 +37,16 @@ const LoginScreen = props => {
             <FlatInput
               value={maNv}
               label="Mã nhân viên"
-              style={{ width: '100%' }}
+              style={{ width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL }}
               placeholder="Nhập mã nhân viên của bạn"
               setValue={setMaNv}
             />
             <FlatInput
               value={password}
               label="Mật khẩu"
-              style={{ width: '100%' }}
+              style={{ width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL }}
               placeholder="Nhập mật khẩu của bạn"
               setValue={setPassword}
-              keyboardType=""
               isPasswordVisible={isPasswordVisible}
               setIsPasswordVisible={setIsPasswordVisible}
               secureTextEntry={true}
@@ -54,6 +55,7 @@ const LoginScreen = props => {
             <Row style={{ justifyContent: 'space-between', width: '100%' }}>
               <Row>
                 <Switch
+
                   value={checked}
                   color={colors.primary}
                   onValueChange={(value) => setChecked(value)}
@@ -88,7 +90,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   imgBanner: {
-    width: '80%',
+    width: '30%',
     height: 280,
     resizeMode: 'stretch',
     alignSelf: 'center'
