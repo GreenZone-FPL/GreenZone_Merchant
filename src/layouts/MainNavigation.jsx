@@ -1,13 +1,12 @@
-import * as React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as React from 'react';
+import { Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-paper';
 import { Column } from '../components';
 import { colors, GLOBAL_KEYS } from '../constants';
-import { NavigationContainer } from '@react-navigation/native';
-import HomeScreen from '../screens/main/HomeScreen'
-import ProfileScreen from '../screens/main/ProfileScreen'
-import StatisticsScreen from '../screens/main/StatisticsScreen'
+import HomeScreen from '../screens/main/HomeScreen';
+import OrderHistoryScreen from '../screens/main/OrderHistoryScreen';
+import StatisticsScreen from '../screens/main/StatisticsScreen';
 import { AuthGraph } from './graphs';
 const { width, height } = Dimensions.get('window');
 const Drawer = createDrawerNavigator();
@@ -15,7 +14,7 @@ const Drawer = createDrawerNavigator();
 const DrawerItems = ({ navigation, selectedScreen, setSelectedScreen }) => {
   const items = [
     { name: 'Home', screen: 'Home', icon: 'home' },
-    { name: 'Profile', screen: 'Profile', icon: 'account' },
+    { name: 'OrderHistory', screen: 'OrderHistory', icon: 'clock-time-two' },
     { name: 'Statistics', screen: 'Statistics', icon: 'chart-line-variant' },
   ];
 
@@ -84,8 +83,8 @@ const MainNavigation = () => {
       }}
       drawerContent={props => <CustomDrawerContent {...props} />}
     >
+      <Drawer.Screen name="OrderHistory" component={OrderHistoryScreen} />
       <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="Profile" component={ProfileScreen} />
       <Drawer.Screen name="Statistics" component={StatisticsScreen} />
     </Drawer.Navigator>
   );
