@@ -7,15 +7,15 @@ import { colors, GLOBAL_KEYS } from '../constants';
 import HomeScreen from '../screens/main/HomeScreen';
 import OrderHistoryScreen from '../screens/main/OrderHistoryScreen';
 import StatisticsScreen from '../screens/main/StatisticsScreen';
-import { AuthGraph } from './graphs';
+import { AuthGraph, MainGraph } from './graphs';
 const { width, height } = Dimensions.get('window');
 const Drawer = createDrawerNavigator();
 
 const DrawerItems = ({ navigation, selectedScreen, setSelectedScreen }) => {
   const items = [
-    { name: 'Home', screen: 'Home', icon: 'home' },
-    { name: 'OrderHistory', screen: 'OrderHistory', icon: 'clock-time-two' },
-    { name: 'Statistics', screen: 'Statistics', icon: 'chart-line-variant' },
+    { name: MainGraph.OrderHistoryScreen, screen: MainGraph.OrderHistoryScreen, icon: 'clock-time-two' },
+    { name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home' },
+    { name: MainGraph.StatisticsScreen, screen: MainGraph.StatisticsScreen, icon: 'chart-line-variant' },
   ];
 
   return items.map((item) => (
@@ -41,7 +41,7 @@ const DrawerItems = ({ navigation, selectedScreen, setSelectedScreen }) => {
 };
 
 const CustomDrawerContent = ({ navigation }) => {
-  const [selectedScreen, setSelectedScreen] = React.useState('Home');
+  const [selectedScreen, setSelectedScreen] = React.useState(MainGraph.OrderHistoryScreen);
 
   return (
     <SafeAreaView style={styles.drawerContent}>
@@ -53,7 +53,10 @@ const CustomDrawerContent = ({ navigation }) => {
         />
       </Column>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={() => navigation.navigate(AuthGraph.LoginScreen)}>
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => navigation.navigate(AuthGraph.LoginScreen)}
+      >
         <Icon
           source="exit-to-app"
           color={colors.black}
@@ -68,24 +71,24 @@ const CustomDrawerContent = ({ navigation }) => {
 const MainNavigation = () => {
   return (
     <Drawer.Navigator
-      initialRouteName="Home"
+      initialRouteName={MainGraph.OrderHistoryScreen}
       screenOptions={{
         drawerStyle: {
-          backgroundColor: '#fafafa',
+          backgroundColor: colors.fbBg,
           width: 240,
-          height: height,  // Đảm bảo Drawer chiếm toàn bộ chiều cao màn hình
+          height: height,
         },
-        drawerActiveTintColor: '#333',
-        drawerLabelStyle: {
-          fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
-          fontWeight: 'bold',
-        },
+        // drawerActiveTintColor: '#333',
+        // drawerLabelStyle: {
+        //   fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
+        //   fontWeight: 'bold',
+        // },
       }}
       drawerContent={props => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="OrderHistory" component={OrderHistoryScreen} />
-      <Drawer.Screen name="Home" component={HomeScreen} />
-      <Drawer.Screen name="Statistics" component={StatisticsScreen} />
+      <Drawer.Screen name={MainGraph.OrderHistoryScreen} component={OrderHistoryScreen} />
+      <Drawer.Screen name={MainGraph.HomeScreen} component={HomeScreen} />
+      <Drawer.Screen name={MainGraph.StatisticsScreen} component={StatisticsScreen} />
     </Drawer.Navigator>
   );
 };
