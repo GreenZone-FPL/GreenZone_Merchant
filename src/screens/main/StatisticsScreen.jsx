@@ -73,7 +73,7 @@ const StatisticsScreen = () => {
         : 0;
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
             <Text style={styles.title}>Biểu Đồ Doanh Số Cả Năm 2024</Text>
             <BarChart
                 style={styles.chart}
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
         height: 350,
     },
     card: {
-        marginTop: 20,
+        margin: 20,
         backgroundColor: colors.white,
         padding: 20,
         borderRadius: 12,

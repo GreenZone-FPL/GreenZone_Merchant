@@ -13,9 +13,9 @@ const Drawer = createDrawerNavigator();
 
 const DrawerItems = ({ navigation, selectedScreen, setSelectedScreen }) => {
   const items = [
-    { name: MainGraph.OrderHistoryScreen, screen: MainGraph.OrderHistoryScreen, icon: 'clock-time-two' },
-    { name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home' },
-    { name: MainGraph.StatisticsScreen, screen: MainGraph.StatisticsScreen, icon: 'chart-line-variant' },
+    { name: 'Lịch sử đặt hàng', screen: MainGraph.OrderHistoryScreen, icon: 'clock-time-two' },
+    { name: 'Trang chủ', screen: MainGraph.HomeScreen, icon: 'home' },
+    { name: 'Thống kê doanh thu', screen: MainGraph.StatisticsScreen, icon: 'chart-line-variant' },
   ];
 
   return items.map((item) => (
@@ -73,6 +73,7 @@ const MainNavigation = () => {
     <Drawer.Navigator
       initialRouteName={MainGraph.OrderHistoryScreen}
       screenOptions={{
+
         drawerStyle: {
           backgroundColor: colors.fbBg,
           width: 240,

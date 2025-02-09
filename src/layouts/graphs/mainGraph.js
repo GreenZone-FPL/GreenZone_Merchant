@@ -4,7 +4,7 @@ import { AppGraph } from "./appGraph";
 export const MainGraph = Object.freeze({
   graphName: AppGraph.MAIN,
 
-  HomeScreen: 'HomeScreen',
-  StatisticsScreen: 'StatisticsScreen',
-  OrderHistoryScreen: 'OrderHistoryScreen',
+  HomeScreen: 'Trang chủ',
+  StatisticsScreen: 'Thống kê doanh thu',
+  OrderHistoryScreen: 'Lịch sử đặt hàng',
 });
