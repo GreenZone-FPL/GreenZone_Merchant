@@ -1,7 +1,7 @@
 import React from 'react';
-import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View, } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { DualTextRow, HorizontalProductItem, PaymentMethodRow, NormalHeader, LightStatusBar, Row, Column, NormalText } from '../../components';
+import { FlatList, Image, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Icon, IconButton } from 'react-native-paper';
+import { Column, DualTextRow, HorizontalProductItem, NormalText, OverlayStatusBar, PaymentMethodRow, Row, TitleText } from '../../components';
 import { GLOBAL_KEYS, colors } from '../../constants';
 import { OrderGraph } from '../../layouts/graphs';
 
@@ -11,27 +11,29 @@ const OrderDetailScreen = (props) => {
 
 
     return (
-
-        <View style={styles.container}>
-            <LightStatusBar />
-            <NormalHeader
-                title='Chi tiết đơn hàng'
-                onLeftPress={() => navigation.goBack()}
-            />
-
-
+        <View style={styles.modalContainer}>
+            <OverlayStatusBar />
             <ScrollView
                 showsVerticalScrollIndicator={false}
-                style={styles.containerContent}
-            >
+                style={styles.modalContent}>
+
+                <Row style={{ width: '100%', backgroundColor: 'white', justifyContent: 'space-between', paddingHorizontal: 16 }}>
+                    <View style={{ width: 24, height: 24 }}></View>
+                    <TitleText text='Chi tiết đơn hàng' style={{ alignSelf: 'center' }} />
+                    <IconButton
+                        icon="close"
+                        size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                        iconColor={colors.primary}
+                        style={styles.closeButton}
+                        onPress={() => navigation.goBack()}
+                    />
+                </Row>
 
                 <Title
-                    title={'Đơn hàng đang trên đường giao đến bạn'}
-                    titleStyle={{ fontWeight: '500', marginVertical: 8 }}
+                    title={'Đơn hàng đang thực hiện'}
+                    titleStyle={{ fontWeight: '500', margin: GLOBAL_KEYS.PADDING_DEFAULT }}
                 />
-                <ShipperInfo messageClick = {() => navigation.navigate(OrderGraph.ChatScreen)}/>
-                <Image style={{ width: '100%', height: 400 }} source={require('../../assets/images/map.png')} />
-
+                <ShipperInfo  />
                 <MerchantInfo />
                 <RecipientInfo />
 
@@ -42,18 +44,16 @@ const OrderDetailScreen = (props) => {
 
             </ScrollView>
 
+        </View >
 
-
-
-        </View>
 
 
     );
 };
 
-const ShipperInfo = ({messageClick}) => {
+const ShipperInfo = ({ messageClick }) => {
     return (
-        <Row style={{ gap: 16, marginVertical: 8 }}>
+        <Row style={{ gap: 16, marginVertical: 8, marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT }}>
             <Image style={{ width: 40, height: 40 }} source={require('../../assets/images/helmet.png')} />
             <Column style={{ flex: 1 }}>
                 <NormalText text='Shipper' style={{ fontWeight: '500' }} />
@@ -102,7 +102,7 @@ const ProductsInfo = () => {
                 renderItem={({ item }) => (
                     <HorizontalProductItem item={item} />
                 )}
-                contentContainerStyle={styles.flatListContentContainer}
+                contentContainerStyle={{ marginVertical: GLOBAL_KEYS.PADDING_DEFAULT }}
                 scrollEnabled={false}
             />
         </View>
@@ -154,7 +154,7 @@ const Title = ({
 
 
 const PaymentDetails = () => (
-    <View style={{ marginBottom: 8 }}>
+    <View style={{ marginBottom: 8, marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT }}>
 
         <DualTextRow
             leftText="CHI TIẾT THANH TOÁN"
@@ -181,15 +181,15 @@ const PaymentDetails = () => (
         <PaymentMethodRow enableChange={false} />
 
         <Pressable style={styles.button} onPress={() => { }}>
-            <Text style={styles.normalText}>Cancel this order</Text>
+            <NormalText text='Đã hoàn thành đơn hàng' />
         </Pressable>
     </View>
 );
 
 const OrderId = () => {
     return (
-        <View style={[styles.row, { marginBottom: 6 }]}>
-            <Text style={styles.normalText}>Mã đơn hàng</Text>
+        <Row style={[styles.row, { marginBottom: 6 }]}>
+            <NormalText text='Mã đơn hàng' />
             <Pressable style={styles.row} onPress={() => { }}>
 
                 <Text style={[styles.normalText, { fontWeight: 'bold', marginRight: 8 }]}>202407032008350</Text>
@@ -199,7 +199,7 @@ const OrderId = () => {
                     size={18}
                 />
             </Pressable>
-        </View>
+        </Row>
     )
 }
 
@@ -235,32 +235,34 @@ const products = [
 
 
 const styles = StyleSheet.create({
-    container: {
-        backgroundColor: colors.white,
-        flex: 1
-    },
-    containerContent: {
-        backgroundColor: colors.white,
+    modalContainer: {
+        backgroundColor: colors.overlay,
         flex: 1,
-        gap: 12,
-        marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+        width: '100%',
 
+    },
+    modalContent: {
+        width: '75%',
+        alignSelf: 'center',
+        backgroundColor: colors.white,
+        flexDirection: 'column',
+        gap: GLOBAL_KEYS.GAP_SMALL,
+        margin: StatusBar.currentHeight,
+        flexDirection: 'column',
+        flex: 1,
+        borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE
     },
     row: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        gap: GLOBAL_KEYS.GAP_SMALL,
+        justifyContent: 'flex-end',
+        flex: 1
     },
-    normalText: {
-        textAlign: 'justify',
-        lineHeight: GLOBAL_KEYS.LIGHT_HEIGHT_DEFAULT,
-        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-        color: colors.black
+    closeButton: {
+        backgroundColor: colors.green100,
+        alignSelf: 'flex-end'
     },
 
-    flatListContentContainer: {
-        marginVertical: GLOBAL_KEYS.PADDING_DEFAULT
-    },
     greenText: {
         fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
         color: colors.primary,
@@ -275,7 +277,8 @@ const styles = StyleSheet.create({
     areaContainer: {
         borderBottomWidth: 5,
         borderColor: colors.gray200,
-        paddingVertical: 8
+        paddingVertical: 8,
+        marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT
     },
     button: {
         backgroundColor: colors.white,

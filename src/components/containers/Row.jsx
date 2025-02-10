@@ -29,6 +29,6 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: GLOBAL_KEYS.GAP_SMALL, 
+        // gap: GLOBAL_KEYS.GAP_SMALL, 
     },
 });
