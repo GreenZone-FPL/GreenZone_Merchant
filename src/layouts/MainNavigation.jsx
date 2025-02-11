@@ -1,47 +1,69 @@
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import {createDrawerNavigator} from '@react-navigation/drawer';
 import * as React from 'react';
-import { Dimensions, SafeAreaView, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { Column } from '../components';
-import { colors, GLOBAL_KEYS } from '../constants';
+import {
+  Dimensions,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+import {Icon} from 'react-native-paper';
+import {Column} from '../components';
+import {colors, GLOBAL_KEYS} from '../constants';
 import HomeScreen from '../screens/main/HomeScreen';
 import OrderHistoryScreen from '../screens/main/OrderHistoryScreen';
 import StatisticsScreen from '../screens/main/StatisticsScreen';
-import { AuthGraph, MainGraph } from './graphs';
-const { width, height } = Dimensions.get('window');
+import {AuthGraph, MainGraph} from './graphs';
+const {width, height} = Dimensions.get('window');
 const Drawer = createDrawerNavigator();
 
-const DrawerItems = ({ navigation, selectedScreen, setSelectedScreen }) => {
+const DrawerItems = ({navigation, selectedScreen, setSelectedScreen}) => {
   const items = [
-    { name: MainGraph.OrderHistoryScreen, screen: MainGraph.OrderHistoryScreen, icon: 'clock-time-two' },
-    { name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home' },
-    { name: MainGraph.StatisticsScreen, screen: MainGraph.StatisticsScreen, icon: 'chart-line-variant' },
+    {
+      name: MainGraph.OrderHistoryScreen,
+      screen: MainGraph.OrderHistoryScreen,
+      icon: 'clock-time-two',
+    },
+    {name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home'},
+    {
+      name: MainGraph.StatisticsScreen,
+      screen: MainGraph.StatisticsScreen,
+      icon: 'chart-line-variant',
+    },
   ];
 
-  return items.map((item) => (
+  return items.map(item => (
     <TouchableOpacity
       key={item.name}
-      style={[styles.drawerButton, selectedScreen === item.screen && styles.selectedDrawerButton]}
+      style={[
+        styles.drawerButton,
+        selectedScreen === item.screen && styles.selectedDrawerButton,
+      ]}
       onPress={() => {
         setSelectedScreen(item.screen);
         navigation.navigate(item.screen); // Điều hướng tới màn hình đã chọn
         navigation.closeDrawer(); // Đóng Drawer sau khi chọn
-      }}
-    >
+      }}>
       <Icon
         source={item.icon}
         color={selectedScreen === item.screen ? colors.primary : colors.black}
         size={24}
       />
-      <Text style={[styles.drawerButtonText, selectedScreen === item.screen && styles.selectedDrawerButtonText]}>
+      <Text
+        style={[
+          styles.drawerButtonText,
+          selectedScreen === item.screen && styles.selectedDrawerButtonText,
+        ]}>
         {item.name}
       </Text>
     </TouchableOpacity>
   ));
 };
 
-const CustomDrawerContent = ({ navigation }) => {
-  const [selectedScreen, setSelectedScreen] = React.useState(MainGraph.OrderHistoryScreen);
+const CustomDrawerContent = ({navigation}) => {
+  const [selectedScreen, setSelectedScreen] = React.useState(
+    MainGraph.OrderHistoryScreen,
+  );
 
   return (
     <SafeAreaView style={styles.drawerContent}>
@@ -55,8 +77,7 @@ const CustomDrawerContent = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.logoutButton}
-        onPress={() => navigation.navigate(AuthGraph.LoginScreen)}
-      >
+        onPress={() => navigation.navigate(AuthGraph.LoginScreen)}>
         <Icon
           source="exit-to-app"
           color={colors.black}
@@ -71,7 +92,7 @@ const CustomDrawerContent = ({ navigation }) => {
 const MainNavigation = () => {
   return (
     <Drawer.Navigator
-      initialRouteName={MainGraph.OrderHistoryScreen}
+      initialRouteName={MainGraph.HomeScreen}
       screenOptions={{
         drawerStyle: {
           backgroundColor: colors.fbBg,
@@ -84,11 +105,17 @@ const MainNavigation = () => {
         //   fontWeight: 'bold',
         // },
       }}
-      drawerContent={props => <CustomDrawerContent {...props} />}
-    >
-      <Drawer.Screen name={MainGraph.OrderHistoryScreen} component={OrderHistoryScreen} />
+      drawerContent={props => <CustomDrawerContent {...props} />}>
       <Drawer.Screen name={MainGraph.HomeScreen} component={HomeScreen} />
-      <Drawer.Screen name={MainGraph.StatisticsScreen} component={StatisticsScreen} />
+      <Drawer.Screen
+        name={MainGraph.OrderHistoryScreen}
+        component={OrderHistoryScreen}
+      />
+
+      <Drawer.Screen
+        name={MainGraph.StatisticsScreen}
+        component={StatisticsScreen}
+      />
     </Drawer.Navigator>
   );
 };
