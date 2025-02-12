@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import {ButtonGroup} from '../../components';
 import {colors} from '../../constants';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
 
 
 const categories = [
@@ -50,6 +52,7 @@ const toppings = [
 const sizes = ['S', 'M', 'L'];
 
 const HomeScreen = () => {
+  const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [isCheckout, setIsCheckout] = useState(false); // State kiểm soát chế độ hiển thị
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cart, setCart] = useState([]);
@@ -103,6 +106,11 @@ const HomeScreen = () => {
     setSelectedToppings([]);
     setSelectedSize('M');
   };
+  // Xóa sản phẩm khỏi giỏ
+  const removeFromCart = index => {
+    setCart(prevCart => prevCart.filter((_, i) => i !== index));
+  };
+
 
   return (
     <View style={styles.container}>
@@ -159,17 +167,25 @@ const HomeScreen = () => {
               {cart.length > 0 ? (
                 cart.map((item, index) => (
                   <View key={index} style={styles.cartItem}>
-                    <Text style={styles.cartItemText}>
-                      {item.name} ({item.selectedSize}) - {item.price} VNĐ
-                    </Text>
-                    {item.toppings?.length > 0 && (
-                      <Text style={styles.toppingText}>
-                        Topping:{' '}
-                        {item.toppings
-                          .map(t => t.name + ' (+' + t.price + ' VNĐ)')
-                          .join(', ')}
-                      </Text>
-                    )}
+                    <View style={styles.cartItemInfo}>
+                      <View style={styles.deleteButton}>
+                        <Text style={styles.cartItemText}>
+                          {item.name} ({item.selectedSize}) - {item.price} VNĐ
+                        </Text>
+                        <TouchableOpacity onPress={() => removeFromCart(index)}>
+                          <Icon name="close" size={22} color="red" />
+                        </TouchableOpacity>
+                      </View>
+
+                      {item.toppings?.length > 0 && (
+                        <Text style={styles.toppingText}>
+                          Topping:{' '}
+                          {item.toppings
+                            .map(t => t.name + ' (+' + t.price + ' VNĐ)')
+                            .join(', ')}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                 ))
               ) : (
@@ -180,9 +196,33 @@ const HomeScreen = () => {
               <Text style={styles.totalPrice}>Tổng tiền: {totalPrice} VNĐ</Text>
               <TouchableOpacity
                 style={styles.checkoutButton}
-                onPress={() => setIsCheckout(true)}>
+                onPress={() => {
+                  if (cart.length === 0) {
+                    setIsCartEmptyModalVisible(true); // Hiển thị modal nếu giỏ hàng trống
+                  } else {
+                    setIsCheckout(true); // Chuyển sang màn hình thanh toán nếu có sản phẩm
+                  }
+                }}>
                 <Text style={styles.checkoutButtonText}>Thanh toán</Text>
               </TouchableOpacity>
+              <Modal
+                visible={isCartEmptyModalVisible}
+                transparent
+                animationType="fade">
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Thông báo</Text>
+                    <Text style={styles.modalMessage}>
+                      Giỏ hàng của bạn đang trống!
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.confirmButton}
+                      onPress={() => setIsCartEmptyModalVisible(false)}>
+                      <Text style={styles.confirmButtonText}>OK</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
             </View>
           </>
         ) : (
@@ -193,9 +233,14 @@ const HomeScreen = () => {
             </View>
             <View style={styles.footer}>
               <TouchableOpacity
+                style={[styles.backButton, {backgroundColor: colors.red900}]}
+                onPress={() => setIsCheckout(false)}>
+                <Text style={[styles.checkoutButtonText]}>Quay lại</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 style={styles.backButton}
                 onPress={() => setIsCheckout(false)}>
-                <Text style={styles.checkoutButtonText}>Quay lại</Text>
+                <Text style={styles.checkoutButtonText}>Hoàn tất</Text>
               </TouchableOpacity>
             </View>
           </>
@@ -264,31 +309,24 @@ const HomeScreen = () => {
 
 const styles = StyleSheet.create({
   footer: {
+    flexDirection:'row',
+    justifyContent: 'space-between',
     backgroundColor: colors.white,
     padding: 10,
-    borderTopWidth: 1,
-    borderColor: colors.gray300,
+    alignItems: 'center',
   },
   totalPrice: {
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  checkoutButtonText: {color: '#fff', fontWeight: 'bold'},
-  totalPrice: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    textAlign: 'start',
-  },
+
   checkoutButton: {
     backgroundColor: '#299345',
     padding: 10,
     borderRadius: 5,
     alignItems: 'center',
-    marginTop: 10,
   },
-  checkoutButtonText: {color: '#fff', fontWeight: 'bold'},
 
   container: {flex: 1, flexDirection: 'row'},
   searchContainer: {
@@ -341,12 +379,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cartItem: {
-    backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 10,
-    marginBottom: 5,
-    borderRadius: 5,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderColor: colors.gray300,
   },
-  cartItemText: {fontSize: 14},
+  cartItemInfo: {
+    paddingHorizontal: 4,
+  },
   emptyCart: {fontSize: 14, color: '#777', textAlign: 'center'},
   toppingText: {fontSize: 12, color: '#555'},
   modalContainer: {
@@ -360,6 +403,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   sizeContainer: {
     flexDirection: 'row',
@@ -422,24 +470,17 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     borderRadius: 12,
     marginTop: 8,
-
   },
-  cartItemText: {fontSize: 16,fontWeight: 'bold'},
-  toppingText: {fontSize: 14, color:colors.gray700},
+  cartItemText: {fontSize: 16, fontWeight: 'bold'},
+  toppingText: {fontSize: 14, color: colors.gray700},
   emptyCart: {textAlign: 'center', fontSize: 16, color: 'gray'},
-  footer: {paddingVertical: 15, alignItems: 'center'},
+
   totalPrice: {fontSize: 18, fontWeight: 'bold'},
-  checkoutButton: {
-    backgroundColor: '#299345',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 10,
-  },
   backButton: {
     backgroundColor: colors.primary,
     padding: 12,
     borderRadius: 8,
-    marginTop: 10,
+
   },
   checkoutButtonText: {
     color: '#fff',
@@ -449,6 +490,7 @@ const styles = StyleSheet.create({
   },
   paymentContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   paymentText: {fontSize: 18, fontWeight: 'bold'},
+  deleteButton: {flexDirection: 'row',alignItems: 'center',justifyContent: 'space-between'},
 });
 
 export default HomeScreen;
