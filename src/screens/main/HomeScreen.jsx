@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,64 +12,109 @@ import {
 } from 'react-native';
 import {ButtonGroup} from '../../components';
 import {colors} from '../../constants';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-
-
-
-const categories = [
-  'Tất cả',
-  'Trà trái cây',
-  'Trà xanh',
-  'Trà sữa',
-  'Coffee',
-  'Bánh ngọt',
-];
-
-const products = [
-  {
-    id: 1,
-    name: 'Trà Đào',
-    image: require('../../assets/images/image_category/image_coffee.png'),
-    category: 'Trà trái cây',
-    sizes: {S: 30000, M: 35000, L: 40000},
-  },
-  {
-    id: 2,
-    name: 'Trà Cam Xả',
-    image: require('../../assets/images/image_category/image_coffee.png'),
-    category: 'Trà trái cây',
-    sizes: {S: 32000, M: 38000, L: 42000},
-  },
-];
-
-const toppings = [
-  {name: 'Trân châu', price: 5000},
-  {name: 'Thạch dừa', price: 4000},
-  {name: 'Kem cheese', price: 7000},
-  {name: 'Hạt chia', price: 3000},
-];
-
+import {getAllCategories} from '../../axios/modules/category';
+import {getAllProducts} from '../../axios/modules/product';
+import {getAllToppings} from '../../axios/modules/topping';
+import {TextFormatter} from '../../utils';
 const sizes = ['S', 'M', 'L'];
 
 const HomeScreen = () => {
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [isCheckout, setIsCheckout] = useState(false); // State kiểm soát chế độ hiển thị
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(1);
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [selectedSize, setSelectedSize] = useState('M');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Lọc sản phẩm theo danh mục và search
-  const filteredProducts = products.filter(product => {
-    const matchesCategory =
-      selectedIndex === 0 || product.category === categories[selectedIndex];
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // state lưu dữ liệu
+  const [categories, setCategories] = useState([
+    {_id: 'cate000-000', name: 'Tất cả', icon: ''},
+  ]);
+  const [productsByCate, setProductsByCate] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [toppings, setToppings] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  // Gọi danh sách danh mục từ API
+  const fetchCategories = async () => {
+    try {
+      const response = await getAllCategories();
+      if (response && response.data) {
+        const categoriesData = [
+          {_id: 'cate000-000', name: 'Tất cả', icon: ''},
+          ...response.data,
+        ];
+        setCategories(categoriesData);
+      }
+    } catch (error) {
+      console.error('Lỗi khi gọi API Categories:', error);
+    }
+  };
+
+  // Gọi danh sách sản phẩm từ API (tất cả sản phẩm từ tất cả danh mục)
+  const fetchProducts = async () => {
+    try {
+      const response = await getAllProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Lỗi khi gọi API Products:', error);
+    }
+  };
+  // gọi sản phẩm theo index cate
+  const getProductsByCategory = index => {
+    if (!products || products.length === 0) return [];
+
+    if (index === 0) {
+      return products.flatMap(category => category?.products || []);
+    }
+
+    if (index > 0 && index < products.length + 1) {
+      return products[index - 1]?.products || [];
+    }
+
+    return [];
+  };
+  // Gọi danh sách toppings từ API
+  const fetchToppings = async () => {
+    try {
+      const response = await getAllToppings();
+      if (response && response.data) {
+        setToppings(response.data);
+      }
+    } catch (error) {
+      console.error('Lỗi khi gọi API Toppings:', error);
+    }
+  };
+  // Gọi danh mục & sản phẩm từ API
+  useEffect(() => {
+    fetchCategories();
+    fetchProducts();
+  }, []);
+
+  // Cập nhật danh sách sản phẩm theo danh mục đã chọn
+  useEffect(() => {
+    const updatedProducts = getProductsByCategory(selectedIndex);
+    setProductsByCate(updatedProducts);
+  }, [selectedIndex, categories, products]);
+
+  // Cập nhật sản phẩm hiển thị khi tìm kiếm thay đổi
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredProducts(productsByCate);
+    } else {
+      const filtered = productsByCate.filter(product =>
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [searchTerm, productsByCate]);
+
+  // Cập nhập topping
+  useEffect(() => {
+    fetchToppings();
+  }, []);
 
   // Tính tổng tiền
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
@@ -111,7 +156,6 @@ const HomeScreen = () => {
     setCart(prevCart => prevCart.filter((_, i) => i !== index));
   };
 
-
   return (
     <View style={styles.container}>
       {/* Phần danh sách sản phẩm */}
@@ -128,21 +172,23 @@ const HomeScreen = () => {
         <View style={styles.optionContainer}>
           <Text style={styles.title}>Chọn danh mục:</Text>
           <ButtonGroup
-            buttons={categories}
+            buttons={categories.map(category => category.name)}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
           />
         </View>
         <FlatList
-          data={filteredProducts}
-          keyExtractor={item => item.id.toString()}
+          data={searchTerm.length > 0 ? filteredProducts : productsByCate}
+          keyExtractor={item => item._id.toString()}
           numColumns={5}
           renderItem={({item}) => (
             <View style={styles.productCard}>
-              <Image source={item.image} style={styles.productImage} />
+              <Image source={{uri: item.image}} style={styles.productImage} />
               <View style={styles.productDetails}>
                 <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productPrice}>Từ {item.sizes.S} VNĐ</Text>
+                <Text style={styles.productPrice}>
+                  Từ {TextFormatter.formatCurrency(item.originalPrice)} VNĐ
+                </Text>
                 <TouchableOpacity
                   style={styles.addButton}
                   onPress={() => handleAddProduct(item)}>
@@ -309,9 +355,9 @@ const HomeScreen = () => {
 
 const styles = StyleSheet.create({
   footer: {
-    flexDirection:'row',
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
+    backgroundColor: 'white',
     padding: 10,
     alignItems: 'center',
   },
@@ -480,7 +526,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 12,
     borderRadius: 8,
-
   },
   checkoutButtonText: {
     color: '#fff',
@@ -490,7 +535,11 @@ const styles = StyleSheet.create({
   },
   paymentContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   paymentText: {fontSize: 18, fontWeight: 'bold'},
-  deleteButton: {flexDirection: 'row',alignItems: 'center',justifyContent: 'space-between'},
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
 });
 
 export default HomeScreen;
