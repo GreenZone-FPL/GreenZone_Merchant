@@ -10,12 +10,12 @@ export const getAllProducts = async () => {
   }
 };
 
-export const getProductsByCate = async idCate => {
+export const getProductsById = async productId => {
   try {
-    const response = await axiosInstance.get(`/v1/category/${idCate}`);
+    const response = await axiosInstance.get(`/v1/product/${productId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching products by category:', error);
+    console.log('Error fetching products', error);
     throw error;
   }
 };
