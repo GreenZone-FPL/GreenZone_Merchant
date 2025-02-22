@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,112 +9,121 @@ import {
   Modal,
   TextInput,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import {ButtonGroup} from '../../components';
-import {colors} from '../../constants';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {colors, GLOBAL_KEYS} from '../../constants';
+import {
+  getAllCategories,
+  getAllProducts,
+  getAllToppings,
+  getProductsById,
+} from '../../axios/index';
+import {TextFormatter} from '../../utils';
 
-
-
-const categories = [
-  'Tất cả',
-  'Trà trái cây',
-  'Trà xanh',
-  'Trà sữa',
-  'Coffee',
-  'Bánh ngọt',
-];
-
-const products = [
-  {
-    id: 1,
-    name: 'Trà Đào',
-    image: require('../../assets/images/image_category/image_coffee.png'),
-    category: 'Trà trái cây',
-    sizes: {S: 30000, M: 35000, L: 40000},
-  },
-  {
-    id: 2,
-    name: 'Trà Cam Xả',
-    image: require('../../assets/images/image_category/image_coffee.png'),
-    category: 'Trà trái cây',
-    sizes: {S: 32000, M: 38000, L: 42000},
-  },
-];
-
-const toppings = [
-  {name: 'Trân châu', price: 5000},
-  {name: 'Thạch dừa', price: 4000},
-  {name: 'Kem cheese', price: 7000},
-  {name: 'Hạt chia', price: 3000},
-];
-
-const sizes = ['S', 'M', 'L'];
+const {width} = Dimensions.get('window').width;
 
 const HomeScreen = () => {
-  const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
-  const [isCheckout, setIsCheckout] = useState(false); // State kiểm soát chế độ hiển thị
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [cart, setCart] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [selectedToppings, setSelectedToppings] = useState([]);
-  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedProduct, setSelectedProduct] = useState();
   const [searchTerm, setSearchTerm] = useState('');
+  const [openMenu, setOpenMenu] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [product, setProduct] = useState([]);
+  const [toppings, setToppings] = useState([]);
 
-  // Lọc sản phẩm theo danh mục và search
-  const filteredProducts = products.filter(product => {
-    const matchesCategory =
-      selectedIndex === 0 || product.category === categories[selectedIndex];
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  // state lưu dữ liệu
+  const [categories, setCategories] = useState([
+    {_id: 'cate000-000', name: 'Tất cả', icon: ''},
+  ]);
+  const [productsByCate, setProductsByCate] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
-  // Tính tổng tiền
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+  // Gọi danh sách danh mục từ API
+  const fetchCategories = async () => {
+    try {
+      const response = await getAllCategories();
+      const categoriesData = [
+        {_id: 'cate000-000', name: 'Tất cả', icon: ''},
+        ...response.data,
+      ];
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Lỗi khi gọi API Categories:', error);
+    }
+  };
+
+  // Gọi danh sách sản phẩm từ API
+  const fetchProducts = async id => {
+    try {
+      const response = await getAllProducts();
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Lỗi khi gọi API Products:', error);
+    }
+  };
+
+  // gọi sản phẩm theo index cate
+  const getProductsByCategory = index => {
+    if (!products || products.length === 0) return [];
+
+    if (index === 0) {
+      return products.flatMap(category => category?.products || []);
+    }
+
+    if (index > 0 && index < products.length + 1) {
+      return products[index - 1]?.products || [];
+    }
+
+    return [];
+  };
+
+  // Gọi danh mục & sản phẩm  và topping từ API
+  useEffect(() => {
+    fetchCategories();
+    fetchProducts();
+  }, []);
+
+  // Cập nhật danh sách sản phẩm theo danh mục đã chọn
+  useEffect(() => {
+    const updatedProducts = getProductsByCategory(selectedIndex);
+    setProductsByCate(updatedProducts);
+  }, [selectedIndex, categories, products]);
+
+  // Cập nhật sản phẩm hiển thị khi tìm kiếm thay đổi
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredProducts(productsByCate);
+    } else {
+      const filtered = productsByCate.filter(product =>
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [searchTerm, productsByCate]);
 
   // Mở modal thêm sản phẩm
-  const handleAddProduct = product => {
-    setSelectedProduct(product);
-    setSelectedToppings([]);
-    setSelectedSize('M');
+  // Gọi API để lấy sản phẩm
+  const handleAddProduct = async id => {
+    try {
+      const response = await getProductsById(id);
+      setProduct(response.data);
+    } catch (error) {
+      console.log('Lỗi khi lấy sản phẩm:', error);
+    }
   };
 
-  // Thêm/bỏ topping
-  const toggleTopping = topping => {
-    setSelectedToppings(prev =>
-      prev.some(t => t.name === topping.name)
-        ? prev.filter(t => t.name !== topping.name)
-        : [...prev, topping],
-    );
-  };
+  // them vao gio hang o day
 
-  // Xác nhận thêm sản phẩm vào giỏ
-  const confirmAddToCart = () => {
-    const toppingPrice = selectedToppings.reduce((sum, t) => sum + t.price, 0);
-    setCart(prevCart => [
-      ...prevCart,
-      {
-        ...selectedProduct,
-        selectedSize,
-        price: selectedProduct.sizes[selectedSize] + toppingPrice,
-        toppings: selectedToppings,
-      },
-    ]);
-    setSelectedProduct(null);
-    setSelectedToppings([]);
-    setSelectedSize('M');
-  };
-  // Xóa sản phẩm khỏi giỏ
-  const removeFromCart = index => {
-    setCart(prevCart => prevCart.filter((_, i) => i !== index));
-  };
-
-
+  // Khi product được cập nhật, mở modal
+  useEffect(() => {
+    if (product?._id) {
+      setOpenMenu(true);
+    }
+  }, [product]);
   return (
     <View style={styles.container}>
-      {/* Phần danh sách sản phẩm */}
       <View style={styles.leftSection}>
         {/* Thanh Search */}
         <View style={styles.searchContainer}>
@@ -128,24 +137,31 @@ const HomeScreen = () => {
         <View style={styles.optionContainer}>
           <Text style={styles.title}>Chọn danh mục:</Text>
           <ButtonGroup
-            buttons={categories}
+            buttons={categories.map(category => category.name)}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
           />
         </View>
         <FlatList
-          data={filteredProducts}
-          keyExtractor={item => item.id.toString()}
+          data={searchTerm.length > 0 ? filteredProducts : productsByCate}
+          keyExtractor={item => item._id.toString()}
           numColumns={5}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          nestedScrollEnabled
+          initialNumToRender={10}
+          removeClippedSubviews={true}
           renderItem={({item}) => (
             <View style={styles.productCard}>
-              <Image source={item.image} style={styles.productImage} />
+              <Image source={{uri: item.image}} style={styles.productImage} />
               <View style={styles.productDetails}>
                 <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productPrice}>Từ {item.sizes.S} VNĐ</Text>
+                <Text style={styles.productPrice}>
+                  Từ {TextFormatter.formatCurrency(item.originalPrice)}
+                </Text>
                 <TouchableOpacity
                   style={styles.addButton}
-                  onPress={() => handleAddProduct(item)}>
+                  onPress={() => handleAddProduct(item._id)}>
                   <Text style={styles.addButtonText}>Thêm</Text>
                 </TouchableOpacity>
               </View>
@@ -153,165 +169,246 @@ const HomeScreen = () => {
           )}
         />
       </View>
-
-      {/* Phần giỏ hàng */}
-      <View style={styles.rightSection}>
-        <Text style={styles.rightTitle}>
-          {isCheckout ? 'Thanh toán' : 'Giỏ hàng'}
-        </Text>
-
-        {/* Nếu đang ở giao diện giỏ hàng */}
-        {!isCheckout ? (
-          <>
-            <ScrollView style={styles.cartList}>
-              {cart.length > 0 ? (
-                cart.map((item, index) => (
-                  <View key={index} style={styles.cartItem}>
-                    <View style={styles.cartItemInfo}>
-                      <View style={styles.deleteButton}>
-                        <Text style={styles.cartItemText}>
-                          {item.name} ({item.selectedSize}) - {item.price} VNĐ
-                        </Text>
-                        <TouchableOpacity onPress={() => removeFromCart(index)}>
-                          <Icon name="close" size={22} color="red" />
-                        </TouchableOpacity>
-                      </View>
-
-                      {item.toppings?.length > 0 && (
-                        <Text style={styles.toppingText}>
-                          Topping:{' '}
-                          {item.toppings
-                            .map(t => t.name + ' (+' + t.price + ' VNĐ)')
-                            .join(', ')}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.emptyCart}>Chưa có sản phẩm</Text>
-              )}
-            </ScrollView>
-            <View style={styles.footer}>
-              <Text style={styles.totalPrice}>Tổng tiền: {totalPrice} VNĐ</Text>
-              <TouchableOpacity
-                style={styles.checkoutButton}
-                onPress={() => {
-                  if (cart.length === 0) {
-                    setIsCartEmptyModalVisible(true); // Hiển thị modal nếu giỏ hàng trống
-                  } else {
-                    setIsCheckout(true); // Chuyển sang màn hình thanh toán nếu có sản phẩm
-                  }
-                }}>
-                <Text style={styles.checkoutButtonText}>Thanh toán</Text>
-              </TouchableOpacity>
-              <Modal
-                visible={isCartEmptyModalVisible}
-                transparent
-                animationType="fade">
-                <View style={styles.modalContainer}>
-                  <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>Thông báo</Text>
-                    <Text style={styles.modalMessage}>
-                      Giỏ hàng của bạn đang trống!
-                    </Text>
-                    <TouchableOpacity
-                      style={styles.confirmButton}
-                      onPress={() => setIsCartEmptyModalVisible(false)}>
-                      <Text style={styles.confirmButtonText}>OK</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </Modal>
-            </View>
-          </>
-        ) : (
-          <>
-            {/* Nếu đang ở giao diện thanh toán */}
-            <View style={styles.paymentContainer}>
-              <Text style={styles.paymentText}>Thông tin thanh toán...</Text>
-            </View>
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={[styles.backButton, {backgroundColor: colors.red900}]}
-                onPress={() => setIsCheckout(false)}>
-                <Text style={[styles.checkoutButtonText]}>Quay lại</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => setIsCheckout(false)}>
-                <Text style={styles.checkoutButtonText}>Hoàn tất</Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-      </View>
-
-      {/* Modal chọn kích cỡ và topping */}
-      <Modal
-        visible={selectedProduct !== null}
-        transparent
-        animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.sizeContainer}>
-              {sizes.map(size => (
-                <TouchableOpacity
-                  key={size}
-                  style={[
-                    styles.sizeOption,
-                    selectedSize === size && styles.selectedSize,
-                  ]}
-                  onPress={() => setSelectedSize(size)}>
-                  <Text
-                    style={[
-                      styles.sizeText,
-                      selectedSize === size && styles.selectedSizeText,
-                    ]}>
-                    {size} - {selectedProduct?.sizes[size]} VNĐ
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.modalTitle}>Chọn Topping</Text>
-            {toppings.map((topping, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => toggleTopping(topping)}>
-                <Text
-                  style={[
-                    styles.toppingOption,
-                    selectedToppings.some(t => t.name === topping.name) &&
-                      styles.selectedTopping,
-                  ]}>
-                  {topping.name} (+{topping.price} VNĐ)
-                </Text>
-              </TouchableOpacity>
-            ))}
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={confirmAddToCart}>
-                <Text style={styles.confirmButtonText}>Xác nhận</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.confirmButton, {backgroundColor: colors.red900}]}
-                onPress={() => setSelectedProduct(null)}>
-                <Text style={styles.confirmButtonText}>Hủy</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <CartOrder />
+      <ModalToping
+        openMenu={openMenu}
+        setOpenMenu={setOpenMenu}
+        cart={cart}
+        setCart={setCart}
+        product={product}
+      />
     </View>
   );
 };
 
+const CartOrder = () => {
+  const [isCheckout, setIsCheckout] = useState(false);
+  const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
+  const [cart, setCart] = useState([]);
+
+  // Xóa sản phẩm khỏi giỏ
+  const removeFromCart = index => {
+    setCart(prevCart => prevCart.filter((_, i) => i !== index));
+  };
+  // Tính tổng tiền
+  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+
+  return (
+    <View style={styles.rightSection}>
+      <Text style={styles.rightTitle}>
+        {isCheckout ? 'Thanh toán' : 'Giỏ hàng'}
+      </Text>
+      {/* Nếu đang ở giao diện giỏ hàng */}
+      {!isCheckout ? (
+        <>
+          <ScrollView style={styles.cartList}>
+            {cart.length > 0 ? (
+              cart.map((item, index) => (
+                <View key={index} style={styles.cartItem}>
+                  <View style={styles.cartItemInfo}>
+                    <View style={styles.deleteButton}>
+                      <Text style={styles.cartItemText}>
+                        {item.name} ({item.selectedSize}) - {item.price} VNĐ
+                      </Text>
+                      <TouchableOpacity onPress={() => removeFromCart(index)}>
+                        <Icon name="close" size={22} color="red" />
+                      </TouchableOpacity>
+                    </View>
+
+                    {item.toppings?.length > 0 && (
+                      <Text style={styles.toppingText}>
+                        Topping:{' '}
+                        {item.toppings.data
+                          .map(t => t.name + ' (+' + t.price + ' VNĐ)')
+                          .join(', ')}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyCart}>Chưa có sản phẩm</Text>
+            )}
+          </ScrollView>
+          <View style={styles.footer}>
+            <Text style={styles.totalPrice}>Tổng tiền: {totalPrice} VNĐ</Text>
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              onPress={() => {
+                if (cart.length === 0) {
+                  setIsCartEmptyModalVisible(true); // Hiển thị modal nếu giỏ hàng trống
+                } else {
+                  setIsCheckout(true); // Chuyển sang màn hình thanh toán nếu có sản phẩm
+                }
+              }}>
+              <Text style={styles.checkoutButtonText}>Thanh toán</Text>
+            </TouchableOpacity>
+            <Modal
+              visible={isCartEmptyModalVisible}
+              transparent
+              animationType="fade">
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Thông báo</Text>
+                  <Text style={styles.modalMessage}>
+                    Giỏ hàng của bạn đang trống!
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={() => setIsCartEmptyModalVisible(false)}>
+                    <Text style={styles.confirmButtonText}>OK</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          </View>
+        </>
+      ) : (
+        <>
+          {/* Nếu đang ở giao diện thanh toán */}
+          <View style={styles.paymentContainer}>
+            <Text style={styles.paymentText}>Thông tin thanh toán...</Text>
+          </View>
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.backButton, {backgroundColor: colors.red900}]}
+              onPress={() => setIsCheckout(false)}>
+              <Text style={[styles.checkoutButtonText]}>Quay lại</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => setIsCheckout(false)}>
+              <Text style={styles.checkoutButtonText}>Hoàn tất</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </View>
+  );
+};
+
+const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
+  const [selectedToppings, setSelectedToppings] = useState([]);
+  const [selectedSize, setSelectedSize] = useState([]);
+
+  useEffect(() => {
+    if (product?.variant?.length > 0) {
+      setSelectedSize(product.variant[0]);
+    }
+  }, [product]);
+
+  const toggleTopping = topping => {
+    setSelectedToppings(prev =>
+      prev.some(t => t._id === topping._id)
+        ? prev.filter(t => t._id !== topping._id)
+        : [...prev, topping],
+    );
+  };
+
+  const confirmAddToCart = () => {
+    if (!selectedSize) return;
+    // thêm vào giỏ hàng ở đây
+
+    setSelectedToppings([]);
+    setSelectedSize(product?.variant?.[0] || null);
+    setOpenMenu(false);
+  };
+
+  console.log('san pham da chon', product);
+  console.log('size da chon', selectedSize);
+  console.log('toping da chon', selectedToppings);
+
+  return (
+    <Modal visible={openMenu} transparent animationType="slide">
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          {/* Chọn Size */}
+          <Text style={styles.title}>Chọn Size</Text>
+
+          <View style={styles.sizeContainer}>
+            {product?.variant?.length > 0 ? (
+              product.variant.map(item => (
+                <TouchableOpacity
+                  key={item._id}
+                  style={[
+                    styles.sizeOption,
+                    selectedSize?._id === item._id && styles.selectedSize,
+                  ]}
+                  onPress={() => setSelectedSize(item)}>
+                  <Text
+                    style={[
+                      styles.sizeText,
+                      selectedSize?._id === item._id && styles.selectedSizeText,
+                    ]}>
+                    {item.size} - {item.sellingPrice.toLocaleString()} VNĐ
+                  </Text>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text>Không có size</Text>
+            )}
+          </View>
+
+          {/* Chọn Topping */}
+          <Text style={styles.modalTitle}>Chọn Topping</Text>
+          <ScrollView style={styles.toppingList}>
+            {product?.topping?.length > 0 ? (
+              product.topping.map(topping => {
+                const isSelected = selectedToppings.some(
+                  t => t._id === topping._id,
+                );
+
+                return (
+                  <TouchableOpacity
+                    key={topping._id}
+                    style={[
+                      styles.toppingOption,
+                      isSelected && styles.selectedTopping,
+                    ]}
+                    onPress={() => toggleTopping(topping)}>
+                    <Text
+                      style={[
+                        styles.sizeText,
+                        isSelected && styles.selectedToppingText,
+                      ]}>
+                      {topping.name} ( +{' '}
+                      {TextFormatter.formatCurrency(topping.extraPrice)} )
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              <Text>Không có topping</Text>
+            )}
+          </ScrollView>
+
+          {/* Nút xác nhận & Hủy */}
+          <View style={styles.modalButtonContainer}>
+            <TouchableOpacity
+              style={styles.confirmButton}
+              onPress={confirmAddToCart}>
+              <Text style={styles.confirmButtonText}>Xác nhận</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.confirmButton, {backgroundColor: 'red'}]}
+              onPress={() => {
+                setOpenMenu(false);
+                setSelectedToppings([]);
+                setSelectedSize(product?.variant?.[0] || null);
+              }}>
+              <Text style={styles.confirmButtonText}>Hủy</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 const styles = StyleSheet.create({
   footer: {
-    flexDirection:'row',
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
+    backgroundColor: 'white',
     padding: 10,
     alignItems: 'center',
   },
@@ -391,7 +488,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   emptyCart: {fontSize: 14, color: '#777', textAlign: 'center'},
-  toppingText: {fontSize: 12, color: '#555'},
+  toppingText: {fontSize: 12, color: colors.black},
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -415,30 +512,50 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sizeOption: {
-    padding: 10,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT - 4,
     borderWidth: 1,
-    borderColor: '#299345',
+    borderColor: '#ccc',
     borderRadius: 5,
     marginHorizontal: 5,
+    backgroundColor: colors.gray200,
   },
   selectedSize: {
-    backgroundColor: '#299345',
+    backgroundColor: colors.primary,
+    borderColor: colors.yellow500,
   },
   sizeText: {
-    color: '#299345',
+    color: colors.primary,
   },
   selectedSizeText: {
-    color: '#fff',
+    color: colors.white,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
   },
-  toppingOption: {fontSize: 16, padding: 10, textAlign: 'center'},
+
+  toppingOption: {
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
+    paddingHorizontal: '20%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    backgroundColor: colors.gray200,
+    marginVertical: GLOBAL_KEYS.GAP_SMALL / 2,
+    alignItems: 'center',
+  },
   selectedTopping: {
+    backgroundColor: colors.primary,
+    borderColor: colors.yellow500,
+  },
+  toppingText: {
+    fontSize: 16,
+    color: colors.primary,
+  },
+  selectedToppingText: {
+    color: 'white',
     fontWeight: 'bold',
-    color: '#299345',
   },
   modalButtonContainer: {
     flexDirection: 'row',
@@ -448,9 +565,9 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     backgroundColor: '#299345',
-    padding: 10,
+    padding: 20,
     borderRadius: 5,
-    marginHorizontal: 5,
+    marginHorizontal: 20,
     alignItems: 'center',
   },
   confirmButtonText: {
@@ -480,7 +597,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 12,
     borderRadius: 8,
-
   },
   checkoutButtonText: {
     color: '#fff',
@@ -490,7 +606,11 @@ const styles = StyleSheet.create({
   },
   paymentContainer: {flex: 1, justifyContent: 'center', alignItems: 'center'},
   paymentText: {fontSize: 18, fontWeight: 'bold'},
-  deleteButton: {flexDirection: 'row',alignItems: 'center',justifyContent: 'space-between'},
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
 });
 
 export default HomeScreen;
