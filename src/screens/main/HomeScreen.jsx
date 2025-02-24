@@ -1,25 +1,31 @@
 import React, {useEffect, useState} from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
+  Dimensions,
   FlatList,
   Image,
-  TouchableOpacity,
   Modal,
-  TextInput,
   ScrollView,
-  Dimensions,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {ButtonGroup} from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
 import {
   getAllCategories,
   getAllProducts,
-  getAllToppings,
   getProductsById,
 } from '../../axios/index';
+import {ButtonGroup} from '../../components';
+import {colors, GLOBAL_KEYS} from '../../constants';
 import {TextFormatter} from '../../utils';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+  useCodeScanner,
+} from 'react-native-vision-camera';
+import {Icon} from 'react-native-paper';
 
 const {width} = Dimensions.get('window').width;
 
@@ -31,7 +37,7 @@ const HomeScreen = () => {
   const [cart, setCart] = useState([]);
   const [product, setProduct] = useState([]);
   const [toppings, setToppings] = useState([]);
-
+  
   // state lưu dữ liệu
   const [categories, setCategories] = useState([
     {_id: 'cate000-000', name: 'Tất cả', icon: ''},
@@ -122,6 +128,7 @@ const HomeScreen = () => {
       setOpenMenu(true);
     }
   }, [product]);
+
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
@@ -182,107 +189,166 @@ const HomeScreen = () => {
 };
 
 const CartOrder = () => {
-  const [isCheckout, setIsCheckout] = useState(false);
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [cart, setCart] = useState([]);
+  const [scannedCode, setScannedCode] = useState(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [cameraPosition, setCameraPosition] = useState('back'); // 'back' hoặc 'front'
 
-  // Xóa sản phẩm khỏi giỏ
+  // Lấy quyền camera
+  const {hasPermission, requestPermission} = useCameraPermission();
+  const device = useCameraDevice(cameraPosition); // Chọn camera trước hoặc sau
+
+  // Kiểm tra quyền truy cập camera
+  useEffect(() => {
+    console.log('Has Camera Permission:', hasPermission);
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission]);
+
+  // Xử lý quét mã QR
+  const codeScanner = useCodeScanner({
+    codeTypes: ['qr', 'ean-13', 'upc-a', 'code-128', 'code-39'],
+    onCodeScanned: codes => {
+      if (codes.length > 0) {
+        const scannedText = codes[0].value;
+        setScannedCode(scannedText);
+        setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
+        setIsScanning(false); // Đóng camera sau khi quét
+        console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+      }
+    },
+  });
+
+  // Xóa sản phẩm khỏi giỏ hàng
   const removeFromCart = index => {
     setCart(prevCart => prevCart.filter((_, i) => i !== index));
   };
+
   // Tính tổng tiền
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
     <View style={styles.rightSection}>
-      <Text style={styles.rightTitle}>
-        {isCheckout ? 'Thanh toán' : 'Giỏ hàng'}
-      </Text>
-      {/* Nếu đang ở giao diện giỏ hàng */}
-      {!isCheckout ? (
-        <>
-          <ScrollView style={styles.cartList}>
-            {cart.length > 0 ? (
-              cart.map((item, index) => (
-                <View key={index} style={styles.cartItem}>
-                  <View style={styles.cartItemInfo}>
-                    <View style={styles.deleteButton}>
-                      <Text style={styles.cartItemText}>
-                        {item.name} ({item.selectedSize}) - {item.price} VNĐ
-                      </Text>
-                      <TouchableOpacity onPress={() => removeFromCart(index)}>
-                        <Icon name="close" size={22} color="red" />
-                      </TouchableOpacity>
-                    </View>
+      {/* Camera quét mã QR */}
+      {isScanning ? (
+        device ? (
+          <View>
+            <Camera
+              style={{width: '100%', height: 200, borderRadius: 10}}
+              device={device}
+              isActive={isScanning}
+              codeScanner={codeScanner}
+            />
+            <View style={styles.cameraControls}>
+              <TouchableOpacity
+                style={styles.switchCameraButton}
+                onPress={() =>
+                  setCameraPosition(prev =>
+                    prev === 'back' ? 'front' : 'back',
+                  )
+                }>
+                <Icon source="camera-flip" size={32} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.closeCameraButton}
+                onPress={() => setIsScanning(false)}>
+                <Icon source="close-circle" size={32} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <Text>Không tìm thấy camera</Text>
+        )
+      ) : (
+        <TouchableOpacity onPress={() => setIsScanning(true)}>
+          <Icon source="barcode-scan" size={32} color="black" />
+        </TouchableOpacity>
+      )}
 
-                    {item.toppings?.length > 0 && (
-                      <Text style={styles.toppingText}>
-                        Topping:{' '}
-                        {item.toppings.data
-                          .map(t => t.name + ' (+' + t.price + ' VNĐ)')
-                          .join(', ')}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.emptyCart}>Chưa có sản phẩm</Text>
-            )}
-          </ScrollView>
-          <View style={styles.footer}>
-            <Text style={styles.totalPrice}>Tổng tiền: {totalPrice} VNĐ</Text>
-            <TouchableOpacity
-              style={styles.checkoutButton}
-              onPress={() => {
-                if (cart.length === 0) {
-                  setIsCartEmptyModalVisible(true); // Hiển thị modal nếu giỏ hàng trống
-                } else {
-                  setIsCheckout(true); // Chuyển sang màn hình thanh toán nếu có sản phẩm
-                }
-              }}>
-              <Text style={styles.checkoutButtonText}>Thanh toán</Text>
-            </TouchableOpacity>
-            <Modal
-              visible={isCartEmptyModalVisible}
-              transparent
-              animationType="fade">
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Thông báo</Text>
-                  <Text style={styles.modalMessage}>
-                    Giỏ hàng của bạn đang trống!
+      {/* Hiển thị thông tin khách hàng */}
+      <Text style={styles.rightTitle}>Giỏ hàng</Text>
+      <View
+        style={{
+          margin: GLOBAL_KEYS.PADDING_SMALL,
+          backgroundColor: colors.white,
+          padding: 10,
+          borderRadius: 10,
+        }}>
+        <Text style={{fontSize: 16, color: colors.gray850, fontWeight: 'bold'}}>
+          Thông tin khách hàng
+        </Text>
+        <Text style={{fontSize: 14, color: colors.gray850}}>
+          Tên: Khách vãng lai
+        </Text>
+        <Text style={{fontSize: 14, color: colors.gray850}}>
+          SĐT: {phoneNumber || 'Chưa quét mã'}
+        </Text>
+      </View>
+      {/* Danh sách sản phẩm trong giỏ hàng */}
+      <ScrollView style={styles.cartList}>
+        {cart.length > 0 ? (
+          cart.map((item, index) => (
+            <View key={index} style={styles.cartItem}>
+              <View style={styles.cartItemInfo}>
+                <View style={styles.deleteButton}>
+                  <Text style={styles.cartItemText}>
+                    {item.name} ({item.selectedSize}) - {item.price} VNĐ
                   </Text>
-                  <TouchableOpacity
-                    style={styles.confirmButton}
-                    onPress={() => setIsCartEmptyModalVisible(false)}>
-                    <Text style={styles.confirmButtonText}>OK</Text>
+                  <TouchableOpacity onPress={() => removeFromCart(index)}>
+                    <Icon name="close" size={22} color="red" />
                   </TouchableOpacity>
                 </View>
+                {item.toppings?.length > 0 && (
+                  <Text style={styles.toppingText}>
+                    Topping:{' '}
+                    {item.toppings
+                      .map(t => t.name + ' (+' + t.price + ' VNĐ)')
+                      .join(', ')}
+                  </Text>
+                )}
               </View>
-            </Modal>
-          </View>
-        </>
-      ) : (
-        <>
-          {/* Nếu đang ở giao diện thanh toán */}
-          <View style={styles.paymentContainer}>
-            <Text style={styles.paymentText}>Thông tin thanh toán...</Text>
-          </View>
-          <View style={styles.footer}>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.emptyCart}>Chưa có sản phẩm</Text>
+        )}
+      </ScrollView>
+
+      {/* Tổng tiền và nút Thanh toán */}
+      <View style={styles.footer}>
+        <Text style={styles.totalPrice}>Tổng tiền: {totalPrice} VNĐ</Text>
+        <TouchableOpacity
+          style={styles.checkoutButton}
+          onPress={() => {
+            if (cart.length === 0) {
+              setIsCartEmptyModalVisible(true);
+            } else {
+              console.log('Tiến hành thanh toán...');
+            }
+          }}>
+          <Text style={styles.checkoutButtonText}>Thanh toán</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal thông báo khi giỏ hàng trống */}
+      <Modal visible={isCartEmptyModalVisible} transparent animationType="fade">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thông báo</Text>
+            <Text style={styles.modalMessage}>
+              Giỏ hàng của bạn đang trống!
+            </Text>
             <TouchableOpacity
-              style={[styles.backButton, {backgroundColor: colors.red900}]}
-              onPress={() => setIsCheckout(false)}>
-              <Text style={[styles.checkoutButtonText]}>Quay lại</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => setIsCheckout(false)}>
-              <Text style={styles.checkoutButtonText}>Hoàn tất</Text>
+              style={styles.confirmButton}
+              onPress={() => setIsCartEmptyModalVisible(false)}>
+              <Text style={styles.confirmButtonText}>OK</Text>
             </TouchableOpacity>
           </View>
-        </>
-      )}
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -611,6 +677,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+   cameraControls: {position: 'absolute', top: 10, right: 10, flexDirection: 'row'},
+  switchCameraButton: {marginRight: 10, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 5},
+  closeCameraButton: {backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 5},
 });
 
 export default HomeScreen;
