@@ -37,11 +37,9 @@ const HomeScreen = () => {
   const [cart, setCart] = useState([]);
   const [product, setProduct] = useState([]);
   const [toppings, setToppings] = useState([]);
-  
+
   // state lưu dữ liệu
-  const [categories, setCategories] = useState([
-    {_id: 'cate000-000', name: 'Tất cả', icon: ''},
-  ]);
+  const [categories, setCategories] = useState([]);
   const [productsByCate, setProductsByCate] = useState([]);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -51,7 +49,7 @@ const HomeScreen = () => {
     try {
       const response = await getAllCategories();
       const categoriesData = [
-        {_id: 'cate000-000', name: 'Tất cả', icon: ''},
+        {_id: 'cate18-06', name: 'Tất cả', icon: ''},
         ...response.data,
       ];
       setCategories(categoriesData);
@@ -73,16 +71,10 @@ const HomeScreen = () => {
   // gọi sản phẩm theo index cate
   const getProductsByCategory = index => {
     if (!products || products.length === 0) return [];
-
     if (index === 0) {
       return products.flatMap(category => category?.products || []);
     }
-
-    if (index > 0 && index < products.length + 1) {
-      return products[index - 1]?.products || [];
-    }
-
-    return [];
+    return products[index - 1]?.products || [];
   };
 
   // Gọi danh mục & sản phẩm  và topping từ API
@@ -102,10 +94,11 @@ const HomeScreen = () => {
     if (searchTerm.trim() === '') {
       setFilteredProducts(productsByCate);
     } else {
-      const filtered = productsByCate.filter(product =>
-        product.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      setFilteredProducts(
+        productsByCate.filter(product =>
+          product.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+        ),
       );
-      setFilteredProducts(filtered);
     }
   }, [searchTerm, productsByCate]);
 
@@ -115,19 +108,11 @@ const HomeScreen = () => {
     try {
       const response = await getProductsById(id);
       setProduct(response.data);
+      setOpenMenu(true);
     } catch (error) {
       console.log('Lỗi khi lấy sản phẩm:', error);
     }
   };
-
-  // them vao gio hang o day
-
-  // Khi product được cập nhật, mở modal
-  useEffect(() => {
-    if (product?._id) {
-      setOpenMenu(true);
-    }
-  }, [product]);
 
   return (
     <View style={styles.container}>
@@ -357,12 +342,13 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [selectedSize, setSelectedSize] = useState([]);
 
+  //Chọn size đầu tiên
   useEffect(() => {
     if (product?.variant?.length > 0) {
       setSelectedSize(product.variant[0]);
     }
   }, [product]);
-
+  //chọn topping
   const toggleTopping = topping => {
     setSelectedToppings(prev =>
       prev.some(t => t._id === topping._id)
@@ -374,15 +360,18 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
   const confirmAddToCart = () => {
     if (!selectedSize) return;
     // thêm vào giỏ hàng ở đây
-
+    /// cart add product   selectedToppings  selectedSize
+    //
     setSelectedToppings([]);
-    setSelectedSize(product?.variant?.[0] || null);
+    setSelectedSize([]);
     setOpenMenu(false);
   };
 
-  console.log('san pham da chon', product);
-  console.log('size da chon', selectedSize);
-  console.log('toping da chon', selectedToppings);
+  useEffect(() => {
+    console.log('Sản phẩm đã chọn:', product);
+    console.log('Size đã chọn:', selectedSize);
+    console.log('Topping đã chọn:', selectedToppings);
+  }, [product, selectedSize, selectedToppings]);
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
@@ -418,27 +407,27 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
           {/* Chọn Topping */}
           <Text style={styles.modalTitle}>Chọn Topping</Text>
           <ScrollView style={styles.toppingList}>
-            {product?.topping?.length > 0 ? (
-              product.topping.map(topping => {
+            {product?.productTopping?.length > 0 ? (
+              product.productTopping.map(item => {
                 const isSelected = selectedToppings.some(
-                  t => t._id === topping._id,
+                  t => t._id === item._id,
                 );
 
                 return (
                   <TouchableOpacity
-                    key={topping._id}
+                    key={item._id}
                     style={[
                       styles.toppingOption,
                       isSelected && styles.selectedTopping,
                     ]}
-                    onPress={() => toggleTopping(topping)}>
+                    onPress={() => toggleTopping(item)}>
                     <Text
                       style={[
                         styles.sizeText,
                         isSelected && styles.selectedToppingText,
                       ]}>
-                      {topping.name} ( +{' '}
-                      {TextFormatter.formatCurrency(topping.extraPrice)} )
+                      {item.topping.name} ( +{' '}
+                      {TextFormatter.formatCurrency(item.topping.extraPrice)} )
                     </Text>
                   </TouchableOpacity>
                 );
@@ -460,7 +449,7 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
               onPress={() => {
                 setOpenMenu(false);
                 setSelectedToppings([]);
-                setSelectedSize(product?.variant?.[0] || null);
+                setSelectedSize([]);
               }}>
               <Text style={styles.confirmButtonText}>Hủy</Text>
             </TouchableOpacity>
@@ -677,9 +666,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-   cameraControls: {position: 'absolute', top: 10, right: 10, flexDirection: 'row'},
-  switchCameraButton: {marginRight: 10, backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 5},
-  closeCameraButton: {backgroundColor: 'rgba(0,0,0,0.5)', padding: 8, borderRadius: 5},
+  cameraControls: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+  },
+  switchCameraButton: {
+    marginRight: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 8,
+    borderRadius: 5,
+  },
+  closeCameraButton: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 8,
+    borderRadius: 5,
+  },
 });
 
 export default HomeScreen;
