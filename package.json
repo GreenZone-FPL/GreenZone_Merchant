@@ -29,6 +29,8 @@
     "@shadcn/ui": "^0.0.4",
     "axios": "^1.7.8",
     "iconsax-react-native": "^0.0.8",
+    "jwt-decode": "^4.0.0",
+    "lottie-react-native": "^7.2.2",
     "lucide-react-native": "^0.475.0",
     "react": "18.3.1",
     "react-delegate-component": "^1.0.0",
@@ -46,7 +48,9 @@
     "react-native-hmac": "^0.1.1",
     "react-native-image-picker": "^7.2.3",
     "react-native-image-zoom-viewer": "^3.0.1",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-notifications": "^5.1.0",
+    "react-native-otp-entry": "^1.8.2",
     "react-native-pager-view": "^6.7.0",
     "react-native-paper": "^5.12.5",
     "react-native-progress": "^5.0.1",
@@ -60,7 +64,7 @@
     "react-native-tab-view": "^4.0.5",
     "react-native-toast-message": "^2.2.1",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-webview": "^13.12.5",
+    "react-native-webview": "^13.13.2",
     "socket.io-client": "^4.8.1"
   },
   "devDependencies": {

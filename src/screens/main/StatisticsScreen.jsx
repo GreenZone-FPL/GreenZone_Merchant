@@ -1,10 +1,9 @@
-import { StyleSheet, Text, View, ScrollView, processColor } from 'react-native';
 import React from 'react';
+import { processColor, ScrollView, StyleSheet, Text } from 'react-native';
 import { BarChart } from 'react-native-charts-wrapper';
-import { colors, GLOBAL_KEYS } from '../../constants';
-import { Column, Row } from '../../components';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Icon } from 'react-native-paper';
+import { Column, Row } from '../../components';
+import { colors, GLOBAL_KEYS } from '../../constants';
 const StatisticsScreen = () => {
     const currentMonth = new Date().getMonth();
 
@@ -73,6 +72,7 @@ const StatisticsScreen = () => {
                     textSize: 14,
                 }}
                 drawRoundedBar={true}
+              
             />
 
             <Column style={styles.card}>
