@@ -139,7 +139,7 @@ const ModalToping = ({
     console.log('Sản phẩm đã chọn:', JSON.stringify(selectedProduct, null, 2));
     console.log('Size đã chọn:', selectedSize);
     console.log('Topping đã chọn:', selectedToppings);
-    console.log('Cart:', JSON.stringify(cart, null, 2));
+    // console.log('Cart:', JSON.stringify(cart, null, 2));
   }, [selectedProduct, , selectedToppings, selectedSize, cart]);
 
   return (
@@ -205,6 +205,7 @@ const ModalToping = ({
                 setSelectedToppings([]);
                 setSelectedSize(null);
                 setSelectedProduct(null);
+
                 setOpenMenu(false);
               }}>
               <Text style={styles.confirmButtonText}>Hủy</Text>
@@ -302,4 +303,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-export default ModalToping;
+export default React.memo(ModalToping);

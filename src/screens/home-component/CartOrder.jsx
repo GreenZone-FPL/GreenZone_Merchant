@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -126,6 +126,8 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
         }}>
         {cart && cart.orderItems.length > 0 ? (
           <FlatList
+            initialNumToRender={5}
+            maxToRenderPerBatch={10}
             data={cart.orderItems}
             keyExtractor={item => item._id}
             renderItem={({item}) => (
@@ -347,4 +349,4 @@ const styles = StyleSheet.create({
   emptyCart: {fontSize: 14, color: '#777', textAlign: 'center'},
 });
 
-export default CartOrder;
+export default React.memo(CartOrder);
