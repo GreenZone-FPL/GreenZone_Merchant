@@ -14,6 +14,7 @@ import {
 import {
   getAllCategories,
   getAllProducts,
+  getAllToppings,
   getProductsById,
 } from '../../axios/index';
 import {ButtonGroup} from '../../components';
@@ -32,11 +33,11 @@ const {width} = Dimensions.get('window').width;
 const HomeScreen = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState();
+  const [selectedToppings, setSelectedToppings] = useState([]);
+  const [selectedSize, setSelectedSize] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenu, setOpenMenu] = useState(false);
-  const [cart, setCart] = useState([]);
-  const [product, setProduct] = useState([]);
-  const [toppings, setToppings] = useState([]);
+  const [cart, setCart] = useState(null);
 
   // state lưu dữ liệu
   const [categories, setCategories] = useState([]);
@@ -107,7 +108,7 @@ const HomeScreen = () => {
   const handleAddProduct = async id => {
     try {
       const response = await getProductsById(id);
-      setProduct(response.data);
+      setSelectedProduct(response.data);
       setOpenMenu(true);
     } catch (error) {
       console.log('Lỗi khi lấy sản phẩm:', error);
@@ -161,25 +162,30 @@ const HomeScreen = () => {
           )}
         />
       </View>
-      <CartOrder />
+      <CartOrder cart={cart} setCart={setCart} />
       <ModalToping
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
         cart={cart}
         setCart={setCart}
-        product={product}
+        selectedProduct={selectedProduct}
+        setSelectedProduct={setSelectedProduct}
+        selectedSize={selectedSize}
+        setSelectedSize={setSelectedSize}
+        selectedToppings={selectedToppings}
+        setSelectedToppings={setSelectedToppings}
       />
     </View>
   );
 };
 
-const CartOrder = () => {
+const CartOrder = ({cart, setCart}) => {
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
-  const [cart, setCart] = useState([]);
   const [scannedCode, setScannedCode] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [cameraPosition, setCameraPosition] = useState('back'); // 'back' hoặc 'front'
+  const [toppings, setToppings] = useState([]);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -213,8 +219,22 @@ const CartOrder = () => {
   };
 
   // Tính tổng tiền
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+  // const totalPrice = cart?.reduce((sum, item) => sum + item.price, 0);
 
+  const feathAllToppings = async () => {
+    try {
+      const response = await getAllToppings();
+      setToppings(response.data);
+    } catch (error) {
+      console.log('Lỗi gọi API Toppings', error);
+    }
+  };
+
+  useEffect(() => {
+    feathAllToppings();
+  }, []);
+
+  // console.log('toppings', toppings);
   return (
     <View style={styles.rightSection}>
       {/* Camera quét mã QR */}
@@ -272,43 +292,113 @@ const CartOrder = () => {
           SĐT: {phoneNumber || 'Chưa quét mã'}
         </Text>
       </View>
-      {/* Danh sách sản phẩm trong giỏ hàng */}
-      <ScrollView style={styles.cartList}>
-        {cart.length > 0 ? (
-          cart.map((item, index) => (
-            <View key={index} style={styles.cartItem}>
-              <View style={styles.cartItemInfo}>
-                <View style={styles.deleteButton}>
-                  <Text style={styles.cartItemText}>
-                    {item.name} ({item.selectedSize}) - {item.price} VNĐ
-                  </Text>
-                  <TouchableOpacity onPress={() => removeFromCart(index)}>
-                    <Icon name="close" size={22} color="red" />
-                  </TouchableOpacity>
-                </View>
-                {item.toppings?.length > 0 && (
-                  <Text style={styles.toppingText}>
-                    Topping:{' '}
-                    {item.toppings
-                      .map(t => t.name + ' (+' + t.price + ' VNĐ)')
-                      .join(', ')}
-                  </Text>
-                )}
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text style={styles.emptyCart}>Chưa có sản phẩm</Text>
-        )}
-      </ScrollView>
 
+      {/* Danh sách sản phẩm trong giỏ hàng */}
+      {cart?.orderItems?.length > 0 ? (
+        <FlatList
+          contentContainerStyle={{gap: GLOBAL_KEYS.GAP_SMALL}}
+          data={cart.orderItems}
+          keyExtractor={item => item._id}
+          renderItem={({item}) => {
+            return (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  padding: GLOBAL_KEYS.PADDING_DEFAULT,
+                  gap: GLOBAL_KEYS.GAP_DEFAULT,
+                  borderColor: colors.primary,
+                  borderWidth: 1,
+                  borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+                  justifyContent: 'space-between',
+                  backgroundColor: colors.white,
+                }}>
+                <View>
+                  <Image
+                    style={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+                    }}
+                    source={{uri: item.product.image}}
+                  />
+                  <Text
+                    style={{
+                      position: 'absolute',
+                      backgroundColor: colors.green200,
+                      width: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
+                      height: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
+                      borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 2,
+                      textAlign: 'center',
+                      fontWeight: '500',
+                      start: -10,
+                      top: -10,
+                      textAlignVertical: 'center',
+                    }}>
+                    {item.quantity}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    flex: 1,
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                      fontWeight: '500',
+                    }}>
+                    {item.product.name}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.yellow700,
+                      fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                    }}>
+                    Size: {item.size.size}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.gray700,
+                      fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+                    }}>
+                    {item?.topping.map(topping => topping.name).join('\n')}
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: GLOBAL_KEYS.GAP_DEFAULT,
+                  }}>
+                  <Text style={{fontWeight: '500'}}>
+                    {TextFormatter.formatCurrency(item.price)}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.red900,
+                      padding: GLOBAL_KEYS.PADDING_SMALL,
+                      backgroundColor: colors.gray200,
+                      textAlign: 'center',
+                      borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+                    }}>
+                    Xoá
+                  </Text>
+                </View>
+              </View>
+            );
+          }}
+        />
+      ) : (
+        <Text style={styles.emptyCart}>Chưa có sản phẩm</Text>
+      )}
       {/* Tổng tiền và nút Thanh toán */}
       <View style={styles.footer}>
-        <Text style={styles.totalPrice}>Tổng tiền: {totalPrice} VNĐ</Text>
+        <Text style={styles.totalPrice}>Tổng tiền: VNĐ</Text>
         <TouchableOpacity
           style={styles.checkoutButton}
           onPress={() => {
-            if (cart.length === 0) {
+            if (cart?.length === 0) {
               setIsCartEmptyModalVisible(true);
             } else {
               console.log('Tiến hành thanh toán...');
@@ -338,16 +428,24 @@ const CartOrder = () => {
   );
 };
 
-const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
-  const [selectedToppings, setSelectedToppings] = useState([]);
-  const [selectedSize, setSelectedSize] = useState([]);
-
+const ModalToping = ({
+  openMenu,
+  setOpenMenu,
+  cart,
+  setCart,
+  selectedProduct,
+  setSelectedProduct,
+  selectedSize,
+  setSelectedSize,
+  selectedToppings,
+  setSelectedToppings,
+}) => {
   //Chọn size đầu tiên
   useEffect(() => {
-    if (product?.variant?.length > 0) {
-      setSelectedSize(product.variant[0]);
+    if (selectedProduct?.variant?.length > 0) {
+      setSelectedSize(selectedProduct.variant[0]);
     }
-  }, [product]);
+  }, [selectedProduct]);
   //chọn topping
   const toggleTopping = topping => {
     setSelectedToppings(prev =>
@@ -357,21 +455,104 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
     );
   };
 
+  // them san pham vao gio hang
   const confirmAddToCart = () => {
-    if (!selectedSize) return;
-    // thêm vào giỏ hàng ở đây
-    /// cart add product   selectedToppings  selectedSize
-    //
-    setSelectedToppings([]);
-    setSelectedSize([]);
-    setOpenMenu(false);
+    const newItem = addItemOrder();
+    if (!newItem) return;
+
+    createOrder();
+
+    // Reset lại dữ liệu sau khi thêm vào giỏ hàng
+    setTimeout(() => {
+      setSelectedToppings([]);
+      setSelectedSize(null);
+      setSelectedProduct(null);
+      setOpenMenu(false);
+    }, 300);
   };
 
+  //tao card
+  const createOrder = () => {
+    setCart(prevCart => {
+      const newItem = addItemOrder();
+      if (!newItem) return prevCart; // Nếu không có sản phẩm hợp lệ, giữ nguyên giỏ hàng
+
+      if (
+        !prevCart ||
+        !prevCart.orderItems ||
+        prevCart.orderItems.length === 0
+      ) {
+        return {
+          _id: Date.now().toString(),
+          deliveryMethod: 'Tại cửa hàng',
+          fulfillmentDateTime: new Date().toISOString(),
+          note: '',
+          paymentMethod: 'Chưa xác định',
+          shippingAddress: null,
+          store: 'Chưa xác định',
+          owner: 'Khách hàng chưa xác định',
+          voucher: null,
+          orderItems: [newItem],
+        };
+      } else {
+        // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
+        const existingItemIndex = prevCart.orderItems.findIndex(
+          item =>
+            item.variant === newItem.variant &&
+            JSON.stringify(item.toppingItems) ===
+              JSON.stringify(newItem.toppingItems),
+        );
+
+        if (existingItemIndex !== -1) {
+          // Nếu sản phẩm đã có trong giỏ hàng, cập nhật quantity và price
+          const updatedOrderItems = [...prevCart.orderItems];
+          updatedOrderItems[existingItemIndex] = {
+            ...updatedOrderItems[existingItemIndex],
+            quantity: updatedOrderItems[existingItemIndex].quantity + 1,
+            price: updatedOrderItems[existingItemIndex].price + newItem.price, // Cộng dồn giá
+          };
+
+          return {
+            ...prevCart,
+            orderItems: updatedOrderItems,
+          };
+        } else {
+          // Nếu sản phẩm chưa có, thêm mới vào giỏ hàng
+          return {
+            ...prevCart,
+            orderItems: [...prevCart.orderItems, newItem],
+          };
+        }
+      }
+    });
+  };
+  const addItemOrder = () => {
+    return {
+      _id: Date.now().toString(),
+      variant: selectedSize ? selectedSize._id : '',
+      quantity: 1,
+      price: selectedSize
+        ? selectedSize.sellingPrice +
+          selectedToppings.reduce((total, item) => total + item.extraPrice, 0)
+        : 0,
+
+      toppingItems: selectedToppings.map(item => ({
+        topping: item._id,
+        quantity: 1,
+        price: item.extraPrice,
+      })),
+      product: selectedProduct,
+      size: selectedSize,
+      topping: selectedToppings,
+    };
+  };
   useEffect(() => {
-    console.log('Sản phẩm đã chọn:', product);
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>');
+    console.log('Sản phẩm đã chọn:', JSON.stringify(selectedProduct, null, 2));
     console.log('Size đã chọn:', selectedSize);
     console.log('Topping đã chọn:', selectedToppings);
-  }, [product, selectedSize, selectedToppings]);
+    console.log('Cart:', JSON.stringify(cart, null, 2));
+  }, [selectedProduct, , selectedToppings, selectedSize, cart]);
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
@@ -381,8 +562,8 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
           <Text style={styles.title}>Chọn Size</Text>
 
           <View style={styles.sizeContainer}>
-            {product?.variant?.length > 0 ? (
-              product.variant.map(item => (
+            {selectedProduct?.variant?.length > 0 ? (
+              selectedProduct.variant.map(item => (
                 <TouchableOpacity
                   key={item._id}
                   style={[
@@ -407,8 +588,8 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
           {/* Chọn Topping */}
           <Text style={styles.modalTitle}>Chọn Topping</Text>
           <ScrollView style={styles.toppingList}>
-            {product?.productTopping?.length > 0 ? (
-              product.productTopping.map(item => {
+            {selectedProduct?.topping?.length > 0 ? (
+              selectedProduct.topping.map(item => {
                 const isSelected = selectedToppings.some(
                   t => t._id === item._id,
                 );
@@ -426,8 +607,8 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
                         styles.sizeText,
                         isSelected && styles.selectedToppingText,
                       ]}>
-                      {item.topping.name} ( +{' '}
-                      {TextFormatter.formatCurrency(item.topping.extraPrice)} )
+                      {item.name} ( +{' '}
+                      {TextFormatter.formatCurrency(item.extraPrice)} )
                     </Text>
                   </TouchableOpacity>
                 );
@@ -450,6 +631,7 @@ const ModalToping = ({openMenu, setOpenMenu, cart, setCart, product}) => {
                 setOpenMenu(false);
                 setSelectedToppings([]);
                 setSelectedSize([]);
+                setSelectedProduct([]);
               }}>
               <Text style={styles.confirmButtonText}>Hủy</Text>
             </TouchableOpacity>
@@ -531,13 +713,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   cartItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     padding: 10,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderColor: colors.gray300,
+    flexDirection: 'row',
   },
   cartItemInfo: {
     paddingHorizontal: 4,
