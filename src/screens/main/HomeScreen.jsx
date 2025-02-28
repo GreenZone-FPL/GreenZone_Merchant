@@ -133,6 +133,8 @@ const HomeScreen = () => {
           data={searchTerm.length > 0 ? filteredProducts : productsByCate}
           keyExtractor={item => item._id.toString()}
           numColumns={5}
+          initialNumToRender={5}
+          maxToRenderPerBatch={10}
           renderItem={({item}) => (
             <View style={styles.productCard}>
               <Image source={{uri: item.image}} style={styles.productImage} />
@@ -268,4 +270,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-export default HomeScreen;
+export default React.memo(HomeScreen);
