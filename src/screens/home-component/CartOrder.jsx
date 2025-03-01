@@ -19,7 +19,7 @@ import {
 import {Icon, IconButton} from 'react-native-paper';
 import {TextFormatter} from '../../utils';
 import {CustomFlatInput} from '../../components';
-
+import ModalCheckout from './ModalCheckout';
 const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
@@ -27,7 +27,8 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
   const [cameraPosition, setCameraPosition] = useState('back');
   const [voucherCode, setVoucherCode] = useState('');
   const [message, setMessage] = useState('');
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [isCheckout, setIsCheckout] = useState(false);
+  const [order, setOrder] = useState(null);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -66,10 +67,59 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
     });
   };
 
-  // Tính tổng tiền
-  const calculateTotalPrice = cart => {
-    if (!cart || !cart.orderItems) return 0;
-    return cart.orderItems.reduce((total, item) => total + item.price, 0);
+  // cập nhập số lượng
+  const updateItemQuantity = (itemId, newQuantity) => {
+    setCart(prevCart => {
+      const updatedOrderItems = prevCart.orderItems.map(item => {
+        if (item._id === itemId) {
+          return {
+            ...item,
+            quantity: newQuantity,
+            totalPrice: newQuantity * item.totalProductPrice,
+          };
+        }
+        return item;
+      });
+
+      // Tính lại tổng giá của giỏ hàng từ các orderItem
+      const updatedTotalPrice = updatedOrderItems.reduce(
+        (total, item) => total + item.totalPrice,
+        0,
+      );
+
+      return {
+        ...prevCart,
+        orderItems: updatedOrderItems,
+        totalPrice: updatedTotalPrice,
+      };
+    });
+  };
+  // Lọc lại cart để gửi oder
+  const filterCart = cart => {
+    if (cart === null) return;
+    const orderItems = cart.orderItems.map(item => ({
+      variant: item.variant,
+      quantity: item.quantity,
+      price: item.price,
+      toppingItems: item.toppingItems.map(toppingItem => ({
+        topping: toppingItem.topping,
+        quantity: toppingItem.quantity,
+        price: toppingItem.price,
+      })),
+    }));
+
+    return {
+      deliveryMethod: cart.deliveryMethod,
+      fulfillmentDateTime: new Date().toISOString(),
+      note: cart.note,
+      totalPrice: cart.totalPrice,
+      paymentMethod: cart.paymentMethod,
+      shippingAddress: cart.shippingAddress,
+      store: cart.store,
+      owner: cart.owner,
+      voucher: cart.voucher,
+      orderItems: orderItems,
+    };
   };
 
   return (
@@ -133,11 +183,19 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
             renderItem={({item}) => (
               <View style={styles.cartItem}>
                 <View style={styles.itemQuantity}>
-                  <TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (item.quantity > 1) {
+                        updateItemQuantity(item._id, item.quantity - 1);
+                      }
+                    }}>
                     <Text style={styles.buttonQuantity}>-</Text>
                   </TouchableOpacity>
                   <Text style={{}}>{item.quantity}</Text>
-                  <TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      updateItemQuantity(item._id, item.quantity + 1);
+                    }}>
                     <Text style={styles.buttonQuantity}>+</Text>
                   </TouchableOpacity>
                 </View>
@@ -174,7 +232,7 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
                     gap: GLOBAL_KEYS.GAP_DEFAULT,
                   }}>
                   <Text style={styles.cartItemPrice}>
-                    {TextFormatter.formatCurrency(item.price)}
+                    {TextFormatter.formatCurrency(item.totalPrice)}
                   </Text>
                   <TouchableOpacity onPress={() => removeFromCart(item._id)}>
                     <Text style={styles.buttonDelete}>Xoá</Text>
@@ -191,10 +249,6 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
 
       <View>
         <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
-          {/* <Text
-            style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER, fontWeight: '500'}}>
-            Mã giảm giá:
-          </Text> */}
           <CustomFlatInput
             label={'Nhập mã voucher hoặc quét QR'}
             placeholder="Mã giảm giá"
@@ -227,20 +281,36 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
               fontWeight: 'bold',
               color: colors.black,
             }}>
-            {TextFormatter.formatCurrency(calculateTotalPrice(cart))}
+            {TextFormatter.formatCurrency(
+              cart?.totalPrice ? cart.totalPrice : 0,
+            )}
           </Text>
         </Text>
-        <Text
-          style={{
-            padding: 10,
-            backgroundColor: colors.primary,
-            color: colors.white,
-            fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-            fontWeight: 'bold',
+        <TouchableOpacity
+          onPress={() => {
+            if (cart == null) return;
+            setIsCheckout(true);
           }}>
-          Thanh Toán
-        </Text>
+          <Text
+            style={{
+              padding: 10,
+              backgroundColor: colors.primary,
+              color: colors.white,
+              fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+              fontWeight: 'bold',
+            }}>
+            Thanh Toán
+          </Text>
+        </TouchableOpacity>
       </View>
+      {isCheckout && (
+        <ModalCheckout
+          data={filterCart(cart)}
+          setIsCheckout={setIsCheckout}
+          isCheckout={isCheckout}
+          setCart={setCart}
+        />
+      )}
     </View>
   );
 };
