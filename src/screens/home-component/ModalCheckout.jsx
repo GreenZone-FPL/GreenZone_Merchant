@@ -7,18 +7,44 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {TextFormatter} from '../../utils';
 import {createPickUpOrder} from '../../axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width, height} = Dimensions.get('window');
 
-const ModalCheckout = ({data, setIsCheckout, isCheckout, setCart}) => {
+const ModalCheckout = ({
+  data,
+  setIsCheckout,
+  isCheckout,
+  setCart,
+  phoneNumber,
+  setPhoneNumber,
+  customer,
+}) => {
   const [order, setOrder] = useState(data);
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
+  const [merchant, setMerchant] = useState(null);
 
+  // lấy dữ liệu cửa hàng
+  useEffect(() => {
+    AsyncStorage.getItem('merchant')
+      .then(merchantString => {
+        if (merchantString) {
+          setMerchant(JSON.parse(merchantString));
+        } else {
+          console.log('Không tìm thấy merchant trong AsyncStorage');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
+
+  // xac nhan
   const showAlert = ({notification, message, onPress}) => {
     Alert.alert(notification, message, [
       {
@@ -35,7 +61,20 @@ const ModalCheckout = ({data, setIsCheckout, isCheckout, setCart}) => {
     ]);
   };
 
-  console.log('Dữ liệu gửi lên API:', JSON.stringify(order, null, 2));
+  const processCashPayment = () => {
+    const newOrder = {...order, paymentMethod: 'cod'};
+    showAlert({
+      notification: 'Xác nhận tạo đơn hàng',
+      message: 'Xác nhận đã thanh toán tiền mặt, tạo đơn hàng.',
+      onPress: async () => {
+        try {
+          await createOrder(newOrder);
+        } catch (error) {}
+      },
+    });
+  };
+
+  //tạo order
   const createOrder = async order => {
     try {
       const response = await createPickUpOrder(order);
@@ -47,9 +86,11 @@ const ModalCheckout = ({data, setIsCheckout, isCheckout, setCart}) => {
           setCart(null);
           setIsCheckout(false);
           setMessage('');
+          setPhoneNumber('');
         }, 3000);
       }
-      console.log(response.status);
+      console.log('status:', response.status);
+      console.log('Dữ liệu gửi lên API:', JSON.stringify(order, null, 2));
       return response;
     } catch (error) {
       throw error;
@@ -60,13 +101,19 @@ const ModalCheckout = ({data, setIsCheckout, isCheckout, setCart}) => {
       <View style={styles.container}>
         <View style={styles.modalContent}>
           <View style={styles.infoContainer}>
-            <Item title={'Cửa hàng'} text={order.store} />
+            <Item
+              title={'Cửa hàng'}
+              text={`Green Zone ${merchant?.lastName}`}
+            />
             <Item title={'Phương thức nhận hàng'} text={order.deliveryMethod} />
             <Item
               title={'Thời gian hoàn tất đơn hàng'}
               text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
             />
-            <Item title={'Chủ sở hữu'} text={order.owner} />
+            <Item
+              title={'Người đặt hàng'}
+              text={customer ? customer?.customer?.firstName : 'Khách vãng lai'}
+            />
             <Item
               title={'Ghi chú'}
               text={order.note ? order.note : 'không có ghi chú'}
@@ -89,13 +136,7 @@ const ModalCheckout = ({data, setIsCheckout, isCheckout, setCart}) => {
             <TouchableOpacity
               style={styles.paymentButton}
               onPress={() => {
-                showAlert({
-                  notification: 'Xác nhận tạo đơn hàng',
-                  message: 'Xác nhận đã thanh toán tiền mặt, tạo đơn hàng.',
-                  onPress: () => {
-                    createOrder(order);
-                  },
-                });
+                processCashPayment();
               }}>
               <Text style={styles.buttonText}>Thanh Toán Tiền Mặt</Text>
             </TouchableOpacity>

@@ -11,7 +11,7 @@ import {
 
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {TextFormatter} from '../../utils';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const {width} = Dimensions.get('window').width;
 
 const ModalToping = ({
@@ -28,6 +28,22 @@ const ModalToping = ({
   phoneNumber,
   setPhoneNumber,
 }) => {
+  const [merchant, setMerchant] = useState(null);
+  // lấy dữ liệu cửa hàng
+  useEffect(() => {
+    AsyncStorage.getItem('merchant')
+      .then(merchantString => {
+        if (merchantString) {
+          setMerchant(JSON.parse(merchantString));
+        } else {
+          console.log('Không tìm thấy merchant trong AsyncStorage');
+        }
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
+
   //Chọn size đầu tiên
   useEffect(() => {
     if (selectedProduct?.variant?.length > 0) {
@@ -84,9 +100,9 @@ const ModalToping = ({
       product: selectedProduct,
       size: selectedSize,
       topping: selectedToppings || [],
-      totalToppingPrice, // Tổng giá của topping
-      totalProductPrice, // Giá gốc + topping (dùng để cập nhật khi số lượng thay đổi)
-      totalPrice: totalProductPrice, // Ban đầu, quantity = 1 nên totalPrice = totalProductPrice
+      totalToppingPrice,
+      totalProductPrice,
+      totalPrice: totalProductPrice,
     };
   };
 
@@ -103,15 +119,15 @@ const ModalToping = ({
         prevCart.orderItems.length === 0
       ) {
         return {
-          _id: Date.now().toString(), // hoặc uuidv4()
+          _id: Date.now().toString(),
           deliveryMethod: 'pickup',
           fulfillmentDateTime: new Date().toISOString(),
-          note: 'Phong Nguyen',
+          note: null,
           totalPrice: newItem.totalPrice,
-          paymentMethod: 'cod',
-          shippingAddress: '67bf3c98b5ca3926e3df1a92',
-          store: '67bf3c98b5ca3926e3df1a92',
-          owner: '67bf3c98b5ca3926e3df1a92',
+          paymentMethod: null,
+          shippingAddress: null,
+          store: merchant?._id,
+          owner: null,
           voucher: '67bf3c98b5ca3926e3df1a92',
           orderItems: [newItem],
         };

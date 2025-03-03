@@ -32,7 +32,6 @@ const HomeScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenu, setOpenMenu] = useState(false);
   const [cart, setCart] = useState(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
 
   // state lưu dữ liệu
   const [categories, setCategories] = useState([]);
@@ -157,12 +156,7 @@ const HomeScreen = () => {
           )}
         />
       </View>
-      <CartOrder
-        cart={cart}
-        setCart={setCart}
-        phoneNumber={phoneNumber}
-        setPhoneNumber={setPhoneNumber}
-      />
+      <CartOrder cart={cart} setCart={setCart} />
       <ModalToping
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
@@ -174,8 +168,6 @@ const HomeScreen = () => {
         setSelectedSize={setSelectedSize}
         selectedToppings={selectedToppings}
         setSelectedToppings={setSelectedToppings}
-        phoneNumber={phoneNumber}
-        setPhoneNumber={setPhoneNumber}
       />
     </View>
   );

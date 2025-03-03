@@ -20,7 +20,9 @@ import {Icon, IconButton} from 'react-native-paper';
 import {TextFormatter} from '../../utils';
 import {CustomFlatInput} from '../../components';
 import ModalCheckout from './ModalCheckout';
-const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
+import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
+
+const CartOrder = ({cart, setCart}) => {
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [scannedCode, setScannedCode] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -29,6 +31,8 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
   const [message, setMessage] = useState('');
   const [isCheckout, setIsCheckout] = useState(false);
   const [order, setOrder] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [customer, setCustomer] = useState(null);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -56,17 +60,84 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
     },
   });
 
-  // Xóa sản phẩm khỏi giỏ hàng neu không có orderItem nào thì nó sẽ xoá cart
-  const removeFromCart = id => {
-    setCart(prevCart => {
-      const updatedCart = {
-        ...prevCart,
-        orderItems: prevCart.orderItems.filter(item => item._id !== id),
+  // tìm kiếm khách hàng
+  const fetchCustomerByCode = async () => {
+    try {
+      const response = await findCustomerByCode('123ABC');
+      console.log('Dữ liệu khách hàng theo mã code:', response);
+    } catch (error) {
+      console.log('Lỗi:', error);
+    }
+  };
+
+  const fetchCustomerByPhone = async phoneNumber => {
+    try {
+      const response = await findCustomerByPhone(phoneNumber);
+      if (response.data != []) {
+        setCustomer(response.data);
+      } else {
+        setCustomer(null);
+        setPhoneNumber('');
+      }
+    } catch (error) {
+      console.log('Lỗi:', error);
+    }
+  };
+  // gọi api
+  useEffect(() => {
+    if (phoneNumber && /^(03|05|07|08|09)[0-9]{8}$/.test(phoneNumber)) {
+      const fetchData = async () => {
+        try {
+          await fetchCustomerByPhone(phoneNumber);
+        } catch (error) {
+          console.log('Lỗi khi gọi Api getCustomerByPhone', error);
+        }
       };
-      return updatedCart.orderItems.length === 0 ? null : updatedCart;
+
+      fetchData();
+    }
+  }, [phoneNumber]);
+
+  // cập nhập thông tin khách hàng
+  useEffect(() => {
+    console.log(' Dữ liệu khách hàng:', customer?.customer);
+    if (customer?.customer?._id) {
+      updateCustomer(customer.customer._id);
+    }
+  }, [customer]);
+
+  const updateCustomer = newOwner => {
+    setCart(prevOrder => {
+      if (!prevOrder) {
+        return null;
+      }
+
+      return {
+        ...prevOrder,
+        owner: newOwner,
+      };
     });
   };
 
+  // Xóa sản phẩm khỏi giỏ hàng neu không có orderItem nào thì nó sẽ xoá cart
+  const removeFromCart = id => {
+    setCart(prevCart => {
+      const updatedOrderItems = prevCart.orderItems.filter(
+        item => item._id !== id,
+      );
+
+      if (updatedOrderItems.length === 0) {
+        setTimeout(() => {
+          setPhoneNumber('');
+          setCustomer(null);
+        }, 0);
+
+        return null;
+      }
+
+      return {...prevCart, orderItems: updatedOrderItems};
+    });
+  };
   // cập nhập số lượng
   const updateItemQuantity = (itemId, newQuantity) => {
     setCart(prevCart => {
@@ -157,20 +228,49 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
 
       <Text style={styles.rightTitle}>Giỏ hàng</Text>
       <View style={styles.customerInfo}>
-        <View style={{flexDirection: 'column', flex: 1}}>
+        <View
+          style={{
+            flexDirection: 'column',
+            flex: 1,
+            gap: GLOBAL_KEYS.GAP_SMALL,
+          }}>
           <Text style={styles.customerInfoTitle}>Thông tin khách hàng</Text>
-          <Text style={styles.customerInfoText}>
-            SĐT: {phoneNumber || 'Chưa quét mã'}
-          </Text>
+          <CustomFlatInput
+            label={'Nhập số điện thoại hoặc quét mã để lấy thông tin'}
+            placeholder="Số điện thoại"
+            value={phoneNumber}
+            setValue={setPhoneNumber}
+            rightIcon="barcode-scan"
+            onRightPress={() => {
+              setIsScanning(true);
+            }}
+            style={{}}
+          />
+          {message && <Text style={styles.errorText}>{message}</Text>}
+          <View>
+            <Text>
+              Khách hàng:{' '}
+              {cart === null
+                ? 'Vui lòng chọn sản phẩm trước'
+                : customer?.customer
+                ? `${customer.customer.firstName} ${customer.customer.lastName}`
+                : 'Vãng lai'}
+            </Text>
+            <Text>
+              Số điện thoại:{' '}
+              {cart === null
+                ? 'Vui lòng chọn sản phẩm trước'
+                : customer?.customer
+                ? customer?.customer?.phoneNumber
+                : 'Không'}
+            </Text>
+          </View>
         </View>
-        <TouchableOpacity onPress={() => setIsScanning(true)}>
-          <Icon source="barcode-scan" size={24} color={colors.primary} />
-        </TouchableOpacity>
       </View>
 
       <View
         style={{
-          height: '50%',
+          height: '43%',
           borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
           overflow: 'hidden',
         }}>
@@ -309,6 +409,9 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
           setIsCheckout={setIsCheckout}
           isCheckout={isCheckout}
           setCart={setCart}
+          phoneNumber={phoneNumber}
+          setPhoneNumber={setPhoneNumber}
+          customer={customer}
         />
       )}
     </View>
