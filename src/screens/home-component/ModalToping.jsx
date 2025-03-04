@@ -40,7 +40,7 @@ const ModalToping = ({
         }
       })
       .catch(error => {
-        console.error(error);
+        console.log(error);
       });
   }, []);
 
@@ -128,7 +128,7 @@ const ModalToping = ({
           shippingAddress: null,
           store: merchant?._id,
           owner: null,
-          voucher: '67bf3c98b5ca3926e3df1a92',
+          voucher: null,
           orderItems: [newItem],
         };
       } else {
@@ -178,14 +178,6 @@ const ModalToping = ({
       }
     });
   };
-
-  // useEffect(() => {
-  //   console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>');
-  //   // console.log('Sản phẩm đã chọn:', JSON.stringify(selectedProduct, null, 2));
-  //   // console.log('Size đã chọn:', selectedSize);
-  //   // console.log('Topping đã chọn:', selectedToppings);
-  //   console.log('Cart:', JSON.stringify(cart, null, 2));
-  // }, [selectedProduct, , selectedToppings, selectedSize, cart]);
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">

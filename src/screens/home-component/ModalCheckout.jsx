@@ -23,6 +23,7 @@ const ModalCheckout = ({
   phoneNumber,
   setPhoneNumber,
   customer,
+  setScannedCode,
 }) => {
   const [order, setOrder] = useState(data);
   const [message, setMessage] = useState('');
@@ -40,7 +41,7 @@ const ModalCheckout = ({
         }
       })
       .catch(error => {
-        console.error(error);
+        console.log(error);
       });
   }, []);
 
@@ -87,6 +88,7 @@ const ModalCheckout = ({
           setIsCheckout(false);
           setMessage('');
           setPhoneNumber('');
+          setScannedCode('');
         }, 3000);
       }
       console.log('status:', response.status);
@@ -112,7 +114,13 @@ const ModalCheckout = ({
             />
             <Item
               title={'Người đặt hàng'}
-              text={customer ? customer?.customer?.firstName : 'Khách vãng lai'}
+              text={
+                customer
+                  ? customer?.customer?.firstName +
+                    ' ' +
+                    customer?.customer?.lastName
+                  : 'Khách vãng lai'
+              }
             />
             <Item
               title={'Ghi chú'}

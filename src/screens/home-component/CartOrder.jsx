@@ -16,7 +16,7 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera';
-import {Icon, IconButton} from 'react-native-paper';
+import {Icon} from 'react-native-paper';
 import {TextFormatter} from '../../utils';
 import {CustomFlatInput} from '../../components';
 import ModalCheckout from './ModalCheckout';
@@ -24,7 +24,7 @@ import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
 
 const CartOrder = ({cart, setCart}) => {
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
-  const [scannedCode, setScannedCode] = useState(null);
+  const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
   const [voucherCode, setVoucherCode] = useState('');
@@ -61,13 +61,18 @@ const CartOrder = ({cart, setCart}) => {
   });
 
   // tìm kiếm khách hàng
-  const fetchCustomerByCode = async () => {
+  const fetchCustomerByCode = async code => {
     try {
-      const response = await findCustomerByCode('123ABC');
-      console.log('Dữ liệu khách hàng theo mã code:', response);
-    } catch (error) {
-      console.log('Lỗi:', error);
-    }
+      const response = await findCustomerByCode(code);
+      if (response.data != []) {
+        setCustomer(response.data);
+        console.log(response);
+      } else {
+        setCustomer(null);
+        setPhoneNumber('');
+        setScannedCode('');
+      }
+    } catch (error) {}
   };
 
   const fetchCustomerByPhone = async phoneNumber => {
@@ -78,29 +83,30 @@ const CartOrder = ({cart, setCart}) => {
       } else {
         setCustomer(null);
         setPhoneNumber('');
+        setScannedCode('');
       }
-    } catch (error) {
-      console.log('Lỗi:', error);
-    }
+    } catch (error) {}
   };
-  // gọi api
+
+  // gọi api lấy thông tin user qua code hoặc phone
   useEffect(() => {
-    if (phoneNumber && /^(03|05|07|08|09)[0-9]{8}$/.test(phoneNumber)) {
+    if (phoneNumber !== '' && /^(03|05|07|08|09)[0-9]{8}$/.test(phoneNumber)) {
       const fetchData = async () => {
         try {
           await fetchCustomerByPhone(phoneNumber);
-        } catch (error) {
-          console.log('Lỗi khi gọi Api getCustomerByPhone', error);
-        }
+        } catch (error) {}
       };
 
       fetchData();
     }
   }, [phoneNumber]);
 
+  useEffect(() => {
+    if (scannedCode === '') return;
+    fetchCustomerByCode(scannedCode);
+  }, [scannedCode]);
   // cập nhập thông tin khách hàng
   useEffect(() => {
-    console.log(' Dữ liệu khách hàng:', customer?.customer);
     if (customer?.customer?._id) {
       updateCustomer(customer.customer._id);
     }
@@ -126,16 +132,10 @@ const CartOrder = ({cart, setCart}) => {
         item => item._id !== id,
       );
 
-      if (updatedOrderItems.length === 0) {
-        setTimeout(() => {
-          setPhoneNumber('');
-          setCustomer(null);
-        }, 0);
-
-        return null;
-      }
-
-      return {...prevCart, orderItems: updatedOrderItems};
+      // Nếu không còn sản phẩm nào, xóa luôn giỏ hàng
+      return updatedOrderItems.length > 0
+        ? {...prevCart, orderItems: updatedOrderItems}
+        : null; // Hoặc {} nếu muốn giữ trạng thái object
     });
   };
   // cập nhập số lượng
@@ -192,6 +192,14 @@ const CartOrder = ({cart, setCart}) => {
       orderItems: orderItems,
     };
   };
+
+  // update
+  useEffect(() => {
+    if (cart === null) {
+      setPhoneNumber('');
+      setCustomer(null);
+    }
+  }, [cart]);
 
   return (
     <View style={styles.rightSection}>
@@ -412,6 +420,7 @@ const CartOrder = ({cart, setCart}) => {
           phoneNumber={phoneNumber}
           setPhoneNumber={setPhoneNumber}
           customer={customer}
+          setScannedCode={setScannedCode}
         />
       )}
     </View>

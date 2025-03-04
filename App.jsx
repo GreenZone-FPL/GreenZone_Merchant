@@ -33,7 +33,7 @@ function App() {
       await AsyncStorage.setItem('merchant', JSON.stringify(merchant));
       // console.log(
       //   'AccessToken lưu vào AsyncStorage:',
-      //   merchant,
+      //   accessToken,
       //   // JSON.stringify(merchantUser, null, 2),
       // );
       return response;
