@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../constants';
-import {TextFormatter} from '../../utils';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {AppAsyncStorage, TextFormatter} from '../../utils';
+
+import {Ani_ModalLoading} from '../../components';
 const {width} = Dimensions.get('window').width;
 
 const ModalToping = ({
@@ -29,19 +30,19 @@ const ModalToping = ({
   setPhoneNumber,
 }) => {
   const [merchant, setMerchant] = useState(null);
+
   // lấy dữ liệu cửa hàng
   useEffect(() => {
-    AsyncStorage.getItem('merchant')
-      .then(merchantString => {
-        if (merchantString) {
-          setMerchant(JSON.parse(merchantString));
-        } else {
-          console.log('Không tìm thấy merchant trong AsyncStorage');
+    const loadMerchant = async () => {
+      try {
+        const merchantData = await AppAsyncStorage.readData('merchant');
+        if (merchantData) {
+          setMerchant(JSON.parse(merchantData));
         }
-      })
-      .catch(error => {
-        console.log(error);
-      });
+      } catch (error) {}
+    };
+
+    loadMerchant();
   }, []);
 
   //Chọn size đầu tiên

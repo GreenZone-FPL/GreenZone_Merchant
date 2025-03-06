@@ -16,7 +16,7 @@ import {
   getAllProducts,
   getProductsById,
 } from '../../axios/index';
-import {ButtonGroup, Indicator} from '../../components';
+import {Ani_ModalLoading, ButtonGroup, Indicator} from '../../components';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import CartOrder from '../home-component/CartOrder';
 import ModalToping from '../home-component/ModalToping';
@@ -32,6 +32,7 @@ const HomeScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenu, setOpenMenu] = useState(false);
   const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // state lưu dữ liệu
   const [categories, setCategories] = useState([]);
@@ -41,6 +42,8 @@ const HomeScreen = () => {
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
+    setLoading(true);
+
     try {
       const response = await getAllCategories();
       const categoriesData = [
@@ -48,23 +51,29 @@ const HomeScreen = () => {
         ...response.data,
       ];
       setCategories(categoriesData);
+      setLoading(false);
     } catch (error) {}
   };
 
   // Gọi danh sách sản phẩm từ API
   const fetchProducts = async id => {
+    setLoading(true);
+
     try {
       const response = await getAllProducts();
       setProducts(response.data);
+      setLoading(false);
     } catch (error) {}
   };
 
   // gọi sản phẩm theo index cate
   const getProductsByCategory = index => {
     if (!products || products.length === 0) return [];
+
     if (index === 0) {
       return products.flatMap(category => category?.products || []);
     }
+
     return products[index - 1]?.products || [];
   };
 
@@ -171,6 +180,7 @@ const HomeScreen = () => {
         selectedToppings={selectedToppings}
         setSelectedToppings={setSelectedToppings}
       />
+      <Ani_ModalLoading loading={loading} />
     </View>
   );
 };

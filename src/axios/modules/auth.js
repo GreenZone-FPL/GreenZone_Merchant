@@ -89,10 +89,9 @@ export const login = async ({phoneNumber, password}) => {
       phoneNumber,
       password,
     });
-
     return response.data;
   } catch (error) {
-    console.log('error:', error);
+    console.log('Lỗi gọi API Login:', error);
     throw error;
   }
 };

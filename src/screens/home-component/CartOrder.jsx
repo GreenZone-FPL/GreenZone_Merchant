@@ -18,7 +18,7 @@ import {
 } from 'react-native-vision-camera';
 import {Icon} from 'react-native-paper';
 import {TextFormatter} from '../../utils';
-import {CustomFlatInput} from '../../components';
+import {CustomFlatInput, Ani_ModalLoading} from '../../components';
 import ModalCheckout from './ModalCheckout';
 import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
 
@@ -33,6 +33,7 @@ const CartOrder = ({cart, setCart}) => {
   const [order, setOrder] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -55,18 +56,19 @@ const CartOrder = ({cart, setCart}) => {
         setScannedCode(scannedText);
         setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
         setIsScanning(false); // Đóng camera sau khi quét
-        console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+        // console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
       }
     },
   });
 
   // tìm kiếm khách hàng
   const fetchCustomerByCode = async code => {
+    setLoading(true);
     try {
       const response = await findCustomerByCode(code);
       if (response.data != []) {
+        setLoading(false);
         setCustomer(response.data);
-        console.log(response);
       } else {
         setCustomer(null);
         setPhoneNumber('');
@@ -76,10 +78,13 @@ const CartOrder = ({cart, setCart}) => {
   };
 
   const fetchCustomerByPhone = async phoneNumber => {
+    setLoading(true);
+
     try {
       const response = await findCustomerByPhone(phoneNumber);
       if (response.data != []) {
         setCustomer(response.data);
+        setLoading(false);
       } else {
         setCustomer(null);
         setPhoneNumber('');
@@ -423,6 +428,7 @@ const CartOrder = ({cart, setCart}) => {
           setScannedCode={setScannedCode}
         />
       )}
+      <Ani_ModalLoading loading={loading} />
     </View>
   );
 };

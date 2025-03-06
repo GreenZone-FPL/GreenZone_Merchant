@@ -1,6 +1,5 @@
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {AppAsyncStorage} from '../utils';
 export const baseURL = 'https://greenzone.motcaiweb.io.vn/';
 
 const axiosInstance = axios.create({
@@ -14,7 +13,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   async config => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
+      const token = await AppAsyncStorage.readData('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
         // console.log('Lấy token thành công:', token);

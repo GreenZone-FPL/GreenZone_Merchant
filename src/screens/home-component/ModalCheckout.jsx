@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {colors, GLOBAL_KEYS} from '../../constants';
-import {TextFormatter} from '../../utils';
+import {TextFormatter, AppAsyncStorage} from '../../utils';
 import {createPickUpOrder} from '../../axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Ani_ModalLoading} from '../../components';
 
 const {width, height} = Dimensions.get('window');
 
@@ -29,20 +29,20 @@ const ModalCheckout = ({
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
   const [merchant, setMerchant] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // lấy dữ liệu cửa hàng
   useEffect(() => {
-    AsyncStorage.getItem('merchant')
-      .then(merchantString => {
-        if (merchantString) {
-          setMerchant(JSON.parse(merchantString));
-        } else {
-          console.log('Không tìm thấy merchant trong AsyncStorage');
+    const loadMerchant = async () => {
+      try {
+        const merchantData = await AppAsyncStorage.readData('merchant');
+        if (merchantData) {
+          setMerchant(JSON.parse(merchantData));
         }
-      })
-      .catch(error => {
-        console.log(error);
-      });
+      } catch (error) {}
+    };
+
+    loadMerchant();
   }, []);
 
   // xac nhan
@@ -77,9 +77,12 @@ const ModalCheckout = ({
 
   //tạo order
   const createOrder = async order => {
+    setLoading(true);
     try {
       const response = await createPickUpOrder(order);
       if (response.status === 201) {
+        setLoading(false);
+
         setShowMessage(true);
         setMessage('TẠO ĐƠN THÀNH CÔNG');
         setTimeout(() => {
@@ -160,6 +163,7 @@ const ModalCheckout = ({
           {showMessage && <Message message={message} />}
         </View>
       </View>
+      <Ani_ModalLoading loading={loading} />
     </Modal>
   );
 };

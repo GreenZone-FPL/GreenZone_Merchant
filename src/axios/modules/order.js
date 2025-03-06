@@ -23,7 +23,7 @@ export const createPickUpOrder = async order => {
     const response = await axiosInstance.post('/v1/order/create', request);
     return response;
   } catch (error) {
-    console.log('error:', error);
+    console.log('Lỗi gọi API Order', error);
     throw error;
   }
 };
