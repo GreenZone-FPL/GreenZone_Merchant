@@ -16,7 +16,7 @@ import {
   getAllProducts,
   getProductsById,
 } from '../../axios/index';
-import {ButtonGroup} from '../../components';
+import {Ani_ModalLoading, ButtonGroup, Indicator} from '../../components';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import CartOrder from '../home-component/CartOrder';
 import ModalToping from '../home-component/ModalToping';
@@ -32,7 +32,7 @@ const HomeScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [openMenu, setOpenMenu] = useState(false);
   const [cart, setCart] = useState(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // state lưu dữ liệu
   const [categories, setCategories] = useState([]);
@@ -42,6 +42,8 @@ const HomeScreen = () => {
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
+    setLoading(true);
+
     try {
       const response = await getAllCategories();
       const categoriesData = [
@@ -49,27 +51,29 @@ const HomeScreen = () => {
         ...response.data,
       ];
       setCategories(categoriesData);
-    } catch (error) {
-      console.error('Lỗi khi gọi API Categories:', error);
-    }
+      setLoading(false);
+    } catch (error) {}
   };
 
   // Gọi danh sách sản phẩm từ API
   const fetchProducts = async id => {
+    setLoading(true);
+
     try {
       const response = await getAllProducts();
       setProducts(response.data);
-    } catch (error) {
-      console.error('Lỗi khi gọi API Products:', error);
-    }
+      setLoading(false);
+    } catch (error) {}
   };
 
   // gọi sản phẩm theo index cate
   const getProductsByCategory = index => {
     if (!products || products.length === 0) return [];
+
     if (index === 0) {
       return products.flatMap(category => category?.products || []);
     }
+
     return products[index - 1]?.products || [];
   };
 
@@ -105,9 +109,7 @@ const HomeScreen = () => {
       const response = await getProductsById(id);
       setSelectedProduct(response.data);
       setOpenMenu(true);
-    } catch (error) {
-      console.log('Lỗi khi lấy sản phẩm:', error);
-    }
+    } catch (error) {}
   };
 
   return (
@@ -124,7 +126,13 @@ const HomeScreen = () => {
         <View style={styles.optionContainer}>
           <Text style={styles.title}>Chọn danh mục:</Text>
           <ButtonGroup
-            buttons={categories.map(category => category.name)}
+            buttons={
+              categories ? (
+                categories.map(category => category.name)
+              ) : (
+                <Indicator size={24} color={colors.primary} />
+              )
+            }
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
           />
@@ -136,33 +144,30 @@ const HomeScreen = () => {
           initialNumToRender={5}
           maxToRenderPerBatch={10}
           renderItem={({item}) => (
-            <View style={styles.productCard}>
-              <Image source={{uri: item.image}} style={styles.productImage} />
-              <View style={styles.productDetails}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={styles.productPrice}>
-                  {item.sellingPrice
-                    ? `${TextFormatter.formatCurrency(
-                        item.originalPrice,
-                      )} - ${TextFormatter.formatCurrency(item.sellingPrice)}`
-                    : TextFormatter.formatCurrency(item.originalPrice)}
-                </Text>
-                <TouchableOpacity
-                  style={styles.addButton}
-                  onPress={() => handleAddProduct(item._id)}>
-                  <Text style={styles.addButtonText}>Thêm</Text>
-                </TouchableOpacity>
+            <>
+              <View style={styles.productCard}>
+                <Image source={{uri: item.image}} style={styles.productImage} />
+                <View style={styles.productDetails}>
+                  <Text style={styles.productName}>{item.name}</Text>
+                  <Text style={styles.productPrice}>
+                    {item.sellingPrice
+                      ? `${TextFormatter.formatCurrency(
+                          item.originalPrice,
+                        )} - ${TextFormatter.formatCurrency(item.sellingPrice)}`
+                      : TextFormatter.formatCurrency(item.originalPrice)}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => handleAddProduct(item._id)}>
+                    <Text style={styles.addButtonText}>Thêm</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </>
           )}
         />
       </View>
-      <CartOrder
-        cart={cart}
-        setCart={setCart}
-        phoneNumber={phoneNumber}
-        setPhoneNumber={setPhoneNumber}
-      />
+      <CartOrder cart={cart} setCart={setCart} />
       <ModalToping
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
@@ -174,9 +179,8 @@ const HomeScreen = () => {
         setSelectedSize={setSelectedSize}
         selectedToppings={selectedToppings}
         setSelectedToppings={setSelectedToppings}
-        phoneNumber={phoneNumber}
-        setPhoneNumber={setPhoneNumber}
       />
+      <Ani_ModalLoading loading={loading} />
     </View>
   );
 };

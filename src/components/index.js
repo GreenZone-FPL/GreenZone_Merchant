@@ -3,6 +3,11 @@ export * from './indicators/Indicator';
 //barcode
 export * from './barcode/barcodeUser';
 
+//animation
+export * from './animations/Ani_ModalLoading';
+export * from './animations/LoadingOverlay';
+export * from './animations/NomalLoading';
+
 // bottom-sheets
 export * from './bottom-sheets/MerchantDetailSheet';
 export * from './bottom-sheets/ProductDetailSheet';
@@ -15,11 +20,8 @@ export * from './buttons/PrimaryButton';
 export * from './buttons/QuantityButton';
 export * from './buttons/QuantitySelector';
 
-
 // carousel
 export * from './carousel/CarouselBanner';
-
-
 
 // containers
 export * from './containers/Column';

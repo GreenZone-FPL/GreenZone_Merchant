@@ -10,8 +10,9 @@ import {
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../constants';
-import {TextFormatter} from '../../utils';
+import {AppAsyncStorage, TextFormatter} from '../../utils';
 
+import {Ani_ModalLoading} from '../../components';
 const {width} = Dimensions.get('window').width;
 
 const ModalToping = ({
@@ -28,6 +29,22 @@ const ModalToping = ({
   phoneNumber,
   setPhoneNumber,
 }) => {
+  const [merchant, setMerchant] = useState(null);
+
+  // lấy dữ liệu cửa hàng
+  useEffect(() => {
+    const loadMerchant = async () => {
+      try {
+        const merchantData = await AppAsyncStorage.readData('merchant');
+        if (merchantData) {
+          setMerchant(JSON.parse(merchantData));
+        }
+      } catch (error) {}
+    };
+
+    loadMerchant();
+  }, []);
+
   //Chọn size đầu tiên
   useEffect(() => {
     if (selectedProduct?.variant?.length > 0) {
@@ -36,6 +53,7 @@ const ModalToping = ({
   }, [selectedProduct]);
   //chọn topping
   const toggleTopping = topping => {
+    if (selectedToppings.length === 3) return;
     setSelectedToppings(prev =>
       prev.some(t => t._id === topping._id)
         ? prev.filter(t => t._id !== topping._id)
@@ -59,12 +77,43 @@ const ModalToping = ({
     }, 300);
   };
 
-  //tao card
+  // Hàm tạo orderItem
+  const addItemOrder = () => {
+    // Tính tổng giá topping (nếu không có topping thì mặc định là 0)
+    const totalToppingPrice = (selectedToppings || []).reduce(
+      (total, topping) => total + (topping.extraPrice || 0),
+      0,
+    );
+
+    // Tổng giá sản phẩm = giá sản phẩm gốc + tổng giá topping
+    const totalProductPrice = selectedSize.sellingPrice + totalToppingPrice;
+
+    return {
+      _id: Date.now().toString(),
+      variant: selectedSize._id,
+      quantity: 1,
+      price: selectedSize.sellingPrice,
+      toppingItems: (selectedToppings || []).map(item => ({
+        topping: item._id,
+        quantity: 1,
+        price: item.extraPrice,
+      })),
+      product: selectedProduct,
+      size: selectedSize,
+      topping: selectedToppings || [],
+      totalToppingPrice,
+      totalProductPrice,
+      totalPrice: totalProductPrice,
+    };
+  };
+
+  // Hàm tạo giỏ hàng
   const createOrder = () => {
     setCart(prevCart => {
       const newItem = addItemOrder();
-      if (!newItem) return prevCart; // Nếu không có sản phẩm hợp lệ, giữ nguyên giỏ hàng
+      if (!newItem) return prevCart;
 
+      // Nếu giỏ hàng trống, tạo mới giỏ hàng với orderItems chứa newItem
       if (
         !prevCart ||
         !prevCart.orderItems ||
@@ -72,18 +121,19 @@ const ModalToping = ({
       ) {
         return {
           _id: Date.now().toString(),
-          deliveryMethod: 'Tại cửa hàng',
+          deliveryMethod: 'pickup',
           fulfillmentDateTime: new Date().toISOString(),
-          note: '',
-          paymentMethod: 'Chưa xác định',
+          note: null,
+          totalPrice: newItem.totalPrice,
+          paymentMethod: null,
           shippingAddress: null,
-          store: 'Chưa xác định',
-          owner: 'Khách hàng chưa xác định',
+          store: merchant?._id,
+          owner: null,
           voucher: null,
           orderItems: [newItem],
         };
       } else {
-        // Kiểm tra xem sản phẩm đã tồn tại trong giỏ hàng chưa
+        // Kiểm tra xem orderItem mới đã tồn tại trong giỏ hàng chưa (so sánh dựa vào variant và toppingItems)
         const existingItemIndex = prevCart.orderItems.findIndex(
           item =>
             item.variant === newItem.variant &&
@@ -92,55 +142,43 @@ const ModalToping = ({
         );
 
         if (existingItemIndex !== -1) {
-          // Nếu sản phẩm đã có trong giỏ hàng, cập nhật quantity và price
+          // Nếu đã tồn tại, tăng số lượng và cập nhật lại totalPrice của orderItem đó
           const updatedOrderItems = [...prevCart.orderItems];
+          const currentItem = updatedOrderItems[existingItemIndex];
+          const newQuantity = currentItem.quantity + 1;
           updatedOrderItems[existingItemIndex] = {
-            ...updatedOrderItems[existingItemIndex],
-            quantity: updatedOrderItems[existingItemIndex].quantity + 1,
-            price: updatedOrderItems[existingItemIndex].price + newItem.price, // Cộng dồn giá
+            ...currentItem,
+            quantity: newQuantity,
+            totalPrice: newQuantity * currentItem.totalProductPrice,
           };
+
+          const updatedTotalPrice = updatedOrderItems.reduce(
+            (total, item) => total + item.totalPrice,
+            0,
+          );
 
           return {
             ...prevCart,
             orderItems: updatedOrderItems,
+            totalPrice: updatedTotalPrice,
           };
         } else {
-          // Nếu sản phẩm chưa có, thêm mới vào giỏ hàng
+          // Nếu orderItem chưa tồn tại, thêm vào mảng orderItems và cập nhật tổng giá giỏ hàng
+          const updatedTotalPrice =
+            prevCart.orderItems.reduce(
+              (total, item) => total + item.totalPrice,
+              0,
+            ) + newItem.totalPrice;
+
           return {
             ...prevCart,
             orderItems: [...prevCart.orderItems, newItem],
+            totalPrice: updatedTotalPrice,
           };
         }
       }
     });
   };
-  const addItemOrder = () => {
-    return {
-      _id: Date.now().toString(),
-      variant: selectedSize ? selectedSize._id : '',
-      quantity: 1,
-      price: selectedSize
-        ? selectedSize.sellingPrice +
-          selectedToppings.reduce((total, item) => total + item.extraPrice, 0)
-        : 0,
-
-      toppingItems: selectedToppings.map(item => ({
-        topping: item._id,
-        quantity: 1,
-        price: item.extraPrice,
-      })),
-      product: selectedProduct,
-      size: selectedSize,
-      topping: selectedToppings,
-    };
-  };
-  useEffect(() => {
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>');
-    console.log('Sản phẩm đã chọn:', JSON.stringify(selectedProduct, null, 2));
-    console.log('Size đã chọn:', selectedSize);
-    console.log('Topping đã chọn:', selectedToppings);
-    // console.log('Cart:', JSON.stringify(cart, null, 2));
-  }, [selectedProduct, , selectedToppings, selectedSize, cart]);
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
@@ -205,7 +243,6 @@ const ModalToping = ({
                 setSelectedToppings([]);
                 setSelectedSize(null);
                 setSelectedProduct(null);
-
                 setOpenMenu(false);
               }}>
               <Text style={styles.confirmButtonText}>Hủy</Text>

@@ -6,7 +6,7 @@ export const getAllToppings = async () => {
 
     return response.data;
   } catch (error) {
-    console.log('error:', error);
+    console.log('Lỗi gọi API Toppings', error);
     throw error;
   }
 };

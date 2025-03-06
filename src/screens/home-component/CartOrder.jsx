@@ -16,18 +16,24 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera';
-import {Icon, IconButton} from 'react-native-paper';
+import {Icon} from 'react-native-paper';
 import {TextFormatter} from '../../utils';
-import {CustomFlatInput} from '../../components';
+import {CustomFlatInput, Ani_ModalLoading} from '../../components';
+import ModalCheckout from './ModalCheckout';
+import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
 
-const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
+const CartOrder = ({cart, setCart}) => {
   const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
-  const [scannedCode, setScannedCode] = useState(null);
+  const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
   const [voucherCode, setVoucherCode] = useState('');
   const [message, setMessage] = useState('');
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [isCheckout, setIsCheckout] = useState(false);
+  const [order, setOrder] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -55,22 +61,150 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
     },
   });
 
-  // Xóa sản phẩm khỏi giỏ hàng neu không có orderItem nào thì nó sẽ xoá cart
-  const removeFromCart = id => {
-    setCart(prevCart => {
-      const updatedCart = {
-        ...prevCart,
-        orderItems: prevCart.orderItems.filter(item => item._id !== id),
+  // tìm kiếm khách hàng
+  const fetchCustomerByCode = async code => {
+    setLoading(true);
+    try {
+      const response = await findCustomerByCode(code);
+      if (response.data != []) {
+        setLoading(false);
+        setCustomer(response.data);
+      } else {
+        setCustomer(null);
+        setPhoneNumber('');
+        setScannedCode('');
+      }
+    } catch (error) {}
+  };
+
+  const fetchCustomerByPhone = async phoneNumber => {
+    setLoading(true);
+
+    try {
+      const response = await findCustomerByPhone(phoneNumber);
+      if (response.data != []) {
+        setCustomer(response.data);
+        setLoading(false);
+      } else {
+        setCustomer(null);
+        setPhoneNumber('');
+        setScannedCode('');
+      }
+    } catch (error) {}
+  };
+
+  // gọi api lấy thông tin user qua code hoặc phone
+  useEffect(() => {
+    if (phoneNumber !== '' && /^(03|05|07|08|09)[0-9]{8}$/.test(phoneNumber)) {
+      const fetchData = async () => {
+        try {
+          await fetchCustomerByPhone(phoneNumber);
+        } catch (error) {}
       };
-      return updatedCart.orderItems.length === 0 ? null : updatedCart;
+
+      fetchData();
+    }
+  }, [phoneNumber]);
+
+  useEffect(() => {
+    if (scannedCode === '') return;
+    fetchCustomerByCode(scannedCode);
+  }, [scannedCode]);
+  // cập nhập thông tin khách hàng
+  useEffect(() => {
+    if (customer?.customer?._id) {
+      updateCustomer(customer.customer._id);
+    }
+  }, [customer]);
+
+  const updateCustomer = newOwner => {
+    setCart(prevOrder => {
+      if (!prevOrder) {
+        return null;
+      }
+
+      return {
+        ...prevOrder,
+        owner: newOwner,
+      };
     });
   };
 
-  // Tính tổng tiền
-  const calculateTotalPrice = cart => {
-    if (!cart || !cart.orderItems) return 0;
-    return cart.orderItems.reduce((total, item) => total + item.price, 0);
+  // Xóa sản phẩm khỏi giỏ hàng neu không có orderItem nào thì nó sẽ xoá cart
+  const removeFromCart = id => {
+    setCart(prevCart => {
+      const updatedOrderItems = prevCart.orderItems.filter(
+        item => item._id !== id,
+      );
+
+      // Nếu không còn sản phẩm nào, xóa luôn giỏ hàng
+      return updatedOrderItems.length > 0
+        ? {...prevCart, orderItems: updatedOrderItems}
+        : null; // Hoặc {} nếu muốn giữ trạng thái object
+    });
   };
+  // cập nhập số lượng
+  const updateItemQuantity = (itemId, newQuantity) => {
+    setCart(prevCart => {
+      const updatedOrderItems = prevCart.orderItems.map(item => {
+        if (item._id === itemId) {
+          return {
+            ...item,
+            quantity: newQuantity,
+            totalPrice: newQuantity * item.totalProductPrice,
+          };
+        }
+        return item;
+      });
+
+      // Tính lại tổng giá của giỏ hàng từ các orderItem
+      const updatedTotalPrice = updatedOrderItems.reduce(
+        (total, item) => total + item.totalPrice,
+        0,
+      );
+
+      return {
+        ...prevCart,
+        orderItems: updatedOrderItems,
+        totalPrice: updatedTotalPrice,
+      };
+    });
+  };
+  // Lọc lại cart để gửi oder
+  const filterCart = cart => {
+    if (cart === null) return;
+    const orderItems = cart.orderItems.map(item => ({
+      variant: item.variant,
+      quantity: item.quantity,
+      price: item.price,
+      toppingItems: item.toppingItems.map(toppingItem => ({
+        topping: toppingItem.topping,
+        quantity: toppingItem.quantity,
+        price: toppingItem.price,
+      })),
+    }));
+
+    return {
+      deliveryMethod: cart.deliveryMethod,
+      fulfillmentDateTime: new Date().toISOString(),
+      note: cart.note,
+      totalPrice: cart.totalPrice,
+      paymentMethod: cart.paymentMethod,
+      shippingAddress: cart.shippingAddress,
+      store: cart.store,
+      owner: cart.owner,
+      voucher: cart.voucher,
+      orderItems: orderItems,
+    };
+  };
+
+  // update
+  useEffect(() => {
+    if (cart === null) {
+      setPhoneNumber('');
+      setCustomer(null);
+    }
+  }, [cart]);
 
   return (
     <View style={styles.rightSection}>
@@ -107,20 +241,54 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
 
       <Text style={styles.rightTitle}>Giỏ hàng</Text>
       <View style={styles.customerInfo}>
-        <View style={{flexDirection: 'column', flex: 1}}>
+        <View
+          style={{
+            flexDirection: 'column',
+            flex: 1,
+            gap: GLOBAL_KEYS.GAP_SMALL,
+          }}>
           <Text style={styles.customerInfoTitle}>Thông tin khách hàng</Text>
-          <Text style={styles.customerInfoText}>
-            SĐT: {phoneNumber || 'Chưa quét mã'}
-          </Text>
+          <View>
+            <CustomFlatInput
+              label={'Nhập số điện thoại hoặc quét mã để lấy thông tin'}
+              placeholder="Số điện thoại"
+              value={phoneNumber}
+              setValue={setPhoneNumber}
+            />
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                end: 10,
+                top: '30%',
+              }}
+              onPress={() => setIsScanning(true)}>
+              <Icon source="barcode-scan" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <View>
+            <Text>
+              Khách hàng:{' '}
+              {cart === null
+                ? 'Vui lòng chọn sản phẩm trước'
+                : customer?.customer
+                ? `${customer.customer.firstName} ${customer.customer.lastName}`
+                : 'Vãng lai'}
+            </Text>
+            <Text>
+              Số điện thoại:{' '}
+              {cart === null
+                ? 'Vui lòng chọn sản phẩm trước'
+                : customer?.customer
+                ? customer?.customer?.phoneNumber
+                : 'Không'}
+            </Text>
+          </View>
         </View>
-        <TouchableOpacity onPress={() => setIsScanning(true)}>
-          <Icon source="barcode-scan" size={24} color={colors.primary} />
-        </TouchableOpacity>
       </View>
 
       <View
         style={{
-          height: '50%',
+          height: '43%',
           borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
           overflow: 'hidden',
         }}>
@@ -133,11 +301,19 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
             renderItem={({item}) => (
               <View style={styles.cartItem}>
                 <View style={styles.itemQuantity}>
-                  <TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (item.quantity > 1) {
+                        updateItemQuantity(item._id, item.quantity - 1);
+                      }
+                    }}>
                     <Text style={styles.buttonQuantity}>-</Text>
                   </TouchableOpacity>
                   <Text style={{}}>{item.quantity}</Text>
-                  <TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      updateItemQuantity(item._id, item.quantity + 1);
+                    }}>
                     <Text style={styles.buttonQuantity}>+</Text>
                   </TouchableOpacity>
                 </View>
@@ -174,7 +350,7 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
                     gap: GLOBAL_KEYS.GAP_DEFAULT,
                   }}>
                   <Text style={styles.cartItemPrice}>
-                    {TextFormatter.formatCurrency(item.price)}
+                    {TextFormatter.formatCurrency(item.totalPrice)}
                   </Text>
                   <TouchableOpacity onPress={() => removeFromCart(item._id)}>
                     <Text style={styles.buttonDelete}>Xoá</Text>
@@ -191,10 +367,6 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
 
       <View>
         <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
-          {/* <Text
-            style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER, fontWeight: '500'}}>
-            Mã giảm giá:
-          </Text> */}
           <CustomFlatInput
             label={'Nhập mã voucher hoặc quét QR'}
             placeholder="Mã giảm giá"
@@ -227,20 +399,41 @@ const CartOrder = ({cart, setCart, phoneNumber, setPhoneNumber}) => {
               fontWeight: 'bold',
               color: colors.black,
             }}>
-            {TextFormatter.formatCurrency(calculateTotalPrice(cart))}
+            {TextFormatter.formatCurrency(
+              cart?.totalPrice ? cart.totalPrice : 0,
+            )}
           </Text>
         </Text>
-        <Text
-          style={{
-            padding: 10,
-            backgroundColor: colors.primary,
-            color: colors.white,
-            fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-            fontWeight: 'bold',
+        <TouchableOpacity
+          onPress={() => {
+            if (cart == null) return;
+            setIsCheckout(true);
           }}>
-          Thanh Toán
-        </Text>
+          <Text
+            style={{
+              padding: 10,
+              backgroundColor: colors.primary,
+              color: colors.white,
+              fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+              fontWeight: 'bold',
+            }}>
+            Thanh Toán
+          </Text>
+        </TouchableOpacity>
       </View>
+      {isCheckout && (
+        <ModalCheckout
+          data={filterCart(cart)}
+          setIsCheckout={setIsCheckout}
+          isCheckout={isCheckout}
+          setCart={setCart}
+          phoneNumber={phoneNumber}
+          setPhoneNumber={setPhoneNumber}
+          customer={customer}
+          setScannedCode={setScannedCode}
+        />
+      )}
+      <Ani_ModalLoading loading={loading} />
     </View>
   );
 };

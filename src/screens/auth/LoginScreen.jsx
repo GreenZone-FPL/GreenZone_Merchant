@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -16,21 +16,93 @@ import {
   PrimaryButton,
   Row,
   NormalText,
-  TitleText,
 } from '../../components';
+
+import {Ani_ModalLoading} from '../../components/animations/Ani_ModalLoading';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {AppGraph} from '../../layouts/graphs';
+import {AppAsyncStorage, Toaster} from '../../utils';
+import {login} from '../../axios/index';
 
-// Xác định kích thước màn hình, coi là tablet nếu chiều rộng >= 768
 const {width} = Dimensions.get('window');
 const isTablet = width >= 768;
 
 const LoginScreen = props => {
   const navigation = props.navigation;
-  const [maNv, setMaNv] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [checked, setChecked] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [phoneNumberError, setPhoneNumberError] = useState(false);
+  const [phoneNumberMessage, setPhoneNumberMessage] = useState('');
+
+  // 0922222222   9re05645
+  // Tải dữ liệu đã lưu khi mở app
+  useEffect(() => {
+    const loadAccountInfo = async () => {
+      const account = await AppAsyncStorage.readData('userAccount');
+      if (account) {
+        setPhoneNumber(account.phoneNumber);
+        setPassword(account.password);
+        setChecked(account.checked);
+      }
+      setIsLoaded(true);
+    };
+
+    loadAccountInfo();
+  }, []);
+
+  //  Lưu hoặc xóa tài khoản khi checked thay đổi
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const syncAccountInfo = async () => {
+      if (checked && phoneNumber && password) {
+        await AppAsyncStorage.storeData('userAccount', {
+          phoneNumber,
+          password,
+          checked,
+        });
+      } else if (!checked) {
+        await AppAsyncStorage.removeData('userAccount');
+      }
+    };
+    syncAccountInfo();
+  }, [checked, phoneNumber, password, isLoaded]);
+
+  // login
+  const loginHandel = async () => {
+    if (phoneNumber.trim().length !== 10 || !/^[0-9]+$/.test(phoneNumber)) {
+      setPhoneNumberError(true);
+      setPhoneNumberMessage('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)');
+      return;
+    }
+    setLoading(true);
+
+    try {
+      const response = await login({phoneNumber, password});
+
+      // Kiểm tra dữ liệu trả về có hợp lệ không
+      const accessToken = response.data?.token?.accessToken?.token;
+      const refreshToken = response.data?.token?.refreshToken?.token;
+      const merchant = response.data?.user;
+      // Lưu token và thông tin người dùng vào AsyncStorage
+      await AppAsyncStorage.storeData('accessToken', accessToken);
+      await AppAsyncStorage.storeData('refreshToken', refreshToken);
+      await AppAsyncStorage.storeData('merchant', JSON.stringify(merchant));
+      // console.log(merchant);
+      navigation.navigate(AppGraph.MAIN);
+
+      return response;
+    } catch (error) {
+      Toaster.show('Đăng nhập thất bại');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
@@ -40,23 +112,29 @@ const LoginScreen = props => {
           source={require('../../assets/images/logo2.png')}
           style={styles.imgBanner}
         />
-        {/* Container trung tâm cho form đăng nhập */}
         <Column style={styles.formContainer}>
           <Column style={styles.content}>
             <Text style={styles.welcome}>Chào mừng bạn đến với</Text>
             <Text style={styles.title}>GREEN ZONE</Text>
+
             <FlatInput
-              value={maNv}
-              label="Mã nhân viên"
+              value={phoneNumber}
+              label="Số điện thoại"
+              placeholder="Nhập số điện thoại của bạn..."
               style={{width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL}}
-              placeholder="Nhập mã nhân viên của bạn"
-              setValue={setMaNv}
+              setValue={text => {
+                setPhoneNumberError(false);
+                setPhoneNumberMessage('');
+                setPhoneNumber(text);
+              }}
+              error={phoneNumberError}
+              invalidMessage={phoneNumberMessage}
             />
             <FlatInput
               value={password}
               label="Mật khẩu"
               style={{width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL}}
-              placeholder="Nhập mật khẩu của bạn"
+              placeholder="Nhập mật khẩu"
               setValue={setPassword}
               isPasswordVisible={isPasswordVisible}
               setIsPasswordVisible={setIsPasswordVisible}
@@ -67,7 +145,7 @@ const LoginScreen = props => {
                 <Switch
                   value={checked}
                   color={colors.primary}
-                  onValueChange={value => setChecked(value)}
+                  onValueChange={() => setChecked(value => !value)}
                 />
                 <NormalText text="Ghi nhớ tôi" />
               </Row>
@@ -80,17 +158,18 @@ const LoginScreen = props => {
             </Row>
             <PrimaryButton
               title="Đăng nhập"
-              onPress={() => navigation.navigate(AppGraph.MAIN)}
+              onPress={() => loginHandel()}
               style={{width: '100%'}}
             />
           </Column>
         </Column>
       </KeyboardAvoidingView>
+      <Ani_ModalLoading loading={loading} />
     </ScrollView>
   );
 };
 
-export default LoginScreen;
+export default React.memo(LoginScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -109,7 +188,6 @@ const styles = StyleSheet.create({
       ? GLOBAL_KEYS.PADDING_DEFAULT
       : GLOBAL_KEYS.PADDING_SMALL,
   },
-  // Container để giữ form đăng nhập, căn giữa và giới hạn chiều rộng cho tablet
   formContainer: {
     flex: 1,
     alignSelf: 'center',
