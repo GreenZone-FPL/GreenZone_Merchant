@@ -56,7 +56,7 @@ const CartOrder = ({cart, setCart}) => {
         setScannedCode(scannedText);
         setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
         setIsScanning(false); // Đóng camera sau khi quét
-        // console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+        console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
       }
     },
   });
@@ -248,18 +248,23 @@ const CartOrder = ({cart, setCart}) => {
             gap: GLOBAL_KEYS.GAP_SMALL,
           }}>
           <Text style={styles.customerInfoTitle}>Thông tin khách hàng</Text>
-          <CustomFlatInput
-            label={'Nhập số điện thoại hoặc quét mã để lấy thông tin'}
-            placeholder="Số điện thoại"
-            value={phoneNumber}
-            setValue={setPhoneNumber}
-            rightIcon="barcode-scan"
-            onRightPress={() => {
-              setIsScanning(true);
-            }}
-            style={{}}
-          />
-          {message && <Text style={styles.errorText}>{message}</Text>}
+          <View>
+            <CustomFlatInput
+              label={'Nhập số điện thoại hoặc quét mã để lấy thông tin'}
+              placeholder="Số điện thoại"
+              value={phoneNumber}
+              setValue={setPhoneNumber}
+            />
+            <TouchableOpacity
+              style={{
+                position: 'absolute',
+                end: 10,
+                top: '30%',
+              }}
+              onPress={() => setIsScanning(true)}>
+              <Icon source="barcode-scan" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
           <View>
             <Text>
               Khách hàng:{' '}
