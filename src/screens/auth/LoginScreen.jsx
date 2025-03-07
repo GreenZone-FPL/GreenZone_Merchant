@@ -66,6 +66,7 @@ const LoginScreen = props => {
           password,
           checked,
         });
+        
       } else if (!checked) {
         await AppAsyncStorage.removeData('userAccount');
       }
@@ -84,7 +85,7 @@ const LoginScreen = props => {
 
     try {
       const response = await login({phoneNumber, password});
-
+      console.log('>>>>>>>>>>>>>>>>',JSON.stringify(response,null,2))
       // Kiểm tra dữ liệu trả về có hợp lệ không
       const accessToken = response.data?.token?.accessToken?.token;
       const refreshToken = response.data?.token?.refreshToken?.token;
@@ -93,6 +94,8 @@ const LoginScreen = props => {
       await AppAsyncStorage.storeData('accessToken', accessToken);
       await AppAsyncStorage.storeData('refreshToken', refreshToken);
       await AppAsyncStorage.storeData('merchant', JSON.stringify(merchant));
+      await AppAsyncStorage.storeData('storeId',response.data?.user?._id);
+     
       // console.log(merchant);
       navigation.navigate(AppGraph.MAIN);
 

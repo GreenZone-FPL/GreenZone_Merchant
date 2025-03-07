@@ -14,9 +14,26 @@ import {AuthGraph, MainGraph, OrderGraph} from './src/layouts/graphs';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MainNavigation from './src/layouts/MainNavigation';
 import OrderDetailScreen from './src/screens/order/OrderDetailScreen';
+import SocketService from './src/sevices/merchantSocketService';
+
 const BaseStack = createNativeStackNavigator();
 
+
 function App() {
+
+ useEffect(() => {
+   const initializeSocket = async () => {
+     await SocketService.initialize();
+   };
+
+   initializeSocket();
+
+   // Cleanup khi component bị unmount
+   return () => {
+     SocketService.disconnect();
+   };
+ }, []);
+
   return (
     <GestureHandlerRootView>
       <SafeAreaProvider>

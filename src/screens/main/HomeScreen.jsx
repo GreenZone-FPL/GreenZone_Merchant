@@ -3,8 +3,7 @@ import {
   Dimensions,
   FlatList,
   Image,
-  Modal,
-  ScrollView,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -17,12 +16,15 @@ import {
   getProductsById,
 } from '../../axios/index';
 import {Ani_ModalLoading, ButtonGroup, Indicator} from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
+import {colors} from '../../constants';
+import {TextFormatter} from '../../utils';
 import CartOrder from '../home-component/CartOrder';
 import ModalToping from '../home-component/ModalToping';
-import {TextFormatter} from '../../utils';
+import merchantSocketService from '../../sevices/merchantSocketService';
+import io from 'socket.io-client';
 
 const {width} = Dimensions.get('window').width;
+// const socket = io('https://serversocket-4oew.onrender.com/');
 
 const HomeScreen = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -39,6 +41,17 @@ const HomeScreen = () => {
   const [productsByCate, setProductsByCate] = useState([]);
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
+
+  
+  // useEffect(() => {
+  //   socket.on('thuthao', data => {
+  //     console.log('thuthao message', data);
+  //   });
+
+  //   return () => {
+  //     socket.off('thuthao');
+  //   };
+  // }, []);
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
@@ -83,6 +96,22 @@ const HomeScreen = () => {
     fetchProducts();
   }, []);
 
+
+
+  // Khởi tạo kết nối socket
+  // useEffect(() => {
+  //    const initializeSocket = async () => {
+  //      await SocketService.initialize();
+  //    };
+  
+  //    initializeSocket();
+  
+  //    // Cleanup khi component bị unmount
+  //    return () => {
+  //      SocketService.disconnect();
+  //    };
+  //  }, []);
+
   // Cập nhật danh sách sản phẩm theo danh mục đã chọn
   useEffect(() => {
     const updatedProducts = getProductsByCategory(selectedIndex);
@@ -122,6 +151,11 @@ const HomeScreen = () => {
             value={searchTerm}
             onChangeText={text => setSearchTerm(text)}
           />
+          <Pressable
+            style={styles.button}
+            onPress={() => socket.emit('thuthao', {message: 'Hello'})}>
+            <Text style={styles.normalText}>Emit event</Text>
+          </Pressable>
         </View>
         <View style={styles.optionContainer}>
           <Text style={styles.title}>Chọn danh mục:</Text>
