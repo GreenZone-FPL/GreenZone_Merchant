@@ -1,6 +1,4 @@
 import axiosInstance from '../axiosInstance';
-import {AppAsyncStorage} from '../../utils';
-
 export const getProfile = async () => {
   try {
     const response = await axiosInstance.get('/auth/profile');
@@ -81,6 +79,19 @@ export const verifyOTP = async ({phoneNumber, code}) => {
     return response.data;
   } catch (error) {
     console.log('error:', error);
+    throw error;
+  }
+};
+
+export const login = async ({phoneNumber, password}) => {
+  try {
+    const response = await axiosInstance.post('/auth/login', {
+      phoneNumber,
+      password,
+    });
+    return response.data;
+  } catch (error) {
+    console.log('Lỗi gọi API Login:', error);
     throw error;
   }
 };

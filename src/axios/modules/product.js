@@ -5,7 +5,7 @@ export const getAllProducts = async () => {
     const response = await axiosInstance.get('/v1/product/all');
     return response.data;
   } catch (error) {
-    console.log('error:', error);
+    console.log('Lỗi gọi API Products', error);
     throw error;
   }
 };
@@ -15,7 +15,7 @@ export const getProductsById = async productId => {
     const response = await axiosInstance.get(`/v1/product/${productId}`);
     return response.data;
   } catch (error) {
-    console.log('Error fetching products', error);
+    console.log('Lỗi gọi API Product By ID', error);
     throw error;
   }
 };

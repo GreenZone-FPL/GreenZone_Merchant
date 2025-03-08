@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { TextInput } from 'react-native-paper';
-import { GLOBAL_KEYS, colors } from '../../constants';
+import {StyleSheet, Text, View} from 'react-native';
+import {TextInput} from 'react-native-paper';
+import {GLOBAL_KEYS, colors} from '../../constants';
 
 // PropTypes cho FlatInput
 const FlatInputPropTypes = {
@@ -32,7 +32,7 @@ const CustomFlatInputPropTypes = {
   placeholder: PropTypes.string,
   value: PropTypes.string.isRequired,
   setValue: PropTypes.func.isRequired,
-  message: PropTypes.string,
+  invalidMessage: PropTypes.string,
   rightIcon: PropTypes.string,
   onRightPress: PropTypes.func,
   rightIconColor: PropTypes.string,
@@ -61,11 +61,11 @@ const CustomFlatInputPropTypes = {
  * />
  */
 export const FlatInput = ({
-  label = 'Default label',
-  placeholder = 'Default place holder',
+  label = '',
+  placeholder = '',
   value,
   setValue,
-  message,
+  invalidMessage,
   setIsPasswordVisible,
   isPasswordVisible = false,
   secureTextEntry = false,
@@ -73,7 +73,8 @@ export const FlatInput = ({
   editable = true,
   keyboardType = 'default',
   onSubmitEditing,
-  returnKeyType = "done"
+  returnKeyType = 'done',
+  autoFocus = false,
 }) => {
   return (
     <View style={[styles.inputContainer, style]}>
@@ -84,12 +85,13 @@ export const FlatInput = ({
         mode="flat"
         placeholder={placeholder}
         placeholderTextColor={colors.gray400}
-        error={!!message}
-        outlineColor={!!message ? colors.red800 : colors.primary}
+        error={!!invalidMessage}
+        outlineColor={!!invalidMessage ? colors.red800 : colors.primary}
         activeUnderlineColor={colors.primary}
         underlineColor={colors.primary}
         secureTextEntry={secureTextEntry && !isPasswordVisible}
         style={styles.input}
+        autoFocus={autoFocus}
         right={
           secureTextEntry && (
             <TextInput.Icon
@@ -104,7 +106,7 @@ export const FlatInput = ({
         onSubmitEditing={onSubmitEditing}
         returnKeyType={returnKeyType}
       />
-      {message && <Text style={styles.errorText}>{message}</Text>}
+      {invalidMessage && <Text style={styles.errorText}>{invalidMessage}</Text>}
     </View>
   );
 };
@@ -118,22 +120,26 @@ FlatInput.propTypes = FlatInputPropTypes;
  *    label="Email"
  *    placeholder="Enter your email"
  *    setValue={(text) => setEmail(text)}
- *    message={emailError}
+ *    message={emailMessage}
  *    keyboardType="email-address"
  * />
  */
 export const CustomFlatInput = ({
   label = 'Default label',
-  placeholder = 'Default place holder',
+  placeholder = '',
   value,
   setValue,
-  message,
+  invalidMessage,
   rightIcon = 'calendar',
+  leftIcon = 'account',
   onRightPress,
   rightIconColor = colors.primary,
+  leftIconColor = colors.primary,
   style,
   editable = true,
   keyboardType = 'default',
+  enableLeftIcon = false,
+  enableRightIcon = false,
 }) => {
   return (
     <View style={[styles.inputContainer, style]}>
@@ -144,22 +150,29 @@ export const CustomFlatInput = ({
         mode="flat"
         placeholder={placeholder}
         placeholderTextColor={colors.gray400}
-        error={!!message}
-        outlineColor={!!message ? colors.red800 : colors.primary}
+        error={!!invalidMessage}
+        outlineColor={!!invalidMessage ? colors.red800 : colors.primary}
         activeUnderlineColor={colors.primary}
         underlineColor={colors.primary}
         style={styles.input}
         right={
-          <TextInput.Icon
-            color={rightIconColor}
-            icon={rightIcon}
-            onPress={onRightPress}
-          />
+          enableRightIcon && (
+            <TextInput.Icon
+              color={rightIconColor}
+              icon={rightIcon}
+              onPress={onRightPress}
+            />
+          )
+        }
+        left={
+          enableLeftIcon && (
+            <TextInput.Icon color={leftIconColor} icon={leftIcon} />
+          )
         }
         editable={editable}
         keyboardType={keyboardType}
       />
-      {message && <Text style={styles.errorText}>{message}</Text>}
+      {invalidMessage && <Text style={styles.errorText}>{invalidMessage}</Text>}
     </View>
   );
 };
@@ -172,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     elevation: 3,
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
@@ -187,5 +200,3 @@ const styles = StyleSheet.create({
     color: colors.gray500,
   },
 });
-
-

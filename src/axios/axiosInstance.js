@@ -1,6 +1,5 @@
 import axios from 'axios';
 import {AppAsyncStorage} from '../utils';
-
 export const baseURL = 'https://greenzone.motcaiweb.io.vn/';
 
 const axiosInstance = axios.create({
@@ -13,15 +12,16 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   async config => {
-    const token = await AppAsyncStorage.readData('accessToken');
-
-    if (token && !config.skipAuth) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
+    try {
+      const token = await AppAsyncStorage.readData('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        // console.log('Lấy token thành công:', token);
+      }
+    } catch (error) {}
     return config;
   },
-  err => Promise.reject(err),
+  error => Promise.reject(error),
 );
 
 export default axiosInstance;

@@ -5,30 +5,32 @@
  * @format
  */
 import './gesture-handler';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AuthGraph, MainGraph, OrderGraph } from './src/layouts/graphs';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import React, {useEffect} from 'react';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {AuthGraph, MainGraph, OrderGraph} from './src/layouts/graphs';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MainNavigation from './src/layouts/MainNavigation';
 import OrderDetailScreen from './src/screens/order/OrderDetailScreen';
 const BaseStack = createNativeStackNavigator();
+
 function App() {
   return (
     <GestureHandlerRootView>
       <SafeAreaProvider>
         <NavigationContainer>
-          <BaseStack.Navigator screenOptions={{ headerShown: false }}>
-            <BaseStack.Screen
-              name={MainGraph.graphName}
-              component={MainNavigation}
-            />
+          <BaseStack.Navigator screenOptions={{headerShown: false}}>
             <BaseStack.Screen
               name={AuthGraph.LoginScreen}
               component={LoginScreen}
             />
+            <BaseStack.Screen
+              name={MainGraph.graphName}
+              component={MainNavigation}
+            />
+
             <BaseStack.Screen
               name={OrderGraph.OrderDetailScreen}
               component={OrderDetailScreen}
@@ -38,12 +40,10 @@ function App() {
                 headerShown: false,
               }}
             />
-
           </BaseStack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>
-
   );
 }
 
