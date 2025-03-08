@@ -14,6 +14,7 @@ import HomeScreen from '../screens/main/HomeScreen';
 import OrderHistoryScreen from '../screens/main/OrderHistoryScreen';
 import StatisticsScreen from '../screens/main/StatisticsScreen';
 import {AuthGraph, MainGraph} from './graphs';
+
 const {width, height} = Dimensions.get('window');
 const Drawer = createDrawerNavigator();
 
@@ -24,7 +25,11 @@ const DrawerItems = ({navigation, selectedScreen, setSelectedScreen}) => {
       screen: MainGraph.OrderHistoryScreen,
       icon: 'clock-time-two',
     },
-    {name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home'},
+    {
+      name: MainGraph.HomeScreen,
+      screen: MainGraph.HomeScreen,
+      icon: 'home',
+    },
     {
       name: MainGraph.StatisticsScreen,
       screen: MainGraph.StatisticsScreen,
@@ -45,7 +50,7 @@ const DrawerItems = ({navigation, selectedScreen, setSelectedScreen}) => {
         navigation.closeDrawer(); // Đóng Drawer sau khi chọn
       }}>
       <Icon
-        source={item.icon}
+        name={item.icon} // ✅ Dùng prop `name` thay vì `source`
         color={selectedScreen === item.screen ? colors.primary : colors.black}
         size={24}
       />
@@ -79,7 +84,7 @@ const CustomDrawerContent = ({navigation}) => {
         style={styles.logoutButton}
         onPress={() => navigation.navigate(AuthGraph.LoginScreen)}>
         <Icon
-          source="exit-to-app"
+          name="exit-to-app" // ✅ Dùng prop `name` ở đây
           color={colors.black}
           size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
         />
@@ -99,11 +104,6 @@ const MainNavigation = () => {
           width: 240,
           height: height,
         },
-        // drawerActiveTintColor: '#333',
-        // drawerLabelStyle: {
-        //   fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
-        //   fontWeight: 'bold',
-        // },
       }}
       drawerContent={props => <CustomDrawerContent {...props} />}>
       <Drawer.Screen name={MainGraph.HomeScreen} component={HomeScreen} />
@@ -111,7 +111,6 @@ const MainNavigation = () => {
         name={MainGraph.OrderHistoryScreen}
         component={OrderHistoryScreen}
       />
-
       <Drawer.Screen
         name={MainGraph.StatisticsScreen}
         component={StatisticsScreen}

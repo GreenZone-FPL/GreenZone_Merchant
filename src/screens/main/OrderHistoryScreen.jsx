@@ -75,6 +75,7 @@ const OrderHistoryScreen = props => {
           'cancelled',
         ].map((status, index) => (
           <OrderListView
+            index={status}
             status={status}
             orders={orders}
             handleRepeatOrder={handleRepeatOrder}
