@@ -27,3 +27,13 @@ export const createPickUpOrder = async order => {
     throw error;
   }
 };
+
+export const getMyOrders = async () => {
+  try {
+    const responses = await axiosInstance.get('/v1/order/my-order');
+    return responses.data;
+  } catch (error) {
+    console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
+    throw error;
+  }
+};
