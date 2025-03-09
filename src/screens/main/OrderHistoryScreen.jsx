@@ -292,4 +292,4 @@ const styles = StyleSheet.create({
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
   }
 });
-export default OrderHistoryScreen
+export default OrderHistoryScreen;

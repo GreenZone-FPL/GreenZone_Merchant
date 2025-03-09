@@ -1,12 +1,13 @@
 import {io} from 'socket.io-client';
 import {AppAsyncStorage} from '../utils';
+import mitt from 'mitt';
 
 class MerchantSocketService {
   constructor() {
     this.socket = null;
+    this.emitter = mitt(); // Tạo emitter để phát sự kiện
   }
 
-  // Khởi tạo kết nối socket
   async initialize() {
     if (!this.socket) {
       try {
@@ -14,7 +15,8 @@ class MerchantSocketService {
           AppAsyncStorage.STORAGE_KEYS.accessToken,
         );
         const storeId = await AppAsyncStorage.readData('storeId');
-        // Lấy storeId từ AsyncStorage
+          console.log('📌 Token:', token);
+          console.log('📌 storeId:', storeId); 
 
         if (!token || !storeId) {
           console.log(
@@ -30,29 +32,22 @@ class MerchantSocketService {
         });
 
         this.socket.on('connect', () => {
-          console.log('Connected socketId =', this.socket.id);
+          console.log('✅ Merchant connected', this.socket.id);
           this.socket.emit('store.join', storeId);
+          console.log(`🛒 Merchant joined store room: ${storeId}`);
+        });
+
+        this.socket.on('order.new', data => {
+          console.log('📦 New Order:', data);
+          this.emitter.emit('order.new', data); 
         });
 
         this.socket.on('disconnect', () => {
-          console.log('Socket disconnected');
+          console.log('❌ Disconnected');
         });
 
-
-         socket.on('thuthao', data => {
-           console.log('📩 Nhận được sự kiện thuthao từ client:', data);
-           socket.emit('thuthao', `Server đã nhận: ${data.message}`);
-         });
-
-         socket.on('disconnect', () => {
-           console.log('❌ Client disconnected:', socket.id);
-         });
-       ;
-
-        this.socket.on('order.updateStatus', data => {
-          console.log('Trạng thái đơn hàng cập nhật:', data);
-          // Xử lý cập nhật trạng thái đơn hàng
-          // Bạn có thể gọi một callback hoặc cập nhật state ở đây
+        this.socket.on('connect_error', error => {
+          console.error('⚠️ Lỗi kết nối:', error);
         });
       } catch (error) {
         console.log('Lỗi khi khởi tạo socket:', error);
@@ -60,24 +55,19 @@ class MerchantSocketService {
     }
   }
 
-  emitThuThao() {
-    if (this.socket) {
-      this.socket.emit('thuthao', {message: 'abc'});
-      console.log(`Đã emit event thuthao`);
-    }
+  on(event, callback) {
+    this.emitter.on(event, callback); // Đăng ký lắng nghe sự kiện
   }
 
-  // Kiểm tra kết nối socket
-  isConnected() {
-    return this.socket && this.socket.connected;
+  off(event, callback) {
+    this.emitter.off(event, callback); // Hủy lắng nghe sự kiện
   }
 
-  // Ngắt kết nối socket
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      console.log('Socket đã ngắt kết nối');
+      console.log('❌ Socket đã ngắt kết nối');
     }
   }
 }
