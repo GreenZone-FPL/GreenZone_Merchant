@@ -23,6 +23,7 @@ import {colors, GLOBAL_KEYS} from '../../constants';
 import {AppGraph} from '../../layouts/graphs';
 import {AppAsyncStorage, Toaster} from '../../utils';
 import {login} from '../../axios/index';
+import MerchantSocketService from '../../sevices/merchantSocketService';
 
 const {width} = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -66,6 +67,7 @@ const LoginScreen = props => {
           password,
           checked,
         });
+        
       } else if (!checked) {
         await AppAsyncStorage.removeData('userAccount');
       }
@@ -84,7 +86,7 @@ const LoginScreen = props => {
 
     try {
       const response = await login({phoneNumber, password});
-
+      console.log('>>>>>>>>>>>>>>>>', JSON.stringify(response, null, 2));
       // Kiểm tra dữ liệu trả về có hợp lệ không
       const accessToken = response.data?.token?.accessToken?.token;
       const refreshToken = response.data?.token?.refreshToken?.token;
@@ -93,6 +95,13 @@ const LoginScreen = props => {
       await AppAsyncStorage.storeData('accessToken', accessToken);
       await AppAsyncStorage.storeData('refreshToken', refreshToken);
       await AppAsyncStorage.storeData('merchant', JSON.stringify(merchant));
+      await AppAsyncStorage.storeData(
+        'storeId',
+        response.data?.user?.workingStore,
+      );
+      console.log('✅ Đăng nhập thành công, khởi tạo socket...');
+      MerchantSocketService.initialize(); // Khởi tạo socket sau khi đăng nhập thành công
+
       // console.log(merchant);
       navigation.navigate(AppGraph.MAIN);
 

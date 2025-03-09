@@ -3,7 +3,7 @@ import { FlatList, Image, Pressable, ScrollView, StatusBar, StyleSheet, Text, Vi
 import { Icon, IconButton } from 'react-native-paper';
 import { Column, DualTextRow, HorizontalProductItem, NormalText, OverlayStatusBar, PaymentMethodRow, Row, TitleText } from '../../components';
 import { GLOBAL_KEYS, colors } from '../../constants';
-import { OrderGraph } from '../../layouts/graphs';
+import { MainGraph } from '../../layouts/graphs';
 
 const OrderDetailScreen = (props) => {
 
@@ -11,43 +11,45 @@ const OrderDetailScreen = (props) => {
 
 
     return (
-        <View style={styles.modalContainer}>
-            <OverlayStatusBar />
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={styles.modalContent}>
+      <View style={styles.modalContainer}>
+        <OverlayStatusBar />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.modalContent}>
+          <Row
+            style={{
+              width: '100%',
+              backgroundColor: 'white',
+              justifyContent: 'space-between',
+              paddingHorizontal: 16,
+            }}>
+            <View style={{width: 24, height: 24}}></View>
+            <TitleText text="Chi tiết đơn hàng" style={{alignSelf: 'center'}} />
+            <IconButton
+              icon="close"
+              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+              iconColor={colors.primary}
+              style={styles.closeButton}
+              onPress={() => navigation.navigate("OrderHistoryScreen")}
+            />
+          </Row>
 
-                <Row style={{ width: '100%', backgroundColor: 'white', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-                    <View style={{ width: 24, height: 24 }}></View>
-                    <TitleText text='Chi tiết đơn hàng' style={{ alignSelf: 'center' }} />
-                    <IconButton
-                        icon="close"
-                        size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-                        iconColor={colors.primary}
-                        style={styles.closeButton}
-                        onPress={() => navigation.goBack()}
-                    />
-                </Row>
+          <Title
+            title={'Đơn hàng đang thực hiện'}
+            titleStyle={{
+              fontWeight: '500',
+              margin: GLOBAL_KEYS.PADDING_DEFAULT,
+            }}
+          />
+          <ShipperInfo />
+          <MerchantInfo />
+          <RecipientInfo />
 
-                <Title
-                    title={'Đơn hàng đang thực hiện'}
-                    titleStyle={{ fontWeight: '500', margin: GLOBAL_KEYS.PADDING_DEFAULT }}
-                />
-                <ShipperInfo  />
-                <MerchantInfo />
-                <RecipientInfo />
+          <ProductsInfo />
 
-                <ProductsInfo />
-
-
-                <PaymentDetails />
-
-            </ScrollView>
-
-        </View >
-
-
-
+          <PaymentDetails />
+        </ScrollView>
+      </View>
     );
 };
 

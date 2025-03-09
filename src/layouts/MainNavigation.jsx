@@ -19,12 +19,13 @@ const Drawer = createDrawerNavigator();
 
 const DrawerItems = ({navigation, selectedScreen, setSelectedScreen}) => {
   const items = [
+    {name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home'},
     {
       name: MainGraph.OrderHistoryScreen,
       screen: MainGraph.OrderHistoryScreen,
       icon: 'clock-time-two',
     },
-    {name: MainGraph.HomeScreen, screen: MainGraph.HomeScreen, icon: 'home'},
+
     {
       name: MainGraph.StatisticsScreen,
       screen: MainGraph.StatisticsScreen,

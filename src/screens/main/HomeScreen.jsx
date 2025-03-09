@@ -3,8 +3,6 @@ import {
   Dimensions,
   FlatList,
   Image,
-  Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,11 +15,10 @@ import {
   getProductsById,
 } from '../../axios/index';
 import {Ani_ModalLoading, ButtonGroup, Indicator} from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
+import {colors} from '../../constants';
+import {TextFormatter} from '../../utils';
 import CartOrder from '../home-component/CartOrder';
 import ModalToping from '../home-component/ModalToping';
-import {TextFormatter} from '../../utils';
-
 const {width} = Dimensions.get('window').width;
 
 const HomeScreen = () => {
