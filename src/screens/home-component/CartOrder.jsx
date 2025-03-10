@@ -1,12 +1,12 @@
 import React, {useEffect, useState, useMemo} from 'react';
 import {
-  Dimensions,
   FlatList,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../constants';
@@ -22,15 +22,15 @@ import {CustomFlatInput, Ani_ModalLoading} from '../../components';
 import ModalCheckout from './ModalCheckout';
 import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
 
+const {width} = Dimensions.get('window');
+
 const CartOrder = ({cart, setCart}) => {
-  const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
   const [voucherCode, setVoucherCode] = useState('');
   const [message, setMessage] = useState('');
   const [isCheckout, setIsCheckout] = useState(false);
-  const [order, setOrder] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -99,7 +99,9 @@ const CartOrder = ({cart, setCart}) => {
       const fetchData = async () => {
         try {
           await fetchCustomerByPhone(phoneNumber);
-        } catch (error) {}
+        } catch (error) {
+          console.log(error);
+        }
       };
 
       fetchData();
@@ -288,9 +290,11 @@ const CartOrder = ({cart, setCart}) => {
 
       <View
         style={{
-          height: '43%',
+          height: '55%',
           borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
           overflow: 'hidden',
+          backgroundColor: colors.white,
+          marginVertical: GLOBAL_KEYS.PADDING_DEFAULT,
         }}>
         {cart && cart.orderItems.length > 0 ? (
           <FlatList
@@ -298,6 +302,7 @@ const CartOrder = ({cart, setCart}) => {
             maxToRenderPerBatch={10}
             data={cart.orderItems}
             keyExtractor={item => item._id}
+            showsVerticalScrollIndicator={false}
             renderItem={({item}) => (
               <View style={styles.cartItem}>
                 <View style={styles.itemQuantity}>
@@ -358,52 +363,57 @@ const CartOrder = ({cart, setCart}) => {
                 </View>
               </View>
             )}
-            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_SMALL}}
+            contentContainerStyle={{
+              gap: GLOBAL_KEYS.GAP_SMALL,
+              marginVertical: GLOBAL_KEYS.GAP_SMALL,
+              paddingBottom: 18,
+            }}
           />
         ) : (
           <Text style={styles.emptyCart}>Giỏ hàng trống</Text>
         )}
       </View>
 
-      <View>
-        <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
-          <CustomFlatInput
-            label={'Nhập mã voucher hoặc quét QR'}
-            placeholder="Mã giảm giá"
-            value={voucherCode}
-            setValue={setVoucherCode}
-            rightIcon="barcode-scan"
-            onRightPress={() => {}}
-            style={{flex: 1}}
-          />
-          {message && <Text style={styles.errorText}>{message}</Text>}
-        </View>
-      </View>
+      {/* <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
+        <CustomFlatInput
+          label={'Nhập mã voucher hoặc quét QR'}
+          placeholder="Mã giảm giá"
+          value={voucherCode}
+          setValue={setVoucherCode}
+          rightIcon="barcode-scan"
+          onRightPress={() => {}}
+          style={{flex: 1}}
+        />
+      </View> */}
       <View
         style={{
           flexDirection: 'row',
-          gap: 8,
+          gap: 40,
           alignItems: 'center',
           justifyContent: 'space-between',
         }}>
-        <Text
-          style={{
-            fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER + 3,
-            fontWeight: 'bold',
-            color: colors.primary,
-          }}>
-          Tổng tiền:{' '}
+        <View style={{flexDirection: 'column', flex: 1}}>
+          <Text
+            style={{
+              fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+              fontWeight: 'bold',
+              color: colors.primary,
+            }}>
+            Tổng tiền:
+          </Text>
           <Text
             style={{
               fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
               fontWeight: 'bold',
               color: colors.black,
+              width: '100%',
+              textAlign: 'right',
             }}>
             {TextFormatter.formatCurrency(
               cart?.totalPrice ? cart.totalPrice : 0,
             )}
           </Text>
-        </Text>
+        </View>
         <TouchableOpacity
           onPress={() => {
             if (cart == null) return;
@@ -411,11 +421,12 @@ const CartOrder = ({cart, setCart}) => {
           }}>
           <Text
             style={{
-              padding: 10,
+              padding: 6,
               backgroundColor: colors.primary,
               color: colors.white,
-              fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+              fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               fontWeight: 'bold',
+              borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
             }}>
             Thanh Toán
           </Text>
@@ -433,7 +444,7 @@ const CartOrder = ({cart, setCart}) => {
           setScannedCode={setScannedCode}
         />
       )}
-      <Ani_ModalLoading loading={loading} />
+      {/* <Ani_ModalLoading loading={loading} /> */}
     </View>
   );
 };
@@ -442,46 +453,42 @@ const styles = StyleSheet.create({
   rightSection: {
     flex: 3,
     backgroundColor: colors.gray200,
-    padding: 10,
-    gap: 20,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   cameraControls: {
     position: 'absolute',
-    right: 10,
+    right: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
   },
   switchCameraButton: {
-    marginRight: 10,
+    marginRight: GLOBAL_KEYS.PADDING_SMALL,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 8,
-    borderRadius: 5,
+    padding: GLOBAL_KEYS.PADDING_SMALL,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_,
   },
   closeCameraButton: {
     backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 8,
-    borderRadius: 5,
+    padding: GLOBAL_KEYS.PADDING_SMALL,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
   rightTitle: {
-    fontSize: 22,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
     fontWeight: 'bold',
     textAlign: 'center',
     color: colors.primary,
+    marginBottom: GLOBAL_KEYS.PADDING_SMALL,
   },
   customerInfo: {
     backgroundColor: colors.white,
-    borderRadius: 10,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   customerInfoTitle: {
-    fontSize: 16,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray850,
     fontWeight: 'bold',
-  },
-  customerInfoText: {
-    fontSize: 14,
-    color: colors.gray850,
   },
   cartItem: {
     flexDirection: 'row',
@@ -491,36 +498,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.white,
     elevation: 2,
+    marginHorizontal: GLOBAL_KEYS.PADDING_SMALL,
   },
   cartItemImage: {
-    width: 60,
-    height: 60,
+    width: width / 20,
+    height: width / 20,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
   itemQuantity: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 2,
-    fontWeight: '500',
-    end: '30%',
-    bottom: '30%',
     position: 'absolute',
+    right: '30%',
+    bottom: '30%',
+    gap: GLOBAL_KEYS.GAP_SMALL,
   },
   buttonQuantity: {
     width: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
     height: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
-    backgroundColor: colors.fbBg,
+    backgroundColor: colors.white,
     textAlign: 'center',
     textAlignVertical: 'center',
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 2,
     fontWeight: '500',
     elevation: 2,
-    fontSize: 16,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
   },
   cartItemName: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
     fontWeight: '500',
   },
   cartItemTopping: {
@@ -529,17 +536,23 @@ const styles = StyleSheet.create({
     color: colors.gray700,
   },
   cartItemPrice: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
   },
   buttonDelete: {
     textAlign: 'center',
     textAlignVertical: 'center',
     padding: GLOBAL_KEYS.PADDING_SMALL,
-    backgroundColor: colors.gray200,
+    backgroundColor: colors.white,
     color: colors.red900,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
-  emptyCart: {fontSize: 14, color: '#777', textAlign: 'center'},
+  emptyCart: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: '#777',
+    textAlign: 'center',
+  },
+  // Các style cho các input, button, etc.
 });
 
 export default React.memo(CartOrder);

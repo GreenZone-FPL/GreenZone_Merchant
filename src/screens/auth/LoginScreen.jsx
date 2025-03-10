@@ -12,24 +12,24 @@ import {Switch} from 'react-native-paper';
 import {
   Column,
   FlatInput,
-  LightStatusBar,
   PrimaryButton,
   Row,
   NormalText,
+  LightStatusBar,
 } from '../../components';
 
 import {Ani_ModalLoading} from '../../components/animations/Ani_ModalLoading';
 import {colors, GLOBAL_KEYS} from '../../constants';
-import {AppGraph} from '../../layouts/graphs';
 import {AppAsyncStorage, Toaster} from '../../utils';
 import {login} from '../../axios/index';
 import MerchantSocketService from '../../sevices/merchantSocketService';
+import MainNavigation from '../../layouts/MainNavigation';
 
 const {width} = Dimensions.get('window');
 const isTablet = width >= 768;
 
 const LoginScreen = props => {
-  const navigation = props.navigation;
+  const {navigation} = props;
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [checked, setChecked] = useState(false);
@@ -67,7 +67,6 @@ const LoginScreen = props => {
           password,
           checked,
         });
-        
       } else if (!checked) {
         await AppAsyncStorage.removeData('userAccount');
       }
@@ -103,7 +102,7 @@ const LoginScreen = props => {
       MerchantSocketService.initialize(); // Khởi tạo socket sau khi đăng nhập thành công
 
       // console.log(merchant);
-      navigation.navigate(AppGraph.MAIN);
+      navigation.navigate('MainNavigation');
 
       return response;
     } catch (error) {
@@ -178,7 +177,7 @@ const LoginScreen = props => {
   );
 };
 
-export default React.memo(LoginScreen);
+export default LoginScreen;
 
 const styles = StyleSheet.create({
   container: {

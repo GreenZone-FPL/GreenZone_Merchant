@@ -1,8 +1,8 @@
 import React from 'react';
-import { StatusBar } from 'react-native';
-import { colors } from '../../constants';
+import {StatusBar} from 'react-native';
+import {colors} from '../../constants';
 
-export const  LightStatusBar = () => (
+export const LightStatusBar = () => (
   <StatusBar
     animated={true}
     backgroundColor={colors.white}
@@ -10,5 +10,3 @@ export const  LightStatusBar = () => (
     barStyle="dark-content"
   />
 );
-
-

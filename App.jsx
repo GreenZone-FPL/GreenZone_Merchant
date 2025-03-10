@@ -1,16 +1,8 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
 import './gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React, {useEffect} from 'react';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {AuthGraph, MainGraph, OrderGraph} from './src/layouts/graphs';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MainNavigation from './src/layouts/MainNavigation';
 import OrderDetailScreen from './src/screens/order/OrderDetailScreen';
@@ -78,6 +70,19 @@ function App() {
         text2: `Mã đơn: ${data.orderId}`,
         position: 'top',
         visibilityTime: 4000,
+        text1Style: {
+          fontSize: isTablet() ? 22 : 16,
+          fontWeight: 'bold',
+        },
+        text2Style: {
+          fontSize: isTablet() ? 18 : 14,
+        },
+        style: {
+          width: '100%',
+          paddingVertical: isTablet() ? 20 : 10,
+          borderRadius: isTablet() ? 20 : 10,
+        },
+
       });
     };
 
@@ -89,33 +94,24 @@ function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <BaseStack.Navigator screenOptions={{headerShown: false}}>
-            <BaseStack.Screen
-              name={AuthGraph.LoginScreen}
-              component={LoginScreen}
-            />
-            <BaseStack.Screen
-              name={MainGraph.graphName}
-              component={MainNavigation}
-            />
 
-            <BaseStack.Screen
-              name={OrderGraph.OrderDetailScreen}
-              component={OrderDetailScreen}
-              options={{
-                animation: 'slide_from_bottom',
-                presentation: 'transparentModal',
-                headerShown: false,
-              }}
-            />
-          </BaseStack.Navigator>
-        </NavigationContainer>
-        <Toast config={customToastConfig} />
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <BaseStack.Navigator screenOptions={{headerShown: false}}>
+          <BaseStack.Screen name={'LoginScreen'} component={LoginScreen} />
+          <BaseStack.Screen
+            name={'MainNavigation'}
+            component={MainNavigation}
+          />
+          <BaseStack.Screen
+            name={'OrderDetailScreen'}
+            component={OrderDetailScreen}
+          />
+        </BaseStack.Navigator>
+      </NavigationContainer>
+  <Toast config={customToastConfig} />
+    </SafeAreaProvider>
+
   );
 }
 
