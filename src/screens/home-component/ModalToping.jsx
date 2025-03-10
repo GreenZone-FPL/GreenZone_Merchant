@@ -12,7 +12,6 @@ import {
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {AppAsyncStorage, TextFormatter} from '../../utils';
 
-import {Ani_ModalLoading} from '../../components';
 const {width} = Dimensions.get('window').width;
 
 const ModalToping = ({
@@ -125,9 +124,9 @@ const ModalToping = ({
           fulfillmentDateTime: new Date().toISOString(),
           note: null,
           totalPrice: newItem.totalPrice,
-          paymentMethod: null,
+          paymentMethod: 'cod',
           shippingAddress: null,
-          store: merchant?._id,
+          store: merchant?.workingStore,
           owner: null,
           voucher: null,
           orderItems: [newItem],
@@ -184,7 +183,7 @@ const ModalToping = ({
     <Modal visible={openMenu} transparent animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>Chọn Size</Text>
+          <Text style={styles.modalTitle}>Chọn Size</Text>
           <View style={styles.sizeContainer}>
             {selectedProduct?.variant?.map(item => (
               <TouchableOpacity
@@ -259,32 +258,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.overlay,
   },
   modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
+    backgroundColor: colors.white,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     alignItems: 'center',
     flex: 1,
-    margin: 20,
+    margin: GLOBAL_KEYS.PADDING_DEFAULT,
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE, // thay vì 18
     fontWeight: 'bold',
     marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   sizeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: GLOBAL_KEYS.PADDING_SMALL, // thay vì 10
   },
   sizeOption: {
-    padding: GLOBAL_KEYS.PADDING_DEFAULT - 4,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT - 4, // giảm 4 đơn vị so với PADDING_DEFAULT
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginHorizontal: 5,
+    borderColor: colors.gray400, // dùng màu xám từ colors
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_SMALL,
     backgroundColor: colors.gray200,
   },
   selectedSize: {
@@ -304,8 +304,8 @@ const styles = StyleSheet.create({
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     paddingHorizontal: '20%',
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
+    borderColor: colors.gray400,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     backgroundColor: colors.gray200,
     marginVertical: GLOBAL_KEYS.GAP_SMALL / 2,
     alignItems: 'center',
@@ -315,29 +315,30 @@ const styles = StyleSheet.create({
     borderColor: colors.yellow500,
   },
   toppingText: {
-    fontSize: 16,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.primary,
   },
   selectedToppingText: {
-    color: 'white',
+    color: colors.white,
     fontWeight: 'bold',
   },
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    marginTop: 10,
+    marginTop: GLOBAL_KEYS.PADDING_SMALL,
   },
   confirmButton: {
     backgroundColor: '#299345',
-    padding: 20,
-    borderRadius: 5,
-    marginHorizontal: 20,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
     alignItems: 'center',
   },
   confirmButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontWeight: 'bold',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
   },
 });
 export default React.memo(ModalToping);

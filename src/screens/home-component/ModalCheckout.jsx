@@ -8,9 +8,15 @@ import {
   Alert,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {colors, GLOBAL_KEYS} from '../../constants';
+import {
+  colors,
+  DeliveryMethod,
+  GLOBAL_KEYS,
+  OrderStatus,
+  PaymentMethod,
+} from '../../constants';
 import {TextFormatter, AppAsyncStorage} from '../../utils';
-import {createPickUpOrder} from '../../axios';
+import {createPickUpOrder, updateOrderStatus} from '../../axios/index';
 import {Ani_ModalLoading} from '../../components';
 
 const {width, height} = Dimensions.get('window');
@@ -75,14 +81,16 @@ const ModalCheckout = ({
     });
   };
 
-  //tạo order
+  // Tạo đơn hàng
   const createOrder = async order => {
     setLoading(true);
     try {
       const response = await createPickUpOrder(order);
       if (response.status === 201) {
-        setLoading(false);
-
+        await updateStatus(
+          response.data.data._id,
+          OrderStatus.PROCESSING.value,
+        );
         setShowMessage(true);
         setMessage('TẠO ĐƠN THÀNH CÔNG');
         setTimeout(() => {
@@ -95,9 +103,26 @@ const ModalCheckout = ({
         }, 3000);
       }
       console.log('status:', response.status);
-      console.log('Dữ liệu gửi lên API:', JSON.stringify(order, null, 2));
+      console.log(
+        'Dữ liệu gửi lên API:',
+        JSON.stringify(response.data, null, 2),
+      );
       return response;
     } catch (error) {
+      console.error('Lỗi tạo đơn hàng:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cập nhật trạng thái đơn hàng
+  const updateStatus = async (orderId, status) => {
+    try {
+      const response = await updateOrderStatus(orderId, status);
+      return response;
+    } catch (error) {
+      console.error('Lỗi khi cập nhật trạng thái đơn hàng:', error);
       throw error;
     }
   };
@@ -107,10 +132,13 @@ const ModalCheckout = ({
         <View style={styles.modalContent}>
           <View style={styles.infoContainer}>
             <Item
-              title={'Cửa hàng'}
-              text={`Green Zone ${merchant?.lastName}`}
+              title={'Phương thức nhận hàng'}
+              text={
+                order.deliveryMethod === DeliveryMethod.PICK_UP.value &&
+                DeliveryMethod.PICK_UP.label
+              }
             />
-            <Item title={'Phương thức nhận hàng'} text={order.deliveryMethod} />
+
             <Item
               title={'Thời gian hoàn tất đơn hàng'}
               text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
@@ -129,7 +157,10 @@ const ModalCheckout = ({
               title={'Ghi chú'}
               text={order.note ? order.note : 'không có ghi chú'}
             />
-            <Item title={'Phương thức thanh toán'} text={order.paymentMethod} />
+            <Item
+              title={'Phương thức thanh toán'}
+              text={' Thanh toán tiền mặt'}
+            />
             <Item
               title={'Địa chỉ giao hàng'}
               text={order.shippingAddress ? order.shippingAddress : 'Tại quán'}
@@ -149,11 +180,11 @@ const ModalCheckout = ({
               onPress={() => {
                 processCashPayment();
               }}>
-              <Text style={styles.buttonText}>Thanh Toán Tiền Mặt</Text>
+              <Text style={styles.buttonText}>Tạo đơn</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.paymentButton}>
+            {/* <TouchableOpacity style={styles.paymentButton}>
               <Text style={styles.buttonText}>Thanh Toán Chuyển Khoản</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity
               onPress={() => setIsCheckout(false)}
               style={styles.cancelButton}>
@@ -198,58 +229,65 @@ const styles = StyleSheet.create({
     margin: '10%',
     backgroundColor: colors.white,
     alignItems: 'center',
-    gap: GLOBAL_KEYS.GAP_DEFAULT * 5,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     justifyContent: 'center',
+    gap: GLOBAL_KEYS.GAP_SMALL,
   },
   infoContainer: {
     gap: GLOBAL_KEYS.GAP_SMALL,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: GLOBAL_KEYS.GAP_DEFAULT * 2,
+    justifyContent: 'space-between',
+    gap: 30,
+    margin: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   paymentButton: {
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     backgroundColor: colors.primary,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    width: width / 6,
   },
   cancelButton: {
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     backgroundColor: colors.red900,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    width: width / 6,
   },
   buttonText: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '600',
     color: colors.white,
+    textAlign: 'center',
   },
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: GLOBAL_KEYS.GAP_DEFAULT,
+
     width: '100%',
+
+    marginBottom: GLOBAL_KEYS.GAP_SMALL,
   },
   itemTitle: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
-    width: '20%',
+    width: '25%',
   },
   itemText: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.primary,
     fontWeight: '700',
   },
   showMessage: {
-    width: 400,
-    height: 200,
     backgroundColor: colors.white,
     color: colors.primary,
-    borderRadius: 10,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER + 5,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     elevation: 4,
     textAlign: 'center',
     textAlignVertical: 'center',
     fontWeight: '700',
+    padding: 100,
   },
 });
 

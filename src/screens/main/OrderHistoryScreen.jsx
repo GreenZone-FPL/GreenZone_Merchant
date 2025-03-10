@@ -8,46 +8,85 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {getMyOrders} from '../../axios/index';
+import {getOrders} from '../../axios/index';
 import {
+  Ani_ModalLoading,
   Column,
   CustomTabView,
   LightStatusBar,
-  NormalHeader,
   NormalLoading,
 } from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
-import {OrderGraph} from '../../layouts/graphs';
+import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
 import {TextFormatter} from '../../utils';
+import OrderDetailScreen from '../order/OrderDetailScreen';
+import {jsiConfigureProps} from 'react-native-reanimated/lib/typescript/core';
 
 const width = Dimensions.get('window').width;
 
 const OrderHistoryScreen = props => {
   const {navigation} = props;
 
+  const [pendingConfirmation, setPendingConfirmation] = useState([]); //'Chờ xác nhận',
+  const [processing, setProcessing] = useState([]); // 'Đang xử lý',
+  const [readyForPickup, setReadyForPickup] = useState([]); //'Chờ lấy hàng'
+  const [cancelled, setCancelled] = useState([]); //'Đã huỷ'
+  const [failedDelivery, setFailedDelivery] = useState([]); // 'Giao hàng thất bại',
+
   const [tabIndex, setTabIndex] = useState(0);
-  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOrderDetail, setIsModalOrderDetail] = useState(false);
+  const [idOrder, setIdOrder] = useState(null);
 
   ///
-  const feathOrders = async () => {
+  const feathOrders = async ({status, setOrders}) => {
     setLoading(true);
     try {
-      const response = await getMyOrders();
+      const response = await getOrders(status);
       setOrders(response.data);
-      // console.log('>>>>.', response.data);
     } catch {
     } finally {
       setLoading(false);
     }
   };
-
+  //
   useEffect(() => {
-    feathOrders();
+    feathOrders({
+      status: OrderStatus.PENDING_CONFIRMATION.value,
+      setOrders: setPendingConfirmation,
+    });
+  }, []);
+  //
+  useEffect(() => {
+    feathOrders({
+      status: OrderStatus.PROCESSING.value,
+      setOrders: setProcessing,
+    });
+  }, []);
+  //
+  useEffect(() => {
+    feathOrders({
+      status: OrderStatus.READY_FOR_PICKUP.value,
+      setOrders: setReadyForPickup,
+    });
+  }, []);
+  //
+  useEffect(() => {
+    feathOrders({
+      status: OrderStatus.CANCELLED.value,
+      setOrders: setCancelled,
+    });
+  }, []);
+  //
+  useEffect(() => {
+    feathOrders({
+      status: OrderStatus.FAILED_DELIVERY.value,
+      setOrders: setFailedDelivery,
+    });
   }, []);
 
   const handleRepeatOrder = id => {
-    navigation.navigate(OrderGraph.OrderDetailScreen, {id});
+    setIsModalOrderDetail(true);
+    setIdOrder(id);
   };
 
   return (
@@ -58,59 +97,55 @@ const OrderHistoryScreen = props => {
         setTabIndex={setTabIndex}
         tabBarConfig={{
           titles: [
-            'Chờ Thanh Toán',
-            'Chờ xử lý',
-            'Đang thực hiện',
-            'Đã hoàn tất',
+            'Chờ xác nhận',
+            'Đang xử lý',
+            'Chờ lấy hàng',
+            'Giao hàng thất bại',
             'Đã huỷ',
           ],
           titleActiveColor: colors.primary,
           titleInActiveColor: colors.gray700,
         }}>
-        {[
-          'awaitingPayment',
-          'pendingConfirmation',
-          'processing',
-          'completed',
-          'cancelled',
-        ].map((status, index) => (
-          <OrderListView
-            index={status}
-            status={status}
-            orders={orders}
-            handleRepeatOrder={handleRepeatOrder}
-          />
-        ))}
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={pendingConfirmation}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={processing}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={readyForPickup}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={failedDelivery}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={cancelled}
+        />
       </CustomTabView>
+      <Ani_ModalLoading loading={loading} />
+      <OrderDetailScreen
+        setIsModalOrderDetail={setIsModalOrderDetail}
+        isModalOrderDetail={isModalOrderDetail}
+        idOrder={idOrder}
+      />
     </View>
   );
 };
 
-const OrderListView = ({
-  status,
-  orders,
-  loading,
-  onItemPress,
-  handleRepeatOrder,
-}) => {
-  const STATUS_GROUPS = {
-    awaitingPayment: ['awaitingPayment'],
-    pendingConfirmation: ['pendingConfirmation'],
-    processing: ['processing', 'readyForPickup', 'shippingOrder'],
-    completed: ['completed'],
-    cancelled: ['cancelled', 'failedDelivery'],
-  };
-
+const OrderListView = ({orders, loading, handleRepeatOrder}) => {
+  console.log('>>>', JSON.stringify(orders[1], null, 2));
   const filteredOrders =
-    orders
-      ?.filter(order => STATUS_GROUPS[status]?.includes(order.status))
-      .sort((a, b) => {
-        const dateA = new Date(a.fulfillmentDateTime).getTime();
-        const dateB = new Date(b.fulfillmentDateTime).getTime();
-        return dateB - dateA;
-      }) || [];
+    orders.sort((a, b) => {
+      const dateA = new Date(a.fulfillmentDateTime).getTime();
+      const dateB = new Date(b.fulfillmentDateTime).getTime();
+      return dateB - dateA;
+    }) || [];
 
-  let obj = {};
   return (
     <View style={styles.scene}>
       {loading ? (
@@ -127,14 +162,14 @@ const OrderListView = ({
           }}
         />
       ) : (
-        <EmptyView message={getEmptyMessage(status)} />
+        <EmptyView message={getEmptyMessage(orders.status)} />
       )}
     </View>
   );
 };
 
 const Item = ({item, handleRepeatOrder}) => {
-  console.log(JSON.stringify(item, null, 2));
+  // console.log(JSON.stringify(item, null, 2));
   return (
     <TouchableOpacity
       onPress={() => handleRepeatOrder(item._id)}
@@ -154,8 +189,10 @@ const Item = ({item, handleRepeatOrder}) => {
           gap: GLOBAL_KEYS.GAP_SMALL,
           width: '30%',
         }}>
-        <Text>Đơn hàng: {item._id}</Text>
-        <Text>
+        <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
+          Đơn hàng: <Text style={{fontWeight: '500'}}>{item._id}</Text>
+        </Text>
+        <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
           {item.owner?.firstName
             ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
             : 'Khách hàng vãng lai'}
@@ -165,12 +202,21 @@ const Item = ({item, handleRepeatOrder}) => {
         style={{
           flexDirection: 'column',
           gap: GLOBAL_KEYS.GAP_SMALL,
+          width: '20%',
         }}>
         <ItemOrderText deliveryMethod={item.deliveryMethod} />
-        <Text>{item.paymentMethod}</Text>
+        <Text
+          style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500'}}>
+          {item.paymentMethod == PaymentMethod.COD.value
+            ? 'Thanh toán tiền mặt'
+            : 'Thanh toán ngân hàng'}
+        </Text>
       </View>
       <View style={{flex: Column, gap: GLOBAL_KEYS.GAP_SMALL, width: '20%'}}>
-        <Text>{TextFormatter.formatCurrency(item.totalPrice)}</Text>
+        <Text
+          style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500'}}>
+          {TextFormatter.formatCurrency(item.totalPrice)}
+        </Text>
 
         <Text>{TextFormatter.formatDateTime(item.fulfillmentDateTime)}</Text>
       </View>
@@ -233,7 +279,7 @@ const styles = StyleSheet.create({
     paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   emptyContainer: {justifyContent: 'center', alignItems: 'center'},
-  emptyImage: {width: width / 2, height: width / 2},
+  emptyImage: {width: width / 3, height: width / 3},
   orderItem: {
     margin: GLOBAL_KEYS.PADDING_SMALL,
     backgroundColor: colors.white,
@@ -269,8 +315,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   orderTypeIcon: {
-    width: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
-    height: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
+    width: 50,
+    height: 50,
     resizeMode: 'cover',
   },
 });
