@@ -576,6 +576,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: colors.gray200,
     borderWidth: 2,
+    width: '15%',
   },
   button1: {
     backgroundColor: colors.red900,
@@ -585,6 +586,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: colors.gray200,
     borderWidth: 2,
+    width: '15%',
   },
   buttonText: {
     color: colors.white,
