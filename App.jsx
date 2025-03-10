@@ -7,8 +7,10 @@ import LoginScreen from './src/screens/auth/LoginScreen';
 import MainNavigation from './src/layouts/MainNavigation';
 import OrderDetailScreen from './src/screens/order/OrderDetailScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
-import Toast from 'react-native-toast-message';
+import Toast, {BaseToast} from 'react-native-toast-message';
 import {Dimensions, Platform} from 'react-native';
+import { colors } from './src/constants';
+
 
 // Kiểm tra thiết bị có phải là tablet không
 const isTablet = () => {
@@ -17,6 +19,34 @@ const isTablet = () => {
 };
 
 const BaseStack = createNativeStackNavigator();
+
+const customToastConfig = {
+  success: ({text1, text2, props}) => (
+    <BaseToast
+      style={{
+        borderLeftColor: colors.primary,
+        borderLeftWidth: 8,
+        backgroundColor: 'white',
+        borderRadius: 4,
+        padding: 10,
+        width: '80%',
+      }}
+      contentContainerStyle={{paddingHorizontal: 15}}
+      text1Style={{
+        fontSize: isTablet() ? 22 : 18,
+        fontWeight: 'bold',
+        color: colors.primary,
+      }}
+      text2Style={{
+        fontSize: isTablet() ? 18 : 16,
+        color: colors.gray700,
+      }}
+      text1={text1}
+      text2={text2}
+      {...props}
+    />
+  ),
+};
 
 function App() {
   useEffect(() => {
@@ -52,6 +82,7 @@ function App() {
           paddingVertical: isTablet() ? 20 : 10,
           borderRadius: isTablet() ? 20 : 10,
         },
+
       });
     };
 
@@ -63,6 +94,7 @@ function App() {
   }, []);
 
   return (
+
     <SafeAreaProvider>
       <NavigationContainer>
         <BaseStack.Navigator screenOptions={{headerShown: false}}>
@@ -77,7 +109,9 @@ function App() {
           />
         </BaseStack.Navigator>
       </NavigationContainer>
+  <Toast config={customToastConfig} />
     </SafeAreaProvider>
+
   );
 }
 
