@@ -63,7 +63,6 @@ function App() {
 
   useEffect(() => {
     const handleNewOrder = data => {
-      console.log('📦 Đơn hàng mới:', data);
       Toast.show({
         type: 'success',
         text1: '📢 Đơn hàng mới!',

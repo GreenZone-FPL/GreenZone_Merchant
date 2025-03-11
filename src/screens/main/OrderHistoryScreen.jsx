@@ -19,7 +19,6 @@ import {
 import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
 import {TextFormatter} from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
-import {jsiConfigureProps} from 'react-native-reanimated/lib/typescript/core';
 
 const width = Dimensions.get('window').width;
 
@@ -29,6 +28,8 @@ const OrderHistoryScreen = props => {
   const [pendingConfirmation, setPendingConfirmation] = useState([]); //'Chờ xác nhận',
   const [processing, setProcessing] = useState([]); // 'Đang xử lý',
   const [readyForPickup, setReadyForPickup] = useState([]); //'Chờ lấy hàng'
+  const [shippingOrder, setShippingOrder] = useState([]); //'Đang giao hàng',
+  const [completed, setCompleted] = useState([]); //'Hoàn thành',
   const [cancelled, setCancelled] = useState([]); //'Đã huỷ'
   const [failedDelivery, setFailedDelivery] = useState([]); // 'Giao hàng thất bại',
 
@@ -69,6 +70,20 @@ const OrderHistoryScreen = props => {
       setOrders: setReadyForPickup,
     });
   }, []);
+
+  useEffect(() => {
+    feathOrders({
+      status: OrderStatus.SHIPPING_ORDER.value,
+      setOrders: setShippingOrder,
+    });
+  }, []);
+
+  useEffect(() => {
+    feathOrders({
+      status: OrderStatus.COMPLETED.value,
+      setOrders: setCompleted,
+    });
+  }, []);
   //
   useEffect(() => {
     feathOrders({
@@ -100,6 +115,8 @@ const OrderHistoryScreen = props => {
             'Chờ xác nhận',
             'Đang xử lý',
             'Chờ lấy hàng',
+            'Đang giao hàng',
+            'Hoàn thành',
             'Giao hàng thất bại',
             'Đã huỷ',
           ],
@@ -117,6 +134,14 @@ const OrderHistoryScreen = props => {
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={readyForPickup}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={shippingOrder}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={completed}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}

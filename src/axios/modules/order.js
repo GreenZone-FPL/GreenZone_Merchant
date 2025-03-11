@@ -51,16 +51,28 @@ export const getOrderDetail = async orderId => {
   }
 };
 
-export const updateOrderStatus = async (orderId, status) => {
+export const updateOrderStatus = async (
+  orderId,
+  status,
+  deliveryMethod,
+  shipperId,
+) => {
   try {
     const body = {status};
+
+    // Nếu là đơn "delivery" và chuyển sang "readyForPickup", thì cần shipper
+    if (deliveryMethod === 'delivery' && status === 'readyForPickup') {
+      body.shipper = shipperId;
+    }
+
     const response = await axiosInstance.patch(
       `/v1/order/${orderId}/status`,
       body,
     );
-    return response;
+
+    return response.data;
   } catch (error) {
-    console.log('error:', error);
+    console.log('Lỗi API:', error.response?.data || error.message);
     throw error;
   }
 };
