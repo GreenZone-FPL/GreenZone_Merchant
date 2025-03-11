@@ -141,7 +141,7 @@ const HomeScreen = () => {
             {merchant?.firstName + ' ' + merchant?.lastName}
           </Text>
           <CustomSearchBar
-            placeholder="Tìm kiếm đơn hàng..."
+            placeholder="Tìm kiếm sản phẩm..."
             searchQuery={searchTerm}
             setSearchQuery={setSearchTerm}
             onClearIconPress={() => setSearchTerm('')}

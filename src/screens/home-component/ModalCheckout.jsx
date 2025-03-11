@@ -87,10 +87,10 @@ const ModalCheckout = ({
     try {
       const response = await createPickUpOrder(order);
       if (response.status === 201) {
-        await updateStatus(
-          response.data.data._id,
-          OrderStatus.PROCESSING.value,
-        );
+        // await updateStatus(
+        //   response.data.data._id,
+        //   OrderStatus.PROCESSING.value,
+        // );
         setShowMessage(true);
         setMessage('TẠO ĐƠN THÀNH CÔNG');
         setTimeout(() => {
