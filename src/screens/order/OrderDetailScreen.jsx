@@ -38,8 +38,10 @@ const {width} = Dimensions.get('window');
 
 const OrderDetailScreen = ({
   idOrder,
+  setIdOrder,
   setIsModalOrderDetail,
   isModalOrderDetail,
+  fetchOrders,
 }) => {
   const [loading, setLoading] = useState(true);
   const [orderDetail, setOrderDetail] = useState(null);
@@ -50,7 +52,8 @@ const OrderDetailScreen = ({
     try {
       const response = await getOrderDetail(idOrder);
       setOrderDetail(response.data);
-      setStatus(response.data.status); // Cập nhật status
+      setStatus(response.data.status);
+      console.log('>>>>>>', JSON.stringify(response.data, null, 2));
     } catch (error) {
       console.log('Lỗi lấy chi tiết đơn hàng:', error);
     } finally {
@@ -63,7 +66,6 @@ const OrderDetailScreen = ({
     fetchOrderDetail();
   }, [idOrder]);
 
-  // Theo dõi sự thay đổi của status
   useEffect(() => {
     if (status !== null) {
       fetchOrderDetail();
@@ -117,6 +119,8 @@ const OrderDetailScreen = ({
           <PaymentDetails
             data={orderDetail}
             setIsModalOrderDetail={setIsModalOrderDetail}
+            fetchOrders={fetchOrders}
+            setIdOrder={setIdOrder}
           />
         </ScrollView>
       </View>
@@ -293,7 +297,12 @@ const Title = ({
   );
 };
 
-const PaymentDetails = ({data, setIsModalOrderDetail}) => {
+const PaymentDetails = ({
+  data,
+  setIsModalOrderDetail,
+  fetchOrders,
+  setIdOrder,
+}) => {
   if (!data) return null;
 
   const {
@@ -335,10 +344,10 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
   const updateStatus = async (status, deliveryMethod) => {
     try {
       const response = await updateOrderStatus(_id, status, deliveryMethod);
-      console.log(`Cập nhật trạng thái đơn hàng thành công:`, response);
-      return response;
+
+      return response.data;
     } catch (error) {
-      console.error(`Lỗi khi cập nhật trạng thái đơn hàng:`, error);
+      console.log(`Lỗi khi cập nhật trạng thái đơn hàng:`, error);
       throw error;
     }
   };
@@ -352,9 +361,13 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
   const handleStatusUpdate = async newStatus => {
     try {
       await updateStatus(newStatus);
-      setIsModalOrderDetail(false);
+
+      fetchOrders();
+      setIdOrder(null);
     } catch (error) {
-      console.error(`Chuyển trạng thái đơn hàng thất bại:`, error);
+      console.error(`Cập nhật trạng thái đơn hàng thất bại:`, error);
+    } finally {
+      setIsModalOrderDetail(false);
     }
   };
 
@@ -365,69 +378,77 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
 
       await updateOrderStatus(_id, status, 'delivery', shipperId);
       console.log(`Cập nhật trạng thái thành công:`, status);
+      await fetchOrders();
     } catch (error) {
       console.error(`Lỗi cập nhật trạng thái đơn hàng:`, error);
+    } finally {
+      setIsModalOrderDetail(false);
     }
   };
-
   return (
     <View style={styles.paymentDetailsContainer}>
+      {/* Tiêu đề chi tiết thanh toán */}
       <DualTextRow
         leftText="CHI TIẾT THANH TOÁN"
         leftTextStyle={styles.dualTextLeftHeader}
       />
+      {/* Hiển thị ID đơn hàng */}
       <OrderId data={_id} />
+
+      {/* Các thông tin chi tiết thanh toán */}
       {[
         {
-          leftText: `Tạm tính (${orderItems.length} sản phẩm)`,
-          rightText: TextFormatter.formatCurrency(totalPrice),
+          leftText: `Tạm tính (${orderItems.length} sản phẩm)`, // Tạm tính với số lượng sản phẩm
+          rightText: TextFormatter.formatCurrency(totalPrice), // Tổng giá trị đơn hàng
         },
         {
           leftText: 'Phí giao hàng',
           rightText: TextFormatter.formatCurrency(
-            deliveryMethod === DeliveryMethod.DELIVERY.value ? shippingFee : 0,
+            deliveryMethod === DeliveryMethod.DELIVERY.value ? shippingFee : 0, // Kiểm tra phương thức giao hàng và hiển thị phí
           ),
         },
         {
           leftText: 'Giảm giá',
-          rightText: `-${TextFormatter.formatCurrency(discountAmount)}`,
-          rightTextStyle: {color: colors.primary},
+          rightText: `-${TextFormatter.formatCurrency(discountAmount)}`, // Hiển thị số tiền giảm giá
+          rightTextStyle: {color: colors.primary}, // Màu sắc cho giá trị giảm giá
         },
         {
-          leftText: paymentStatus,
-          rightText: TextFormatter.formatCurrency(totalFromData || 0),
+          leftText: paymentStatus, // Trạng thái thanh toán
+          rightText: TextFormatter.formatCurrency(totalFromData || 0), // Tổng thanh toán
           leftTextStyle: {
             ...styles.dualTextStatus,
             borderColor:
               paymentStatus === 'Chưa thanh toán'
                 ? colors.red900
-                : colors.primary,
+                : colors.primary, // Màu sắc viền tùy vào trạng thái thanh toán
             color:
               paymentStatus === 'Chưa thanh toán'
                 ? colors.red900
-                : colors.primary,
+                : colors.primary, // Màu sắc chữ tùy vào trạng thái thanh toán
           },
-          rightTextStyle: {fontWeight: '700', color: colors.primary},
+          rightTextStyle: {fontWeight: '700', color: colors.primary}, // Màu sắc và trọng lượng chữ cho giá trị thanh toán
         },
         {
           leftText: 'Thời gian đặt hàng',
-          rightText: TextFormatter.formatDateTime(fulfillmentDateTime),
+          rightText: TextFormatter.formatDateTime(fulfillmentDateTime), // Hiển thị thời gian đặt hàng
         },
         {
           leftText: 'Thanh toán',
           rightText:
             paymentMethod === PaymentMethod.COD.value
               ? 'Tiền mặt'
-              : 'Chuyển khoản',
-          rightTextStyle: {fontWeight: '700', color: colors.primary},
+              : 'Chuyển khoản', // Hiển thị phương thức thanh toán
+          rightTextStyle: {fontWeight: '700', color: colors.primary}, // Màu sắc và trọng lượng chữ cho phương thức thanh toán
         },
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
       ))}
 
+      {/* Kiểm tra trạng thái đơn hàng để hiển thị các nút tương ứng */}
       {status !== OrderStatus.CANCELLED.value &&
         status !== OrderStatus.FAILED_DELIVERY.value && (
           <View style={styles.buttonContainer}>
+            {/* Trạng thái đang chờ xác nhận */}
             {status === OrderStatus.PENDING_CONFIRMATION.value && (
               <>
                 <Pressable
@@ -437,7 +458,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                       notification: 'Xác nhận đơn hàng',
                       message: 'Bạn có chắc chắn muốn xác nhận đơn hàng này?',
                       onPress: () =>
-                        handleStatusUpdate(OrderStatus.PROCESSING.value),
+                        handleStatusUpdate(OrderStatus.PROCESSING.value), // Cập nhật trạng thái đơn hàng
                     })
                   }>
                   <NormalText text="Xác nhận" style={styles.buttonText} />
@@ -450,7 +471,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                       notification: 'Xác nhận huỷ đơn hàng',
                       message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
                       onPress: () =>
-                        handleStatusUpdate(OrderStatus.CANCELLED.value),
+                        handleStatusUpdate(OrderStatus.CANCELLED.value), // Cập nhật trạng thái huỷ đơn hàng
                     })
                   }>
                   <NormalText text="Huỷ" style={styles.buttonTextWhite} />
@@ -458,16 +479,18 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
               </>
             )}
 
+            {/* Trạng thái đơn hàng đang xử lý */}
             {status === OrderStatus.PROCESSING.value && (
               <>
                 {deliveryMethod === DeliveryMethod.DELIVERY.value ? (
                   <>
+                    {/* Chọn shipper nếu phương thức giao hàng là giao tận nơi */}
                     <ShipperSelect onSelect={setSelectedShipper} />
 
                     <Pressable
                       style={[
                         styles.button,
-                        !selectedShipper && styles.buttonDisabled,
+                        !selectedShipper && styles.buttonDisabled, // Nút disabled nếu chưa chọn shipper
                       ]}
                       onPress={() => {
                         if (!selectedShipper) {
@@ -484,10 +507,9 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                           onPress: () =>
                             handleStatusUpdateWithShipper(
                               OrderStatus.READY_FOR_PICKUP.value,
-                              selectedShipper?._id,
+                              selectedShipper?._id, // Cập nhật trạng thái và ID shipper
                             ),
                         });
-                        console.log('Shipper ID:', selectedShipper?._id);
                       }}>
                       <NormalText
                         text="Giao Cho Shipper"
@@ -496,6 +518,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                     </Pressable>
                   </>
                 ) : (
+                  // Nếu phương thức giao hàng không phải giao tận nơi
                   <Pressable
                     style={styles.button}
                     onPress={() =>
@@ -504,7 +527,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                         message: '"Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy"?',
                         onPress: () =>
                           handleStatusUpdate(
-                            OrderStatus.READY_FOR_PICKUP.value,
+                            OrderStatus.READY_FOR_PICKUP.value, // Cập nhật trạng thái là sẵn sàng để lấy
                           ),
                       })
                     }>
@@ -516,28 +539,28 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                 )}
               </>
             )}
+
+            {/* Trạng thái đơn hàng đã sẵn sàng để giao */}
             {status === OrderStatus.READY_FOR_PICKUP.value && (
               <>
                 {deliveryMethod === DeliveryMethod.DELIVERY.value ? (
-                  <>
-                    <Pressable
-                      style={styles.button}
-                      onPress={() =>
-                        showAlert({
-                          notification: 'Đơn Đang Được Giao',
-                          message: '"Đơn Đang Được Giao"?',
-                          onPress: () =>
-                            handleStatusUpdate(
-                              OrderStatus.SHIPPING_ORDER.value,
-                            ),
-                        })
-                      }>
-                      <NormalText
-                        text="Đang Được Giao"
-                        style={styles.buttonText}
-                      />
-                    </Pressable>
-                  </>
+                  <Pressable
+                    style={styles.button}
+                    onPress={() =>
+                      showAlert({
+                        notification: 'Đơn Đang Được Giao',
+                        message: '"Đơn Đang Được Giao"?',
+                        onPress: () =>
+                          handleStatusUpdate(
+                            OrderStatus.SHIPPING_ORDER.value, // Cập nhật trạng thái đơn hàng đang giao
+                          ),
+                      })
+                    }>
+                    <NormalText
+                      text="Đang Được Giao"
+                      style={styles.buttonText}
+                    />
+                  </Pressable>
                 ) : (
                   <Pressable
                     style={styles.button}
@@ -546,7 +569,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                         notification: 'Đơn Đã Hoàn Thành',
                         message: '"Đơn Đã Hoàn Thành"?',
                         onPress: () =>
-                          handleStatusUpdate(OrderStatus.COMPLETED.value),
+                          handleStatusUpdate(OrderStatus.COMPLETED.value), // Cập nhật trạng thái hoàn thành đơn hàng
                       })
                     }>
                     <NormalText
@@ -557,6 +580,8 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                 )}
               </>
             )}
+
+            {/* Trạng thái đơn hàng đang giao */}
             {status === OrderStatus.SHIPPING_ORDER.value && (
               <>
                 <Pressable
@@ -566,7 +591,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                       notification: 'Đơn Đã Hoàn Thành',
                       message: 'Đơn hàng đã được giao thành công?',
                       onPress: () =>
-                        handleStatusUpdate(OrderStatus.COMPLETED.value),
+                        handleStatusUpdate(OrderStatus.COMPLETED.value), // Cập nhật trạng thái hoàn thành đơn hàng
                     })
                   }>
                   <NormalText text="Đã Hoàn Thành" style={styles.buttonText} />
@@ -579,7 +604,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
                       notification: 'Giao hàng thất bại',
                       message: 'Đơn hàng giao không thành công?',
                       onPress: () =>
-                        handleStatusUpdate(OrderStatus.FAILED_DELIVERY.value),
+                        handleStatusUpdate(OrderStatus.FAILED_DELIVERY.value), // Cập nhật trạng thái giao thất bại
                     })
                   }>
                   <NormalText

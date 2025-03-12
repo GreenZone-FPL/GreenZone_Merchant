@@ -9,16 +9,11 @@ import {
   View,
 } from 'react-native';
 import {getOrders} from '../../axios/index';
-import {
-  Ani_ModalLoading,
-  Column,
-  CustomTabView,
-  LightStatusBar,
-  NormalLoading,
-} from '../../components';
+import {Column, CustomTabView, LightStatusBar} from '../../components';
 import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
 import {TextFormatter} from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
+import MerchantSocketService from '../../sevices/merchantSocketService';
 
 const width = Dimensions.get('window').width;
 
@@ -39,70 +34,75 @@ const OrderHistoryScreen = props => {
   const [idOrder, setIdOrder] = useState(null);
 
   ///
-  const feathOrders = async ({status, setOrders}) => {
+  const fetchOrders = async () => {
     setLoading(true);
+
     try {
-      const response = await getOrders(status);
-      setOrders(response.data);
-    } catch {
+      // Lấy đơn hàng trạng thái Chờ xác nhận
+      const responsePending = await getOrders(
+        OrderStatus.PENDING_CONFIRMATION.value,
+      );
+      setPendingConfirmation(responsePending.data);
+
+      // Lấy đơn hàng trạng thái Đang xử lý
+      const responseProcessing = await getOrders(OrderStatus.PROCESSING.value);
+      setProcessing(responseProcessing.data);
+
+      // Lấy đơn hàng trạng thái Chờ lấy hàng
+      const responseReadyForPickup = await getOrders(
+        OrderStatus.READY_FOR_PICKUP.value,
+      );
+      setReadyForPickup(responseReadyForPickup.data);
+
+      // Lấy đơn hàng trạng thái Đang giao hàng
+      const responseShippingOrder = await getOrders(
+        OrderStatus.SHIPPING_ORDER.value,
+      );
+      setShippingOrder(responseShippingOrder.data);
+
+      // Lấy đơn hàng trạng thái Hoàn thành
+      const responseCompleted = await getOrders(OrderStatus.COMPLETED.value);
+      setCompleted(responseCompleted.data);
+
+      // Lấy đơn hàng trạng thái Đã huỷ
+      const responseCancelled = await getOrders(OrderStatus.CANCELLED.value);
+      setCancelled(responseCancelled.data);
+
+      // Lấy đơn hàng trạng thái Giao hàng thất bại
+      const responseFailedDelivery = await getOrders(
+        OrderStatus.FAILED_DELIVERY.value,
+      );
+      setFailedDelivery(responseFailedDelivery.data);
+    } catch (error) {
+      console.log('Lỗi khi lấy danh sách đơn hàng:', error);
     } finally {
       setLoading(false);
     }
   };
-  //
   useEffect(() => {
-    feathOrders({
-      status: OrderStatus.PENDING_CONFIRMATION.value,
-      setOrders: setPendingConfirmation,
-    });
-  }, []);
-  //
-  useEffect(() => {
-    feathOrders({
-      status: OrderStatus.PROCESSING.value,
-      setOrders: setProcessing,
-    });
-  }, []);
-  //
-  useEffect(() => {
-    feathOrders({
-      status: OrderStatus.READY_FOR_PICKUP.value,
-      setOrders: setReadyForPickup,
-    });
-  }, []);
-
-  useEffect(() => {
-    feathOrders({
-      status: OrderStatus.SHIPPING_ORDER.value,
-      setOrders: setShippingOrder,
-    });
-  }, []);
-
-  useEffect(() => {
-    feathOrders({
-      status: OrderStatus.COMPLETED.value,
-      setOrders: setCompleted,
-    });
-  }, []);
-  //
-  useEffect(() => {
-    feathOrders({
-      status: OrderStatus.CANCELLED.value,
-      setOrders: setCancelled,
-    });
-  }, []);
-  //
-  useEffect(() => {
-    feathOrders({
-      status: OrderStatus.FAILED_DELIVERY.value,
-      setOrders: setFailedDelivery,
-    });
+    fetchOrders();
   }, []);
 
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
     setIdOrder(id);
   };
+
+  useEffect(() => {
+    const handleNewOrder = data => {
+      if (data._id !== null) {
+        console.log(' goi api khi co don hang moi');
+        fetchOrders();
+      } else {
+        console.log(' khong dc goi api khi co don hang moi');
+      }
+    };
+
+    MerchantSocketService.on('order.new', handleNewOrder);
+    return () => {
+      MerchantSocketService.off('order.new', handleNewOrder);
+    };
+  }, []);
 
   return (
     <View style={{flex: 1}}>
@@ -126,44 +126,54 @@ const OrderHistoryScreen = props => {
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={pendingConfirmation}
+          status={'pendingConfirmation'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={processing}
+          status={'processing'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={readyForPickup}
+          status={'readyForPickup'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={shippingOrder}
+          status={'shippingOrder'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={completed}
+          status={'completed'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={failedDelivery}
+          status={'failedDelivery'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={cancelled}
+          status={'cancelled'}
         />
       </CustomTabView>
-      <Ani_ModalLoading loading={loading} />
+
       <OrderDetailScreen
         setIsModalOrderDetail={setIsModalOrderDetail}
         isModalOrderDetail={isModalOrderDetail}
         idOrder={idOrder}
+        setIdOrder={setIdOrder}
+        fetchOrders={fetchOrders}
       />
+      {/* <NormalLoading visible={loading} /> */}
     </View>
   );
 };
 
-const OrderListView = ({orders, loading, handleRepeatOrder}) => {
-  console.log('>>>', JSON.stringify(orders[1], null, 2));
+const OrderListView = ({orders, loading, handleRepeatOrder, status}) => {
+  // console.log('>>>', JSON.stringify(orders[1], null, 2));
   const filteredOrders =
     orders.sort((a, b) => {
       const dateA = new Date(a.fulfillmentDateTime).getTime();
@@ -187,7 +197,7 @@ const OrderListView = ({orders, loading, handleRepeatOrder}) => {
           }}
         />
       ) : (
-        <EmptyView message={getEmptyMessage(orders.status)} />
+        <EmptyView message={getEmptyMessage(status)} />
       )}
     </View>
   );
@@ -252,13 +262,19 @@ const Item = ({item, handleRepeatOrder}) => {
 const getEmptyMessage = status => {
   switch (status) {
     case 'pendingConfirmation':
-      return 'Chưa có đơn hàng chờ xử lý';
+      return 'Chưa có đơn hàng Chờ xác nhận';
     case 'processing':
-      return 'Chưa có đơn hàng đang thực hiện';
+      return 'Chưa có đơn hàng Đang xử lý';
+    case 'readyForPickup':
+      return 'Chưa có đơn hàng Chờ lấy hàng';
+    case 'shippingOrder':
+      return 'Chưa có đơn Đang giao hàng';
     case 'completed':
-      return 'Chưa có đơn hàng hoàn thành';
+      return 'Chưa có đơn hàng Hoàn thành';
+    case 'failedDelivery':
+      return 'Chưa có đơn hàng Giao thất bại';
     case 'cancelled':
-      return 'Chưa có đơn hàng đã hủy';
+      return 'Chưa có đơn hàng Đã hủy';
   }
 };
 const ItemOrderType = ({deliveryMethod}) => {
