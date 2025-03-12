@@ -4,7 +4,6 @@ import {
   Image,
   Pressable,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -39,6 +38,7 @@ const OrderDetailScreen = ({
   idOrder,
   setIsModalOrderDetail,
   isModalOrderDetail,
+  setIsNewOrder,
 }) => {
   const [loading, setLoading] = useState(true);
   const [orderDetail, setOrderDetail] = useState(null);
@@ -111,6 +111,7 @@ const OrderDetailScreen = ({
           <PaymentDetails
             data={orderDetail}
             setIsModalOrderDetail={setIsModalOrderDetail}
+            setIsNewOrder={setIsNewOrder}
           />
         </ScrollView>
       </View>
@@ -257,7 +258,7 @@ const Title = ({
   );
 };
 
-const PaymentDetails = ({data, setIsModalOrderDetail}) => {
+const PaymentDetails = ({data, setIsModalOrderDetail, setIsNewOrder}) => {
   if (!data) return null;
   // console.log('>>>>>>.', JSON.stringify(data, null, 2));
 
@@ -297,6 +298,9 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
   const updateStatus = async status => {
     try {
       const response = await updateOrderStatus(data._id, status);
+      if (response.success === true) {
+        await setIsNewOrder(true);
+      }
       return response;
     } catch (error) {
       console.log('Lỗi khi cập nhật trạng thái đơn hàng:', error);
@@ -433,7 +437,7 @@ const PaymentDetails = ({data, setIsModalOrderDetail}) => {
               }}>
               <NormalText text="Xác nhận" style={styles.buttonText} />
             </Pressable>
-            {data?.status !== OrderStatus.READY_FOR_PICKUP.value && (
+            {data?.status == OrderStatus.PENDING_CONFIRMATION.value && (
               <Pressable style={styles.button1} onPress={goCancelled}>
                 <NormalText text="Huỷ" style={styles.buttonTextWhite} />
               </Pressable>

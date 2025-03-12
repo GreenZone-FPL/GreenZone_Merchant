@@ -19,7 +19,6 @@ import {
 import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
 import {TextFormatter} from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
-import {jsiConfigureProps} from 'react-native-reanimated/lib/typescript/core';
 
 const width = Dimensions.get('window').width;
 
@@ -37,12 +36,18 @@ const OrderHistoryScreen = props => {
   const [isModalOrderDetail, setIsModalOrderDetail] = useState(false);
   const [idOrder, setIdOrder] = useState(null);
 
+  // gọi lại  data
+  const [isNewOrder, setIsNewOrder] = useState(false);
+
   ///
   const feathOrders = async ({status, setOrders}) => {
     setLoading(true);
     try {
       const response = await getOrders(status);
       setOrders(response.data);
+      if (response.data.length > 0 || isNewOrder === true) {
+        setIsNewOrder(false);
+      }
     } catch {
     } finally {
       setLoading(false);
@@ -54,36 +59,37 @@ const OrderHistoryScreen = props => {
       status: OrderStatus.PENDING_CONFIRMATION.value,
       setOrders: setPendingConfirmation,
     });
-  }, []);
+  }, [isNewOrder]);
   //
   useEffect(() => {
     feathOrders({
       status: OrderStatus.PROCESSING.value,
       setOrders: setProcessing,
     });
-  }, []);
+  }, [isNewOrder]);
   //
   useEffect(() => {
     feathOrders({
       status: OrderStatus.READY_FOR_PICKUP.value,
       setOrders: setReadyForPickup,
     });
-  }, []);
+  }, [isNewOrder]);
   //
   useEffect(() => {
     feathOrders({
       status: OrderStatus.CANCELLED.value,
       setOrders: setCancelled,
     });
-  }, []);
+  }, [isNewOrder]);
   //
   useEffect(() => {
     feathOrders({
       status: OrderStatus.FAILED_DELIVERY.value,
       setOrders: setFailedDelivery,
     });
-  }, []);
+  }, [isNewOrder]);
 
+  //
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
     setIdOrder(id);
@@ -132,13 +138,14 @@ const OrderHistoryScreen = props => {
         setIsModalOrderDetail={setIsModalOrderDetail}
         isModalOrderDetail={isModalOrderDetail}
         idOrder={idOrder}
+        setIsNewOrder={setIsNewOrder}
       />
     </View>
   );
 };
 
 const OrderListView = ({orders, loading, handleRepeatOrder}) => {
-  console.log('>>>', JSON.stringify(orders[1], null, 2));
+  // console.log('>>>', JSON.stringify(orders[1], null, 2));
   const filteredOrders =
     orders.sort((a, b) => {
       const dateA = new Date(a.fulfillmentDateTime).getTime();

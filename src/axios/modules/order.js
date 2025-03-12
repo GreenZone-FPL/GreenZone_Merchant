@@ -58,7 +58,7 @@ export const updateOrderStatus = async (orderId, status) => {
       `/v1/order/${orderId}/status`,
       body,
     );
-    return response;
+    return response.data;
   } catch (error) {
     console.log('error:', error);
     throw error;
