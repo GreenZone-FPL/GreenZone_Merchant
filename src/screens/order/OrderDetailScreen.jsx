@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {Icon, IconButton} from 'react-native-paper';
@@ -33,6 +34,7 @@ import {
   colors,
 } from '../../constants';
 import {TextFormatter} from '../../utils';
+import {white} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const {width} = Dimensions.get('window');
 
@@ -74,56 +76,67 @@ const OrderDetailScreen = ({
 
   return (
     <Modal visible={isModalOrderDetail} transparent animationType="fade">
-      <View style={styles.modalContainer}>
-        <OverlayStatusBar />
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={styles.modalContent}>
-          <Row style={styles.headerRow}>
-            <View style={styles.headerSpacer} />
-            <TitleText
-              text="Chi tiết đơn hàng"
-              style={styles.titleTextCenter}
-            />
-            <IconButton
-              icon="close"
-              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-              iconColor={colors.primary}
-              style={styles.closeButton}
-              onPress={() => setIsModalOrderDetail(false)}
-            />
-          </Row>
+      <OverlayStatusBar />
+      <View style={styles.body}>
+        <TouchableOpacity
+          onPress={() => setIsModalOrderDetail(false)}
+          style={styles.viewClose}
+        />
+        <View style={styles.modalContainer}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={styles.modalContent}>
+            <Row style={styles.headerRow}>
+              <View style={styles.headerSpacer} />
+              <TitleText
+                text="Chi tiết đơn hàng"
+                style={styles.titleTextCenter}
+              />
+              <IconButton
+                icon="close"
+                size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                iconColor={colors.primary}
+                style={styles.closeButton}
+                onPress={() => setIsModalOrderDetail(false)}
+              />
+            </Row>
 
-          <Title
-            title={
-              OrderStatus[
-                Object.keys(OrderStatus).find(
-                  key => OrderStatus[key].value === orderDetail?.status,
-                )
-              ]?.label || ''
-            }
-            titleStyle={[
-              styles.titleHeader,
-              {
-                color:
-                  orderDetail?.status === OrderStatus.CANCELLED.value ||
-                  orderDetail?.status === OrderStatus.FAILED_DELIVERY.value
-                    ? colors.red900
-                    : colors.primary,
-              },
-            ]}
-          />
-          <MerchantInfo data={orderDetail?.store} />
-          <RecipientInfo data={orderDetail} />
-          <ProductsInfo data={orderDetail?.orderItems} />
-          <PaymentDetails
-            data={orderDetail}
-            setIsModalOrderDetail={setIsModalOrderDetail}
-            fetchOrders={fetchOrders}
-            setIdOrder={setIdOrder}
-          />
-        </ScrollView>
+            <Title
+              title={
+                OrderStatus[
+                  Object.keys(OrderStatus).find(
+                    key => OrderStatus[key].value === orderDetail?.status,
+                  )
+                ]?.label || ''
+              }
+              titleStyle={[
+                styles.titleHeader,
+                {
+                  color:
+                    orderDetail?.status === OrderStatus.CANCELLED.value ||
+                    orderDetail?.status === OrderStatus.FAILED_DELIVERY.value
+                      ? colors.red900
+                      : colors.primary,
+                },
+              ]}
+            />
+            <MerchantInfo data={orderDetail?.store} />
+            <RecipientInfo data={orderDetail} />
+            <ProductsInfo data={orderDetail?.orderItems} />
+            <PaymentDetails
+              data={orderDetail}
+              setIsModalOrderDetail={setIsModalOrderDetail}
+              fetchOrders={fetchOrders}
+              setIdOrder={setIdOrder}
+            />
+          </ScrollView>
+        </View>
+        <TouchableOpacity
+          onPress={() => setIsModalOrderDetail(false)}
+          style={styles.viewClose}
+        />
       </View>
+
       {/* <Ani_ModalLoading loading={loading} /> */}
     </Modal>
   );
@@ -398,47 +411,47 @@ const PaymentDetails = ({
       {/* Các thông tin chi tiết thanh toán */}
       {[
         {
-          leftText: `Tạm tính (${orderItems.length} sản phẩm)`, // Tạm tính với số lượng sản phẩm
-          rightText: TextFormatter.formatCurrency(totalPrice), // Tổng giá trị đơn hàng
+          leftText: `Tạm tính (${orderItems.length} sản phẩm)`,
+          rightText: TextFormatter.formatCurrency(totalPrice),
         },
         {
           leftText: 'Phí giao hàng',
           rightText: TextFormatter.formatCurrency(
-            deliveryMethod === DeliveryMethod.DELIVERY.value ? shippingFee : 0, // Kiểm tra phương thức giao hàng và hiển thị phí
+            deliveryMethod === DeliveryMethod.DELIVERY.value ? shippingFee : 0,
           ),
         },
         {
           leftText: 'Giảm giá',
-          rightText: `-${TextFormatter.formatCurrency(discountAmount)}`, // Hiển thị số tiền giảm giá
-          rightTextStyle: {color: colors.primary}, // Màu sắc cho giá trị giảm giá
+          rightText: `-${TextFormatter.formatCurrency(discountAmount)}`,
+          rightTextStyle: {color: colors.primary},
         },
         {
-          leftText: paymentStatus, // Trạng thái thanh toán
-          rightText: TextFormatter.formatCurrency(totalFromData || 0), // Tổng thanh toán
+          leftText: paymentStatus,
+          rightText: TextFormatter.formatCurrency(totalFromData || 0),
           leftTextStyle: {
             ...styles.dualTextStatus,
             borderColor:
               paymentStatus === 'Chưa thanh toán'
                 ? colors.red900
-                : colors.primary, // Màu sắc viền tùy vào trạng thái thanh toán
+                : colors.primary,
             color:
               paymentStatus === 'Chưa thanh toán'
                 ? colors.red900
-                : colors.primary, // Màu sắc chữ tùy vào trạng thái thanh toán
+                : colors.primary,
           },
-          rightTextStyle: {fontWeight: '700', color: colors.primary}, // Màu sắc và trọng lượng chữ cho giá trị thanh toán
+          rightTextStyle: {fontWeight: '700', color: colors.primary},
         },
         {
           leftText: 'Thời gian đặt hàng',
-          rightText: TextFormatter.formatDateTime(fulfillmentDateTime), // Hiển thị thời gian đặt hàng
+          rightText: TextFormatter.formatDateTime(fulfillmentDateTime),
         },
         {
           leftText: 'Thanh toán',
           rightText:
             paymentMethod === PaymentMethod.COD.value
               ? 'Tiền mặt'
-              : 'Chuyển khoản', // Hiển thị phương thức thanh toán
-          rightTextStyle: {fontWeight: '700', color: colors.primary}, // Màu sắc và trọng lượng chữ cho phương thức thanh toán
+              : 'Chuyển khoản',
+          rightTextStyle: {fontWeight: '700', color: colors.primary},
         },
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
@@ -633,27 +646,39 @@ const OrderId = ({data}) => {
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    backgroundColor: colors.overlay,
+  body: {
     flex: 1,
+    flexDirection: 'row',
     overflow: 'hidden',
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    backgroundColor: colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewClose: {
+    width: '15%',
+    height: '100%',
+  },
+
+  modalContainer: {
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE,
+    backgroundColor: 'white',
+    width: '60%',
+    height: '90%',
+    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
+    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   modalContent: {
-    width: '70%',
     alignSelf: 'center',
     backgroundColor: colors.white,
     flexDirection: 'column',
     gap: GLOBAL_KEYS.GAP_SMALL,
-    margin: GLOBAL_KEYS.PADDING_DEFAULT,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE,
   },
   headerRow: {
     width: '100%',
     backgroundColor: 'white',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   headerSpacer: {
     width: 24,
@@ -722,7 +747,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   paymentDetailsContainer: {
-    marginBottom: 30,
+    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   dualTextLeftHeader: {
@@ -741,8 +766,7 @@ const styles = StyleSheet.create({
     gap: GLOBAL_KEYS.GAP_DEFAULT * 4,
     borderTopWidth: 2,
     borderColor: colors.gray200,
-    paddingTop: 20,
-    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT * 2,
+    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   button: {
     backgroundColor: colors.primary,
@@ -752,7 +776,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: colors.gray200,
     borderWidth: 2,
-    height: 60,
+    minWidth: '15%',
   },
   button1: {
     backgroundColor: colors.red900,
@@ -762,6 +786,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderColor: colors.gray200,
     borderWidth: 2,
+    minWidth: '15%',
   },
   buttonText: {
     color: colors.white,
