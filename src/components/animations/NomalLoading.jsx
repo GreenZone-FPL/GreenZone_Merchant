@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import {View, StyleSheet} from 'react-native';
 import LottieView from 'lottie-react-native';
 
-const NomalLoading = ({ visible }) => {
+const NomalLoading = ({visible}) => {
   if (!visible) return null;
 
   return (

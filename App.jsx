@@ -9,8 +9,7 @@ import OrderDetailScreen from './src/screens/order/OrderDetailScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
 import Toast, {BaseToast} from 'react-native-toast-message';
 import {Dimensions, Platform} from 'react-native';
-import { colors } from './src/constants';
-
+import {colors} from './src/constants';
 
 // Kiểm tra thiết bị có phải là tablet không
 const isTablet = () => {
@@ -55,7 +54,7 @@ function App() {
       if (storeId) {
         MerchantSocketService.initialize();
       } else {
-        console.log('❌ Chưa có storeId, không khởi tạo socket!');
+        console.log(' Chưa có storeId, không khởi tạo socket!');
       }
     }
     setupSocket();
@@ -81,7 +80,6 @@ function App() {
           paddingVertical: isTablet() ? 20 : 10,
           borderRadius: isTablet() ? 20 : 10,
         },
-
       });
     };
 
@@ -93,7 +91,6 @@ function App() {
   }, []);
 
   return (
-
     <SafeAreaProvider>
       <NavigationContainer>
         <BaseStack.Navigator screenOptions={{headerShown: false}}>
@@ -108,9 +105,8 @@ function App() {
           />
         </BaseStack.Navigator>
       </NavigationContainer>
-  <Toast config={customToastConfig} />
+      <Toast config={customToastConfig} />
     </SafeAreaProvider>
-
   );
 }
 

@@ -35,15 +35,8 @@ export const OrderStatus = Object.freeze({
 export const checkPaymentStatus = order => {
   if (!order) return 'Không có đơn hàng';
 
-  // Các trạng thái đảm bảo đơn hàng đã thanh toán
-  const paidStatuses = [
-    OrderStatus.COMPLETED.value,
-    OrderStatus.SHIPPING_ORDER.value,
-    OrderStatus.READY_FOR_PICKUP.value,
-  ];
-
-  // Nếu đơn hàng có trạng thái đã thanh toán
-  if (paidStatuses.includes(order.status)) {
+  // Nếu đơn hàng có trạng thái đã hoàn thành
+  if (order.status === OrderStatus.COMPLETED.value) {
     return 'Đã thanh toán';
   }
 
@@ -52,10 +45,14 @@ export const checkPaymentStatus = order => {
     return 'Đã thanh toán';
   }
 
-  // Nếu phương thức là COD và đơn hàng đang được xử lý => Đã thanh toán
+  // Nếu phương thức là COD + PickUp và chờ lấy hàng hoặc đang chuẩn bị => Đã thanh toán
   if (
-    order.paymentMethod === PaymentMethod.COD.value &&
-    order.status === OrderStatus.PROCESSING.value
+    (order.paymentMethod === PaymentMethod.COD.value &&
+      order.status === OrderStatus.PROCESSING.value &&
+      order.deliveryMethod === DeliveryMethod.PICK_UP.value) ||
+    (order.paymentMethod === PaymentMethod.COD.value &&
+      order.deliveryMethod === DeliveryMethod.PICK_UP.value &&
+      order.status === OrderStatus.READY_FOR_PICKUP.value)
   ) {
     return 'Đã thanh toán';
   }
@@ -65,5 +62,13 @@ export const checkPaymentStatus = order => {
     return 'Chưa thanh toán';
   }
 
-  return 'Chưa thanh toán'; // Mặc định nếu không thuộc bất kỳ điều kiện nào
+  // Nếu đơn hàng có ship (Delivery) nhưng phương thức là CODE thì chưa thanh toán
+  if (
+    order.paymentMethod == PaymentMethod.COD.value &&
+    order.deliveryMethod == DeliveryMethod.DELIVERY.value
+  ) {
+    return 'Chưa thanh toán';
+  }
+
+  return 'Chưa thanh toán';
 };
