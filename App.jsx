@@ -64,7 +64,7 @@ function App() {
     const handleNewOrder = data => {
       Toast.show({
         type: 'success',
-        text1: '📢 Đơn hàng mới!',
+        text1: 'Đơn hàng mới!',
         text2: `Mã đơn: ${data.orderId}`,
         position: 'top',
         visibilityTime: 4000,

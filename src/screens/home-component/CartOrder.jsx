@@ -28,8 +28,6 @@ const CartOrder = ({cart, setCart}) => {
   const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
-  const [voucherCode, setVoucherCode] = useState('');
-  const [message, setMessage] = useState('');
   const [isCheckout, setIsCheckout] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
@@ -533,7 +531,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   cartItem: {
-    height: width / 15,
     flexDirection: 'row',
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     justifyContent: 'space-between',
@@ -543,6 +540,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     alignItems: 'center',
     paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
   },
   cartItemImage: {
     width: width / 20,

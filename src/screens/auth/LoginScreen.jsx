@@ -85,7 +85,7 @@ const LoginScreen = props => {
 
     try {
       const response = await login({phoneNumber, password});
-      console.log('>>>>>>>>>>>>>>>>', JSON.stringify(response, null, 2));
+      // console.log('>>>>>>>>>>>>>>>>', JSON.stringify(response, null, 2));
       // Kiểm tra dữ liệu trả về có hợp lệ không
       const accessToken = response.data?.token?.accessToken?.token;
       const refreshToken = response.data?.token?.refreshToken?.token;
@@ -98,7 +98,7 @@ const LoginScreen = props => {
         'storeId',
         response.data?.user?.workingStore,
       );
-      console.log('✅ Đăng nhập thành công, khởi tạo socket...');
+      console.log(' Đăng nhập thành công, khởi tạo socket...', accessToken);
       MerchantSocketService.initialize(); // Khởi tạo socket sau khi đăng nhập thành công
 
       // console.log(merchant);

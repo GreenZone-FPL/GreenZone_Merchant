@@ -25,8 +25,6 @@ const ModalToping = ({
   setSelectedSize,
   selectedToppings,
   setSelectedToppings,
-  phoneNumber,
-  setPhoneNumber,
 }) => {
   const [merchant, setMerchant] = useState(null);
 
@@ -52,7 +50,7 @@ const ModalToping = ({
   }, [selectedProduct]);
   //chọn topping
   const toggleTopping = topping => {
-    if (selectedToppings.length === 3) return;
+    // if (selectedToppings.length === 3) return;
     setSelectedToppings(prev =>
       prev.some(t => t._id === topping._id)
         ? prev.filter(t => t._id !== topping._id)
@@ -286,7 +284,9 @@ const styles = StyleSheet.create({
   sizeOption: {
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    backgroundColor: colors.gray200,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   selectedSize: {
     backgroundColor: colors.primary,
@@ -304,12 +304,13 @@ const styles = StyleSheet.create({
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     paddingHorizontal: '20%',
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    backgroundColor: colors.gray200,
+    backgroundColor: colors.white,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   selectedTopping: {
     backgroundColor: colors.primary,
-    borderColor: colors.yellow500,
     fontWeight: 'bold',
   },
 

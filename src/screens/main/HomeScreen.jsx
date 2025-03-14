@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -38,6 +38,7 @@ const HomeScreen = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [merchant, setMerchant] = useState(null);
+  const flatListRef = useRef(null);
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
@@ -118,7 +119,7 @@ const HomeScreen = () => {
     }
   };
 
-  // Lấy dữ liệu cửa hàng
+  // Lấy dữ liệu id cửa hàng
   useEffect(() => {
     const loadMerchant = async () => {
       try {
@@ -134,6 +135,18 @@ const HomeScreen = () => {
 
     loadMerchant();
   }, []);
+
+  // cuon flatlist
+  const scrollToEnd = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({animated: true});
+    }
+  };
+  const scrollToStart = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({index: 0, animated: true});
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -156,12 +169,46 @@ const HomeScreen = () => {
             borderColor: colors.gray200,
           }}
         />
-        <ButtonGroup
-          buttons={categories ? categories.map(category => category.name) : []}
-          icons={categories ? categories.map(category => category.icon) : []}
-          selectedIndex={selectedIndex}
-          onSelect={setSelectedIndex}
-        />
+        <View>
+          <FlatList
+            ref={flatListRef}
+            horizontal={true}
+            data={categories.length > 0 && categories}
+            keyExtractor={item => item._id.toString()}
+            renderItem={({item, index}) => (
+              <View>
+                <TouchableOpacity
+                  style={[
+                    styles.buttonDefault,
+                    selectedIndex === index && styles.buttonSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedIndex(index);
+                    if (index > categories.length / 2 && index !== 0) {
+                      scrollToEnd();
+                    } else {
+                      scrollToStart();
+                    }
+                  }}>
+                  <Image
+                    style={{width: 24, height: 24}}
+                    source={{uri: item.icon}}
+                  />
+                  <Text
+                    style={[
+                      styles.textDefault,
+                      selectedIndex == index && styles.textSelected,
+                    ]}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
+            style={{width: '100%'}}
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
 
         <FlatList
           data={searchTerm.length > 0 ? filteredProducts : productsByCate}
@@ -243,9 +290,28 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
 
+  buttonDefault: {
+    flexDirection: 'row',
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    minWidth: 130,
+  },
+  buttonSelected: {
+    backgroundColor: colors.pink500,
+  },
+  textDefault: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+  },
+  textSelected: {
+    color: colors.white,
+  },
   flatListContainer: {
-    // padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    // backgroundColor: 'black',
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     overflow: 'hidden',
   },

@@ -34,6 +34,7 @@ export const getOrders = async status => {
     const responses = await axiosInstance.get(`/v1/order/store/all`, {
       params: {status},
     });
+    console.log(responses);
     return responses.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);

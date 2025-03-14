@@ -34,22 +34,7 @@ const ModalCheckout = ({
   const [order, setOrder] = useState(data);
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
-  const [merchant, setMerchant] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // lấy dữ liệu cửa hàng
-  useEffect(() => {
-    const loadMerchant = async () => {
-      try {
-        const merchantData = await AppAsyncStorage.readData('merchant');
-        if (merchantData) {
-          setMerchant(JSON.parse(merchantData));
-        }
-      } catch (error) {}
-    };
-
-    loadMerchant();
-  }, []);
 
   // xac nhan
   const showAlert = ({notification, message, onPress}) => {
