@@ -17,7 +17,7 @@ const MainNavigation = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.black,
         tabBarStyle: {
-          backgroundColor: colors.fbBg,
+          backgroundColor: colors.white,
           height: 50,
         },
         tabBarLabelStyle: {
@@ -39,17 +39,17 @@ const MainNavigation = () => {
       <Tab.Screen
         name="HomeScreen"
         component={HomeScreen}
-        options={{tabBarLabel: 'Trang Chủ'}}
+        options={{tabBarLabel: ''}}
       />
       <Tab.Screen
         name="OrderHistoryScreen"
         component={OrderHistoryScreen}
-        options={{tabBarLabel: 'Đơn Hàng'}}
+        options={{tabBarLabel: ''}}
       />
       <Tab.Screen
         name="StatisticsScreen"
         component={StatisticsScreen}
-        options={{tabBarLabel: 'Thống Kê'}}
+        options={{tabBarLabel: ''}}
       />
     </Tab.Navigator>
   );

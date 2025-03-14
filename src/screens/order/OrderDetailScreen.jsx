@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Dimensions,
@@ -34,7 +34,6 @@ import {
   colors,
 } from '../../constants';
 import {TextFormatter} from '../../utils';
-import {white} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const {width} = Dimensions.get('window');
 
@@ -45,9 +44,16 @@ const OrderDetailScreen = ({
   isModalOrderDetail,
   fetchOrders,
 }) => {
+  const scrollViewRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [orderDetail, setOrderDetail] = useState(null);
   const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({animated: true});
+    }, 1000);
+  }, []);
 
   const fetchOrderDetail = async () => {
     setLoading(true);
@@ -84,6 +90,7 @@ const OrderDetailScreen = ({
         />
         <View style={styles.modalContainer}>
           <ScrollView
+            ref={scrollViewRef}
             showsVerticalScrollIndicator={false}
             style={styles.modalContent}>
             <Row style={styles.headerRow}>
@@ -128,6 +135,7 @@ const OrderDetailScreen = ({
               setIsModalOrderDetail={setIsModalOrderDetail}
               fetchOrders={fetchOrders}
               setIdOrder={setIdOrder}
+              scrollViewRef={scrollViewRef}
             />
           </ScrollView>
         </View>
@@ -142,7 +150,7 @@ const OrderDetailScreen = ({
   );
 };
 
-const ShipperSelect = ({onSelect}) => {
+const ShipperSelect = ({onSelect, scrollViewRef}) => {
   const [shippers, setShippers] = useState([]);
   const [expanded, setExpanded] = useState(false);
   const [selectedShipper, setSelectedShipper] = useState(null);
@@ -166,6 +174,7 @@ const ShipperSelect = ({onSelect}) => {
     setSelectedShipper(shipper);
     setExpanded(false);
     onSelect(shipper);
+    scrollViewRef.current?.scrollToEnd({animated: true});
   };
 
   return (
@@ -315,6 +324,7 @@ const PaymentDetails = ({
   setIsModalOrderDetail,
   fetchOrders,
   setIdOrder,
+  scrollViewRef,
 }) => {
   if (!data) return null;
 
@@ -411,7 +421,10 @@ const PaymentDetails = ({
       {/* Các thông tin chi tiết thanh toán */}
       {[
         {
-          leftText: `Tạm tính (${orderItems.length} sản phẩm)`,
+          leftText: `Tạm tính (${orderItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+          )} sản phẩm)`,
           rightText: TextFormatter.formatCurrency(totalPrice),
         },
         {
@@ -498,7 +511,10 @@ const PaymentDetails = ({
                 {deliveryMethod === DeliveryMethod.DELIVERY.value ? (
                   <>
                     {/* Chọn shipper nếu phương thức giao hàng là giao tận nơi */}
-                    <ShipperSelect onSelect={setSelectedShipper} />
+                    <ShipperSelect
+                      onSelect={setSelectedShipper}
+                      scrollViewRef={scrollViewRef}
+                    />
 
                     <Pressable
                       style={[
@@ -777,6 +793,7 @@ const styles = StyleSheet.create({
     borderColor: colors.gray200,
     borderWidth: 2,
     minWidth: '15%',
+    alignSelf: 'flex-start',
   },
   button1: {
     backgroundColor: colors.red900,

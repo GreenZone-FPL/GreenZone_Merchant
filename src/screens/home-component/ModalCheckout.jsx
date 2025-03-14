@@ -100,16 +100,16 @@ const ModalCheckout = ({
           setMessage('');
           setPhoneNumber('');
           setScannedCode('');
-        }, 3000);
+        }, 1000);
       }
-      console.log('status:', response.status);
-      console.log(
-        'Dữ liệu gửi lên API:',
-        JSON.stringify(response.data, null, 2),
-      );
+      console.log('Trạng thái tạo đơn:', response.status);
+      // console.log(
+      //   'Dữ liệu gửi lên API:',
+      //   JSON.stringify(response.data, null, 2),
+      // );
       return response;
     } catch (error) {
-      console.error('Lỗi tạo đơn hàng:', error);
+      console.log('Lỗi tạo đơn hàng:', error);
       throw error;
     } finally {
       setLoading(false);
