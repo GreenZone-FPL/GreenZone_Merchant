@@ -15,16 +15,16 @@ const MainNavigation = () => {
       screenOptions={({route}) => ({
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.black,
+        tabBarInactiveTintColor: colors.gray700,
         tabBarStyle: {
           backgroundColor: colors.white,
-          height: 50,
         },
         tabBarLabelStyle: {
-          fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER - 2,
+          fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
           fontWeight: '500',
         },
-        tabBarIcon: ({color, size}) => {
+        tabBarIcon: ({color}) => {
+          const iconSize = 31;
           let iconName = '';
           if (route.name === 'HomeScreen') {
             iconName = 'home';
@@ -33,7 +33,7 @@ const MainNavigation = () => {
           } else if (route.name === 'StatisticsScreen') {
             iconName = 'chart-line-variant';
           }
-          return <Icon source={iconName} color={color} size={size} />;
+          return <Icon source={iconName} color={color} size={iconSize} />;
         },
       })}>
       <Tab.Screen

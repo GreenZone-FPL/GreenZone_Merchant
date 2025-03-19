@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -9,17 +9,23 @@ import {
   View,
 } from 'react-native';
 import {getOrders} from '../../axios/index';
-import {Column, CustomTabView, LightStatusBar} from '../../components';
-import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
+import {CustomTabView, LightStatusBar} from '../../components';
+import {
+  checkPaymentStatus,
+  colors,
+  DeliveryMethod,
+  GLOBAL_KEYS,
+  OrderStatus,
+  PaymentMethod,
+} from '../../constants';
 import {TextFormatter} from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
 import MerchantSocketService from '../../sevices/merchantSocketService';
 
 const width = Dimensions.get('window').width;
 
-const OrderHistoryScreen = props => {
-  const {navigation} = props;
-
+const OrderHistoryScreen = () => {
+  const [order, setOrder] = useState([]); // tôngwr don hang
   const [pendingConfirmation, setPendingConfirmation] = useState([]); //'Chờ xác nhận',
   const [processing, setProcessing] = useState([]); // 'Đang xử lý',
   const [readyForPickup, setReadyForPickup] = useState([]); //'Chờ lấy hàng'
@@ -33,55 +39,51 @@ const OrderHistoryScreen = props => {
   const [isModalOrderDetail, setIsModalOrderDetail] = useState(false);
   const [idOrder, setIdOrder] = useState(null);
 
-  ///
+  // lấy danh sách đơn hàng
   const fetchOrders = async () => {
     setLoading(true);
-
     try {
-      // Lấy đơn hàng trạng thái Chờ xác nhận
-      const responsePending = await getOrders(
-        OrderStatus.PENDING_CONFIRMATION.value,
-      );
-      setPendingConfirmation(responsePending.data);
-
-      // Lấy đơn hàng trạng thái Đang xử lý
-      const responseProcessing = await getOrders(OrderStatus.PROCESSING.value);
-      setProcessing(responseProcessing.data);
-
-      // Lấy đơn hàng trạng thái Chờ lấy hàng
-      const responseReadyForPickup = await getOrders(
-        OrderStatus.READY_FOR_PICKUP.value,
-      );
-      setReadyForPickup(responseReadyForPickup.data);
-
-      // Lấy đơn hàng trạng thái Đang giao hàng
-      const responseShippingOrder = await getOrders(
-        OrderStatus.SHIPPING_ORDER.value,
-      );
-      setShippingOrder(responseShippingOrder.data);
-
-      // Lấy đơn hàng trạng thái Hoàn thành
-      const responseCompleted = await getOrders(OrderStatus.COMPLETED.value);
-      setCompleted(responseCompleted.data);
-
-      // Lấy đơn hàng trạng thái Đã huỷ
-      const responseCancelled = await getOrders(OrderStatus.CANCELLED.value);
-      setCancelled(responseCancelled.data);
-
-      // Lấy đơn hàng trạng thái Giao hàng thất bại
-      const responseFailedDelivery = await getOrders(
-        OrderStatus.FAILED_DELIVERY.value,
-      );
-      setFailedDelivery(responseFailedDelivery.data);
+      const responseOrder = await getOrders();
+      if (responseOrder) {
+        setOrder(responseOrder.data);
+      }
     } catch (error) {
       console.log('Lỗi khi lấy danh sách đơn hàng:', error);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (order?.length > 0) {
+      // Lấy đơn hàng trạng thái Chờ xác nhận
+      setPendingConfirmation(
+        filterAndSortOrders(order, OrderStatus.PENDING_CONFIRMATION.value),
+      );
+      // Lấy đơn hàng trạng thái Đang xử lý
+      setProcessing(filterAndSortOrders(order, OrderStatus.PROCESSING.value));
+      // Lấy đơn hàng trạng thái Chờ lấy hàng
+      setReadyForPickup(
+        filterAndSortOrders(order, OrderStatus.READY_FOR_PICKUP.value),
+      );
+      // Lấy đơn hàng trạng thái Đang giao hàng
+      setShippingOrder(
+        filterAndSortOrders(order, OrderStatus.SHIPPING_ORDER.value),
+      );
+      // Lấy đơn hàng trạng thái Hoàn thành
+      setCompleted(filterAndSortOrders(order, OrderStatus.COMPLETED.value));
+      // Lấy đơn hàng trạng thái Đã huỷ
+      setCancelled(filterAndSortOrders(order, OrderStatus.CANCELLED.value));
+      // Lấy đơn hàng trạng thái Giao hàng thất bại
+      setFailedDelivery(
+        filterAndSortOrders(order, OrderStatus.FAILED_DELIVERY.value),
+      );
+    }
+  }, [order]);
 
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
@@ -91,19 +93,26 @@ const OrderHistoryScreen = props => {
   useEffect(() => {
     const handleNewOrder = data => {
       if (data._id !== null) {
-        console.log(' goi api khi co don hang moi');
         fetchOrders();
-      } else {
-        console.log(' khong dc goi api khi co don hang moi');
       }
     };
 
-    MerchantSocketService.on('order.new', handleNewOrder);
+    MerchantSocketService.on('order.new');
     return () => {
       MerchantSocketService.off('order.new', handleNewOrder);
     };
   }, []);
 
+  const filterAndSortOrders = useMemo(() => {
+    return (array, status) => {
+      return array
+        .filter(item => item.status === status) // Lọc theo trạng thái
+        .sort(
+          (a, b) =>
+            new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
+        ); // Sắp xếp theo ngày, từ mới nhất đến cũ nhất
+    };
+  }, []); // Thêm mảng phụ thuộc nếu cần thiết, ví dụ khi muốn tính lại nếu state thay đổi
   return (
     <View style={{flex: 1}}>
       <LightStatusBar />
@@ -174,20 +183,14 @@ const OrderHistoryScreen = props => {
 
 const OrderListView = ({orders, loading, handleRepeatOrder, status}) => {
   // console.log('>>>', JSON.stringify(orders[1], null, 2));
-  const filteredOrders =
-    orders.sort((a, b) => {
-      const dateA = new Date(a.fulfillmentDateTime).getTime();
-      const dateB = new Date(b.fulfillmentDateTime).getTime();
-      return dateB - dateA;
-    }) || [];
 
   return (
     <View style={styles.scene}>
       {loading ? (
         <NormalLoading visible={true} message="Đang tải lịch sử đơn hàng..." />
-      ) : filteredOrders.length > 0 ? (
+      ) : orders.length > 0 ? (
         <FlatList
-          data={filteredOrders}
+          data={orders}
           keyExtractor={item => item.orderId || item._id}
           renderItem={({item}) => (
             <Item item={item} handleRepeatOrder={handleRepeatOrder} />
@@ -204,56 +207,57 @@ const OrderListView = ({orders, loading, handleRepeatOrder, status}) => {
 };
 
 const Item = ({item, handleRepeatOrder}) => {
-  // console.log(JSON.stringify(item, null, 2));
+  const paymentMethod = checkPaymentStatus(item);
   return (
     <TouchableOpacity
       onPress={() => handleRepeatOrder(item._id)}
-      style={{
-        padding: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-        backgroundColor: colors.fbBg,
-        marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
-      }}>
+      style={styles.itemOrder}>
       <ItemOrderType deliveryMethod={item.deliveryMethod} />
-      <View
-        style={{
-          flexDirection: 'column',
-          gap: GLOBAL_KEYS.GAP_SMALL,
-          width: '30%',
-        }}>
-        <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
-          Đơn hàng: <Text style={{fontWeight: '500'}}>{item._id}</Text>
-        </Text>
-        <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
+      <View style={styles.view1}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            flex: 1,
+          }}>
+          <Text
+            style={{
+              fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+            }}>
+            Đơn hàng:{' '}
+          </Text>
+          <Text style={{fontWeight: '500'}}>{item._id}</Text>
+        </View>
+
+        <Text style={item.owner?.firstName ? styles.owner : styles.ownerNull}>
           {item.owner?.firstName
             ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
             : 'Khách hàng vãng lai'}
         </Text>
       </View>
-      <View
-        style={{
-          flexDirection: 'column',
-          gap: GLOBAL_KEYS.GAP_SMALL,
-          width: '20%',
-        }}>
+      <View style={styles.view2}>
         <ItemOrderText deliveryMethod={item.deliveryMethod} />
-        <Text
-          style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500'}}>
+        <Text style={styles.cod}>
           {item.paymentMethod == PaymentMethod.COD.value
             ? 'Thanh toán tiền mặt'
             : 'Thanh toán ngân hàng'}
         </Text>
       </View>
-      <View style={{flex: Column, gap: GLOBAL_KEYS.GAP_SMALL, width: '20%'}}>
-        <Text
-          style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500'}}>
+      <View style={styles.view2}>
+        <Text style={styles.price}>
           {TextFormatter.formatCurrency(item.totalPrice)}
         </Text>
 
-        <Text>{TextFormatter.formatDateTime(item.fulfillmentDateTime)}</Text>
+        <Text style={styles.date}>
+          {TextFormatter.formatDateTime(item.fulfillmentDateTime)}
+        </Text>
+      </View>
+      <View style={styles.view2}>
+        {paymentMethod === 'Chưa thanh toán' ? (
+          <Text style={styles.noPaid}>Chưa thanh toán</Text>
+        ) : (
+          <Text style={styles.paid}>Đã thanh toán</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -284,10 +288,12 @@ const ItemOrderType = ({deliveryMethod}) => {
   };
 
   return (
-    <Image
-      style={styles.orderTypeIcon}
-      source={imageMap[deliveryMethod] || imageMap['pickup']}
-    />
+    <View style={styles.emptyContainer}>
+      <Image
+        style={styles.orderTypeIcon}
+        source={imageMap[deliveryMethod] || imageMap['pickup']}
+      />
+    </View>
   );
 };
 
@@ -298,63 +304,121 @@ const ItemOrderText = ({deliveryMethod}) => {
   };
 
   return (
-    <Text style={styles.orderTime}>{textMap[deliveryMethod] || 'Mang đi'}</Text>
+    <Text
+      style={[
+        styles.orderTime,
+        deliveryMethod === 'delivery' ? {color: colors.pink500} : {},
+      ]}>
+      {textMap[deliveryMethod] || 'Mang đi'}
+    </Text>
   );
 };
 
 const EmptyView = ({message}) => (
-  <View style={styles.emptyContainer}>
+  <View style={styles.emptyContainer1}>
     <Image
       style={styles.emptyImage}
       resizeMode="cover"
       source={require('../../assets/images/logo.png')}
     />
-    <Text>{message}</Text>
+    <Text
+      style={{
+        color: colors.yellow700,
+        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+      }}>
+      {message}
+    </Text>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: colors.white},
+  itemOrder: {
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderColor: colors.gray200,
+  },
+  view1: {
+    flexDirection: 'column',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    alignItems: 'center',
+    width: '30%',
+  },
+  view2: {
+    flexDirection: 'column',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    alignItems: 'center',
+    width: '20%',
+  },
+  cod: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  price: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.pink500,
+    textAlign: 'right',
+  },
+  date: {
+    color: colors.gray500,
+  },
+
+  ownerNull: {color: colors.black, fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT},
+  owner: {
+    color: colors.primary,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+  },
+
+  paid: {
+    color: colors.primary,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderBottomWidth: 1,
+    borderColor: colors.primary,
+  },
+  noPaid: {
+    color: colors.yellow700,
+    fontWeight: '500',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderBottomWidth: 1,
+    borderColor: colors.yellow700,
+  },
   scene: {
     width: '100%',
     paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
   },
-  emptyContainer: {justifyContent: 'center', alignItems: 'center'},
-  emptyImage: {width: width / 3, height: width / 3},
-  orderItem: {
-    margin: GLOBAL_KEYS.PADDING_SMALL,
-    backgroundColor: colors.white,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    borderBottomColor: colors.gray200,
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    gap: GLOBAL_KEYS.GAP_SMALL,
-    alignItems: 'center',
+  emptyContainer: {
     justifyContent: 'center',
-    elevation: 3,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    alignItems: 'center',
+    flex: 1,
   },
-  orderColumn: {
-    width: '70%',
+  emptyContainer1: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  orderColumnEnd: {justifyContent: 'center', alignItems: 'center'},
-  orderName: {fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500'},
-  orderTime: {fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, color: colors.gray850},
-  orderTotal: {
+
+  emptyImage: {
+    width: width / 3,
+    height: width / 3,
+  },
+  orderTime: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: 'bold',
-    color: colors.pink500,
+    color: colors.gray850,
+    fontWeight: '500',
   },
-  buttonContainer: {alignItems: 'center', justifyContent: 'center'},
-  buttonText: {
-    padding: 6,
-    backgroundColor: colors.primary,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    color: colors.white,
-    fontWeight: 'bold',
-    alignSelf: 'flex-start',
-  },
+
   orderTypeIcon: {
     width: 50,
     height: 50,

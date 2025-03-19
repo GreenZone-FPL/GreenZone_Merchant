@@ -15,8 +15,8 @@ class MerchantSocketService {
           AppAsyncStorage.STORAGE_KEYS.accessToken,
         );
         const storeId = await AppAsyncStorage.readData('storeId');
-          console.log('📌 Token:', token);
-          console.log('📌 storeId:', storeId); 
+        console.log('Token:', token);
+        console.log('storeId:', storeId);
 
         if (!token || !storeId) {
           console.log(
@@ -32,22 +32,22 @@ class MerchantSocketService {
         });
 
         this.socket.on('connect', () => {
-          console.log('✅ Merchant connected', this.socket.id);
+          console.log('Merchant connected', this.socket.id);
           this.socket.emit('store.join', storeId);
-          console.log(`🛒 Merchant joined store room: ${storeId}`);
+          console.log(`Merchant joined store room: ${storeId}`);
         });
 
         this.socket.on('order.new', data => {
-          console.log('📦 New Order:', data);
-          this.emitter.emit('order.new', data); 
+          console.log('New Order:', data);
+          this.emitter.emit('order.new', data);
         });
 
         this.socket.on('disconnect', () => {
-          console.log('❌ Disconnected');
+          console.log('Disconnected');
         });
 
         this.socket.on('connect_error', error => {
-          console.error('⚠️ Lỗi kết nối:', error);
+          console.error('Lỗi kết nối:', error);
         });
       } catch (error) {
         console.log('Lỗi khi khởi tạo socket:', error);
