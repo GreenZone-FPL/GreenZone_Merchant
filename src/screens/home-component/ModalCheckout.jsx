@@ -116,18 +116,14 @@ const ModalCheckout = ({
       <View style={styles.container}>
         <View style={styles.modalContent}>
           <View style={styles.infoContainer}>
-            <Item
+            {/* <Item
               title={'Phương thức nhận hàng'}
               text={
                 order.deliveryMethod === DeliveryMethod.PICK_UP.value &&
                 DeliveryMethod.PICK_UP.label
               }
-            />
+            /> */}
 
-            <Item
-              title={'Thời gian hoàn tất đơn hàng'}
-              text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
-            />
             <Item
               title={'Người đặt hàng'}
               text={
@@ -138,25 +134,14 @@ const ModalCheckout = ({
                   : 'Khách vãng lai'
               }
             />
-            <Item
-              title={'Ghi chú'}
-              text={order.note ? order.note : 'không có ghi chú'}
-            />
-            <Item
-              title={'Phương thức thanh toán'}
-              text={' Thanh toán tiền mặt'}
-            />
-            <Item
-              title={'Địa chỉ giao hàng'}
-              text={order.shippingAddress ? order.shippingAddress : 'Tại quán'}
-            />
-            <Item
-              title={'Mã giảm giá'}
-              text={order.voucher ? order.voucher : 'Không có'}
-            />
+            <Item title={'Phương thức'} text={'Thanh toán tiền mặt'} />
             <Item
               title={'Tổng giá trị đơn hàng'}
               text={TextFormatter.formatCurrency(order.totalPrice)}
+            />
+            <Item
+              title={'Thời gian'}
+              text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
             />
           </View>
           <View style={styles.buttonContainer}>

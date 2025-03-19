@@ -92,6 +92,14 @@ const OrderDetailScreen = ({
   useEffect(() => {
     console.log('>>>>>>>>', JSON.stringify(orderDetail, null, 2));
   }, [orderDetail]);
+
+  const statusKey = orderDetail
+    ? Object.keys(OrderStatus).find(
+        key => OrderStatus[key].value === orderDetail?.status,
+      )
+    : null;
+  const statusLabel = statusKey ? OrderStatus[statusKey].label : '';
+
   return (
     <Modal visible={isModalOrderDetail} transparent animationType="fade">
       <OverlayStatusBar />
@@ -121,13 +129,7 @@ const OrderDetailScreen = ({
             </Row>
 
             <Title
-              title={
-                OrderStatus[
-                  Object.keys(OrderStatus).find(
-                    key => OrderStatus[key].value === orderDetail?.status,
-                  )
-                ]?.label || ''
-              }
+              title={statusLabel}
               titleStyle={[
                 styles.titleHeader,
                 {

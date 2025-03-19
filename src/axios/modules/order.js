@@ -29,10 +29,14 @@ export const createPickUpOrder = async order => {
   }
 };
 
-export const getOrders = async () => {
+export const getOrders = async status => {
   try {
-    const responses = await axiosInstance.get(`/v1/order/store/all`);
-    return responses.data;
+    const response = await axiosInstance.get(`/v1/order/store/all`, {
+      params: {
+        status: status,
+      },
+    });
+    return response.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
     throw error;

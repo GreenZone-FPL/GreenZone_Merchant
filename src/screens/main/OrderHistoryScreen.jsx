@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState, useMemo, memo} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -13,7 +13,6 @@ import {CustomTabView, LightStatusBar} from '../../components';
 import {
   checkPaymentStatus,
   colors,
-  DeliveryMethod,
   GLOBAL_KEYS,
   OrderStatus,
   PaymentMethod,
@@ -25,27 +24,53 @@ import MerchantSocketService from '../../sevices/merchantSocketService';
 const width = Dimensions.get('window').width;
 
 const OrderHistoryScreen = () => {
-  const [order, setOrder] = useState([]); // tôngwr don hang
-  const [pendingConfirmation, setPendingConfirmation] = useState([]); //'Chờ xác nhận',
-  const [processing, setProcessing] = useState([]); // 'Đang xử lý',
-  const [readyForPickup, setReadyForPickup] = useState([]); //'Chờ lấy hàng'
-  const [shippingOrder, setShippingOrder] = useState([]); //'Đang giao hàng',
-  const [completed, setCompleted] = useState([]); //'Hoàn thành',
-  const [cancelled, setCancelled] = useState([]); //'Đã huỷ'
-  const [failedDelivery, setFailedDelivery] = useState([]); // 'Giao hàng thất bại',
+  const [pendingConfirmation, setPendingConfirmation] = useState([]);
+  const [processing, setProcessing] = useState([]);
+  const [readyForPickup, setReadyForPickup] = useState([]);
+  const [shippingOrder, setShippingOrder] = useState([]);
+  const [completed, setCompleted] = useState([]);
+  const [cancelled, setCancelled] = useState([]);
+  const [failedDelivery, setFailedDelivery] = useState([]);
 
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isModalOrderDetail, setIsModalOrderDetail] = useState(false);
   const [idOrder, setIdOrder] = useState(null);
 
-  // lấy danh sách đơn hàng
-  const fetchOrders = async () => {
+  // Sử dụng useMemo để tạo mảng cấu hình cho các tab chỉ một lần khi component mount
+  const orderStatusConfig = useMemo(
+    () => [
+      {
+        status: OrderStatus.PENDING_CONFIRMATION.value,
+        setter: setPendingConfirmation,
+      },
+      {status: OrderStatus.PROCESSING.value, setter: setProcessing},
+      {status: OrderStatus.READY_FOR_PICKUP.value, setter: setReadyForPickup},
+      {status: OrderStatus.SHIPPING_ORDER.value, setter: setShippingOrder},
+      {status: OrderStatus.COMPLETED.value, setter: setCompleted},
+      {status: OrderStatus.FAILED_DELIVERY.value, setter: setFailedDelivery},
+      {status: OrderStatus.CANCELLED.value, setter: setCancelled},
+    ],
+    [],
+  );
+
+  // Hàm sắp xếp đơn hàng theo thời gian
+  const sortOrdersByDate = orders => {
+    return orders.sort(
+      (a, b) =>
+        new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
+    );
+  };
+
+  // Lấy danh sách đơn hàng theo trạng thái
+  const fetchOrdersByStatus = async (status, setOrder) => {
     setLoading(true);
     try {
-      const responseOrder = await getOrders();
+      const responseOrder = await getOrders(status);
       if (responseOrder) {
-        setOrder(responseOrder.data);
+        // Sắp xếp đơn hàng ngay sau khi nhận dữ liệu
+        const sortedOrders = sortOrdersByDate(responseOrder.data);
+        setOrder(sortedOrders);
       }
     } catch (error) {
       console.log('Lỗi khi lấy danh sách đơn hàng:', error);
@@ -54,65 +79,38 @@ const OrderHistoryScreen = () => {
     }
   };
 
+  // Fetch đơn hàng cho tab hiện tại khi tabIndex thay đổi
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    const {status, setter} = orderStatusConfig[tabIndex];
+    fetchOrdersByStatus(status, setter);
+  }, [tabIndex, orderStatusConfig]);
 
+  // Fetch dữ liệu cho tab đầu tiên khi component mount
   useEffect(() => {
-    if (order?.length > 0) {
-      // Lấy đơn hàng trạng thái Chờ xác nhận
-      setPendingConfirmation(
-        filterAndSortOrders(order, OrderStatus.PENDING_CONFIRMATION.value),
-      );
-      // Lấy đơn hàng trạng thái Đang xử lý
-      setProcessing(filterAndSortOrders(order, OrderStatus.PROCESSING.value));
-      // Lấy đơn hàng trạng thái Chờ lấy hàng
-      setReadyForPickup(
-        filterAndSortOrders(order, OrderStatus.READY_FOR_PICKUP.value),
-      );
-      // Lấy đơn hàng trạng thái Đang giao hàng
-      setShippingOrder(
-        filterAndSortOrders(order, OrderStatus.SHIPPING_ORDER.value),
-      );
-      // Lấy đơn hàng trạng thái Hoàn thành
-      setCompleted(filterAndSortOrders(order, OrderStatus.COMPLETED.value));
-      // Lấy đơn hàng trạng thái Đã huỷ
-      setCancelled(filterAndSortOrders(order, OrderStatus.CANCELLED.value));
-      // Lấy đơn hàng trạng thái Giao hàng thất bại
-      setFailedDelivery(
-        filterAndSortOrders(order, OrderStatus.FAILED_DELIVERY.value),
-      );
-    }
-  }, [order]);
+    const {status, setter} = orderStatusConfig[tabIndex];
+    fetchOrdersByStatus(status, setter);
+  }, [orderStatusConfig, tabIndex]);
+
+  // Cập nhật lại đơn hàng nếu có đơn hàng mới
+  useEffect(() => {
+    const handleNewOrder = data => {
+      if (data._id !== null) {
+        const {status, setter} = orderStatusConfig[tabIndex];
+        fetchOrdersByStatus(status, setter);
+      }
+    };
+
+    MerchantSocketService.on('order.new', handleNewOrder);
+    return () => {
+      MerchantSocketService.off('order.new', handleNewOrder);
+    };
+  }, [tabIndex, orderStatusConfig]);
 
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
     setIdOrder(id);
   };
 
-  useEffect(() => {
-    const handleNewOrder = data => {
-      if (data._id !== null) {
-        fetchOrders();
-      }
-    };
-
-    MerchantSocketService.on('order.new');
-    return () => {
-      MerchantSocketService.off('order.new', handleNewOrder);
-    };
-  }, []);
-
-  const filterAndSortOrders = useMemo(() => {
-    return (array, status) => {
-      return array
-        .filter(item => item.status === status) // Lọc theo trạng thái
-        .sort(
-          (a, b) =>
-            new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
-        ); // Sắp xếp theo ngày, từ mới nhất đến cũ nhất
-    };
-  }, []); // Thêm mảng phụ thuộc nếu cần thiết, ví dụ khi muốn tính lại nếu state thay đổi
   return (
     <View style={{flex: 1}}>
       <LightStatusBar />
@@ -135,36 +133,43 @@ const OrderHistoryScreen = () => {
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={pendingConfirmation}
+          loading={loading}
           status={'pendingConfirmation'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={processing}
+          loading={loading}
           status={'processing'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={readyForPickup}
+          loading={loading}
           status={'readyForPickup'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={shippingOrder}
+          loading={loading}
           status={'shippingOrder'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={completed}
+          loading={loading}
           status={'completed'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={failedDelivery}
+          loading={loading}
           status={'failedDelivery'}
         />
         <OrderListView
           handleRepeatOrder={handleRepeatOrder}
           orders={cancelled}
+          loading={loading}
           status={'cancelled'}
         />
       </CustomTabView>
@@ -174,21 +179,21 @@ const OrderHistoryScreen = () => {
         isModalOrderDetail={isModalOrderDetail}
         idOrder={idOrder}
         setIdOrder={setIdOrder}
-        fetchOrders={fetchOrders}
+        fetchOrders={() => {
+          const {status, setter} = orderStatusConfig[tabIndex];
+          fetchOrdersByStatus(status, setter);
+        }}
       />
       {/* <NormalLoading visible={loading} /> */}
     </View>
   );
 };
 
-const OrderListView = ({orders, loading, handleRepeatOrder, status}) => {
-  // console.log('>>>', JSON.stringify(orders[1], null, 2));
-
+// Component OrderListView được bọc trong React.memo để tránh render lại không cần thiết
+const OrderListView = memo(({orders, loading, handleRepeatOrder, status}) => {
   return (
     <View style={styles.scene}>
-      {loading ? (
-        <NormalLoading visible={true} message="Đang tải lịch sử đơn hàng..." />
-      ) : orders.length > 0 ? (
+      {orders.length > 0 ? (
         <FlatList
           data={orders}
           keyExtractor={item => item.orderId || item._id}
@@ -204,9 +209,10 @@ const OrderListView = ({orders, loading, handleRepeatOrder, status}) => {
       )}
     </View>
   );
-};
+});
 
-const Item = ({item, handleRepeatOrder}) => {
+// Component Item được bọc trong React.memo để tránh render lại nếu props không thay đổi
+const Item = memo(({item, handleRepeatOrder}) => {
   const paymentMethod = checkPaymentStatus(item);
   return (
     <TouchableOpacity
@@ -214,21 +220,12 @@ const Item = ({item, handleRepeatOrder}) => {
       style={styles.itemOrder}>
       <ItemOrderType deliveryMethod={item.deliveryMethod} />
       <View style={styles.view1}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-            flex: 1,
-          }}>
-          <Text
-            style={{
-              fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-            }}>
+        <View style={{flexDirection: 'row', alignItems: 'flex-end', flex: 1}}>
+          <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
             Đơn hàng:{' '}
           </Text>
           <Text style={{fontWeight: '500'}}>{item._id}</Text>
         </View>
-
         <Text style={item.owner?.firstName ? styles.owner : styles.ownerNull}>
           {item.owner?.firstName
             ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
@@ -247,7 +244,6 @@ const Item = ({item, handleRepeatOrder}) => {
         <Text style={styles.price}>
           {TextFormatter.formatCurrency(item.totalPrice)}
         </Text>
-
         <Text style={styles.date}>
           {TextFormatter.formatDateTime(item.fulfillmentDateTime)}
         </Text>
@@ -261,7 +257,7 @@ const Item = ({item, handleRepeatOrder}) => {
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 const getEmptyMessage = status => {
   switch (status) {
@@ -279,8 +275,11 @@ const getEmptyMessage = status => {
       return 'Chưa có đơn hàng Giao thất bại';
     case 'cancelled':
       return 'Chưa có đơn hàng Đã hủy';
+    default:
+      return 'Không có dữ liệu';
   }
 };
+
 const ItemOrderType = ({deliveryMethod}) => {
   const imageMap = {
     pickup: require('../../assets/serving-method/takeaway.png'),
@@ -369,14 +368,12 @@ const styles = StyleSheet.create({
   date: {
     color: colors.gray500,
   },
-
   ownerNull: {color: colors.black, fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT},
   owner: {
     color: colors.primary,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
   },
-
   paid: {
     color: colors.primary,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -408,7 +405,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   emptyImage: {
     width: width / 3,
     height: width / 3,
@@ -418,7 +414,6 @@ const styles = StyleSheet.create({
     color: colors.gray850,
     fontWeight: '500',
   },
-
   orderTypeIcon: {
     width: 50,
     height: 50,
