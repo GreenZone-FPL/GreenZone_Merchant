@@ -1,296 +1,882 @@
-import React from 'react';
-import { FlatList, Image, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
-import { Icon, IconButton } from 'react-native-paper';
-import { Column, DualTextRow, HorizontalProductItem, NormalText, OverlayStatusBar, PaymentMethodRow, Row, TitleText } from '../../components';
-import { GLOBAL_KEYS, colors } from '../../constants';
-import { OrderGraph } from '../../layouts/graphs';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {Icon, IconButton} from 'react-native-paper';
+import {
+  getEmployeesAllAvailable,
+  getOrderDetail,
+  updateOrderStatus,
+} from '../../axios/index';
+import {
+  DualTextRow,
+  NormalText,
+  OverlayStatusBar,
+  Row,
+  TitleText,
+  Column,
+} from '../../components';
+import {
+  DeliveryMethod,
+  GLOBAL_KEYS,
+  OrderStatus,
+  PaymentMethod,
+  checkPaymentStatus,
+  colors,
+} from '../../constants';
+import {TextFormatter} from '../../utils';
 
-const OrderDetailScreen = (props) => {
+const {width} = Dimensions.get('window');
 
-    const { navigation } = props;
-
-
-    return (
-        <View style={styles.modalContainer}>
-            <OverlayStatusBar />
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={styles.modalContent}>
-
-                <Row style={{ width: '100%', backgroundColor: 'white', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-                    <View style={{ width: 24, height: 24 }}></View>
-                    <TitleText text='Chi tiết đơn hàng' style={{ alignSelf: 'center' }} />
-                    <IconButton
-                        icon="close"
-                        size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-                        iconColor={colors.primary}
-                        style={styles.closeButton}
-                        onPress={() => navigation.goBack()}
-                    />
-                </Row>
-
-                <Title
-                    title={'Đơn hàng đang thực hiện'}
-                    titleStyle={{ fontWeight: '500', margin: GLOBAL_KEYS.PADDING_DEFAULT }}
-                />
-                <ShipperInfo  />
-                <MerchantInfo />
-                <RecipientInfo />
-
-                <ProductsInfo />
-
-
-                <PaymentDetails />
-
-            </ScrollView>
-
-        </View >
-
-
-
-    );
+// Định nghĩa một số style chung để tránh tham chiếu động bên trong StyleSheet
+const commonRowStyle = {
+  // Nếu bạn có style row dùng chung, định nghĩa ở đây (nếu không, có thể để trống)
+};
+const commonNormalText = {
+  fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  color: colors.black,
+};
+const Title = ({
+  title,
+  icon,
+  titleStyle,
+  iconColor = colors.primary,
+  iconSize = GLOBAL_KEYS.ICON_SIZE_DEFAULT,
+}) => {
+  return (
+    <View style={styles.titleContainer}>
+      {icon && <Icon source={icon} color={iconColor} size={iconSize} />}
+      <Text style={[styles.greenText, titleStyle]}>{title}</Text>
+    </View>
+  );
 };
 
-const ShipperInfo = ({ messageClick }) => {
-    return (
-        <Row style={{ gap: 16, marginVertical: 8, marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT }}>
-            <Image style={{ width: 40, height: 40 }} source={require('../../assets/images/helmet.png')} />
-            <Column style={{ flex: 1 }}>
-                <NormalText text='Shipper' style={{ fontWeight: '500' }} />
-                <Row>
-                    <Icon
-                        source="star"
-                        color={colors.yellow700}
-                        size={20}
-                    />
-                    <NormalText text='5.0' />
-                    <NormalText text='60B7-40035' style={{ color: colors.yellow700 }} />
+const OrderDetailScreen = ({
+  idOrder,
+  setIdOrder,
+  setIsModalOrderDetail,
+  isModalOrderDetail,
+  fetchOrders,
+}) => {
+  const scrollViewRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [orderDetail, setOrderDetail] = useState(null);
+  const [status, setStatus] = useState(null);
 
-                </Row>
-            </Column>
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({animated: true});
+    }, 1000);
+  }, []);
 
-            <Row style={{ gap: 24 }}>
+  const fetchOrderDetail = async () => {
+    setLoading(true);
+    try {
+      const response = await getOrderDetail(idOrder);
+      setOrderDetail(response.data);
+      setStatus(response.data.status);
+    } catch (error) {
+      console.log('Lỗi lấy chi tiết đơn hàng:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                <Icon
-                    source="phone-outline"
-                    color={colors.black}
-                    size={20}
-                />
-                <Pressable onPress={messageClick}>
-                    <Icon
-                        source="message-outline"
-                        color={colors.black}
-                        size={20}
-                    />
-                </Pressable>
+  useEffect(() => {
+    if (idOrder == null) return;
+    fetchOrderDetail();
+  }, [idOrder]);
 
-            </Row>
-        </Row>
-    )
-}
+  useEffect(() => {
+    if (status !== null) {
+      fetchOrderDetail();
+    }
+  }, [status]);
 
-const ProductsInfo = () => {
-    return (
-        <View style={[styles.areaContainer, { borderBottomWidth: 0 }]}>
-            <Title
-                title={'Danh sách sản phẩm'}
-                icon='sticker-text-outline'
-            />
-            <FlatList
-                data={products}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => (
-                    <HorizontalProductItem item={item} />
-                )}
-                contentContainerStyle={{ marginVertical: GLOBAL_KEYS.PADDING_DEFAULT }}
-                scrollEnabled={false}
-            />
-        </View>
-    )
-}
+  const statusKey = orderDetail
+    ? Object.keys(OrderStatus).find(
+        key => OrderStatus[key].value === orderDetail?.status,
+      )
+    : null;
+  const statusLabel = statusKey ? OrderStatus[statusKey].label : '';
 
-const MerchantInfo = () => {
-    return (
-        <View style={styles.areaContainer}>
-            <Title title='Cửa hàng' icon='store' />
-            <Title title='Green Zone' titleStyle={{ color: colors.black }} />
-            <Text style={styles.normalText}>1 Tô Ký, Trung Mỹ Tây, Quận 12, Hồ Chí Minh</Text>
-        </View>
-    )
-}
-
-const RecipientInfo = () => (
-    <View style={styles.areaContainer}>
-        <Title title='Người nhận' icon='map-marker' />
-        <Title title='Ngọc Đại | 012345678' titleStyle={{ color: colors.black }} />
-        <Text style={styles.normalText}>
-            FPT Polytechnic TP. HCM - Tòa F, Công Viên Phần Mềm Quang Trung, Tòa nhà GenPacific Lô 3 đường 16, Trung Mỹ Tây, Quận 12, Hồ Chí Minh
-        </Text>
-    </View>
-);
-
-const Title = ({
-    title,
-    icon,
-    titleStyle,
-    iconColor = colors.primary,
-    iconSize = GLOBAL_KEYS.ICON_SIZE_DEFAULT }) => {
-    return (
-        <View style={styles.titleContainer}>
-            {
-                icon &&
-                <Icon
-                    source={icon}
-                    color={iconColor}
-                    size={iconSize}
-                />
-            }
-
-            <Text style={[styles.greenText, titleStyle]}>{title}</Text>
-        </View>
-
-    )
-}
-
-
-const PaymentDetails = () => (
-    <View style={{ marginBottom: 8, marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT }}>
-
-        <DualTextRow
-            leftText="CHI TIẾT THANH TOÁN"
-            leftTextStyle={{ color: colors.primary, fontWeight: 'bold' }}
+  return (
+    <Modal visible={isModalOrderDetail} transparent animationType="fade">
+      <OverlayStatusBar />
+      <View style={styles.body}>
+        <TouchableOpacity
+          onPress={() => setIsModalOrderDetail(false)}
+          style={styles.viewClose}
         />
-        <OrderId />
-        {[
-            { leftText: 'Tạm tính (2 sản phẩm)', rightText: '69.000đ' },
-            { leftText: 'Phí giao hàng', rightText: '18.000đ' },
-            { leftText: 'Giảm giá', rightText: '-28.000đ', rightTextStyle: { color: colors.primary } },
-            {
-                leftText: 'Đã thanh toán',
-                rightText: '68.000đ',
-                leftTextStyle: { paddingHorizontal: 4, paddingVertical: 2, borderWidth: 1, borderRadius: 6, borderColor: colors.primary, color: colors.primary },
-                rightTextStyle: { fontWeight: '700', color: colors.primary }
-            },
-            { leftText: 'Thời gian đặt hàng', rightText: '2024/07/03, 20:08' },
-        ].map((item, index) => (
-            <DualTextRow key={index} {...item} />
-        ))}
+        <View style={styles.modalContainer}>
+          <ScrollView
+            ref={scrollViewRef}
+            showsVerticalScrollIndicator={false}
+            style={styles.modalContent}>
+            <Row style={styles.headerRow}>
+              <View style={styles.headerSpacer} />
+              <TitleText
+                text="Chi tiết đơn hàng"
+                style={styles.titleTextCenter}
+              />
+              <IconButton
+                icon="close"
+                size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                iconColor={colors.primary}
+                style={styles.closeButton}
+                onPress={() => setIsModalOrderDetail(false)}
+              />
+            </Row>
 
+            <Title
+              title={statusLabel}
+              titleStyle={[
+                styles.titleHeader,
+                {
+                  color:
+                    orderDetail?.status === OrderStatus.CANCELLED.value ||
+                    orderDetail?.status === OrderStatus.FAILED_DELIVERY.value
+                      ? colors.red900
+                      : colors.primary,
+                },
+              ]}
+            />
+            {Object.keys(orderDetail?.shippingAddress || {}).length > 0 && (
+              <ShipperInfo shipper={orderDetail?.shipper} />
+            )}
+            <MerchantInfo data={orderDetail?.store} />
+            <RecipientInfo data={orderDetail} />
+            <ProductsInfo data={orderDetail?.orderItems} />
+            <PaymentDetails
+              data={orderDetail}
+              setIsModalOrderDetail={setIsModalOrderDetail}
+              fetchOrders={fetchOrders}
+              setIdOrder={setIdOrder}
+              scrollViewRef={scrollViewRef}
+            />
+          </ScrollView>
+        </View>
+        <TouchableOpacity
+          onPress={() => setIsModalOrderDetail(false)}
+          style={styles.viewClose}
+        />
+      </View>
+    </Modal>
+  );
+};
 
-
-        <PaymentMethodRow enableChange={false} />
-
-        <Pressable style={styles.button} onPress={() => { }}>
-            <NormalText text='Đã hoàn thành đơn hàng' />
-        </Pressable>
+const MerchantInfo = ({data}) => {
+  return (
+    <View style={styles.areaContainer}>
+      <Title title={data?.name} titleStyle={{color: colors.black}} />
+      <Text style={styles.normalText}>
+        {`${data?.specificAddress}, ${data?.ward}, ${data?.district}, ${data?.province}`}
+      </Text>
     </View>
+  );
+};
+
+const RecipientInfo = ({data}) => (
+  <View style={styles.areaContainer}>
+    <Title title="Người nhận" icon="map-marker-outline" />
+    <Title
+      title={
+        data?.owner && Object.keys(data.owner).length > 0
+          ? `${data?.owner.firstName} ${data?.owner.lastName} | ${data?.owner.phoneNumber}`
+          : 'Khách vãng lai'
+      }
+      titleStyle={{color: colors.black}}
+    />
+    <Title
+      title={
+        DeliveryMethod[
+          Object.keys(DeliveryMethod).find(
+            key => DeliveryMethod[key].value === data?.deliveryMethod,
+          )
+        ]?.label || 'Không xác định'
+      }
+    />
+  </View>
 );
 
-const OrderId = () => {
+const ProductsInfo = ({data}) => {
+  return (
+    <View style={[styles.areaContainer]}>
+      <Title title="Danh sách sản phẩm" icon="sticker-text-outline" />
+      <FlatList
+        data={data || []}
+        keyExtractor={item => item.product._id}
+        renderItem={({item}) => (
+          <View style={styles.productContainer}>
+            <Image
+              style={styles.productImage}
+              source={{uri: item.product.image}}
+            />
+            <View style={styles.productColumn}>
+              <View style={styles.productInfo}>
+                <Text style={styles.productName}>{item.product.name},</Text>
+                <Text style={styles.productSize}>
+                  Size: <Text style={styles.boldText}>{item.product.size}</Text>
+                  ,
+                </Text>
+                <Text style={styles.productQuantity}>
+                  Số lượng:{' '}
+                  <Text style={styles.boldText}>x{item.quantity}</Text>,
+                </Text>
+                <Text style={styles.productPrice}>
+                  Đơn giá:{' '}
+                  <Text style={styles.boldText}>
+                    {TextFormatter.formatCurrency(item?.price)}
+                  </Text>
+                </Text>
+              </View>
+              {item.toppingItems.length > 0 &&
+                item.toppingItems.some(
+                  topping => Object.keys(topping).length > 0,
+                ) && (
+                  <Text style={styles.toppingText}>
+                    Topping:{' '}
+                    {item.toppingItems
+                      .filter(topping => Object.keys(topping).length > 0)
+                      .map((topping, index) => (
+                        <Text key={index}>
+                          {topping.name || 'Không'}{' '}
+                          <Text style={styles.boldText}>
+                            {topping.price
+                              ? TextFormatter.formatCurrency(topping.price)
+                              : 'Không'}
+                          </Text>
+                          {index !== item.toppingItems.length - 1 ? ', ' : ''}
+                        </Text>
+                      ))}
+                  </Text>
+                )}
+            </View>
+          </View>
+        )}
+        contentContainerStyle={styles.flatListContent}
+        style={styles.flatList}
+        scrollEnabled={false}
+      />
+    </View>
+  );
+};
+
+const PaymentDetails = ({
+  data,
+  setIsModalOrderDetail,
+  fetchOrders,
+  setIdOrder,
+  scrollViewRef,
+}) => {
+  if (!data) return null;
+
+  const totalPrice = calculateTotalPrice(data.orderItems);
+
+  // Check if voucher is valid before calculating the discount
+  const voucher =
+    data.voucher && Object.keys(data.voucher).length > 0 ? data.voucher : null;
+  const discountAmount = calculateVoucher(totalPrice, voucher);
+  const finalTotal = totalPrice - discountAmount + (data.shippingFee || 0);
+  const paymentStatus = checkPaymentStatus(data);
+  const [selectedShipper, setSelectedShipper] = useState(null);
+
+  function calculateTotalPrice(items) {
+    return items.reduce((total, item) => {
+      const itemTotal = item.price * item.quantity;
+      const toppingTotal = (item.toppingItems || []).reduce(
+        (sum, topping) => sum + (topping.price || 0) * (topping.quantity || 1),
+        0,
+      );
+      return total + itemTotal + toppingTotal;
+    }, 0);
+  }
+
+  function calculateVoucher(totalPrice, voucher) {
+    if (!voucher) return 0;
+    return voucher.discountType === 'percentage'
+      ? (voucher.discountValue * totalPrice) / 100
+      : voucher.discountValue || 0;
+  }
+
+  const updateStatus = async (status, deliveryMethod) => {
+    try {
+      const response = await updateOrderStatus(
+        data._id,
+        status,
+        deliveryMethod,
+      );
+      return response.data;
+    } catch (error) {
+      console.log(`Lỗi khi cập nhật trạng thái đơn hàng:`, error);
+      throw error;
+    }
+  };
+
+  const showAlert = ({notification, message, onPress}) => {
+    Alert.alert(notification, message, [
+      {text: 'Huỷ', style: 'cancel'},
+      {text: 'Xác Nhận', onPress},
+    ]);
+  };
+
+  const handleStatusUpdate = async newStatus => {
+    try {
+      await updateStatus(newStatus);
+      await fetchOrders();
+      setIdOrder(null);
+    } catch (error) {
+      console.log(`Cập nhật trạng thái đơn hàng thất bại:`, error);
+    } finally {
+      setIsModalOrderDetail(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedShipper || !selectedShipper._id) {
+      return;
+    }
+    showAlert({
+      notification: 'Xác nhận giao hàng',
+      message:
+        'Chuyển trạng thái đơn hàng sang "Đơn Hàng Đã Giao Cho Shipper"?',
+      onPress: async () => {
+        await handleStatusUpdateWithShipper(
+          OrderStatus.READY_FOR_PICKUP.value,
+          selectedShipper._id,
+        );
+        setSelectedShipper(null);
+      },
+    });
+  }, [selectedShipper]);
+
+  const handleStatusUpdateWithShipper = async (status, shipperId) => {
+    try {
+      console.log('Status gửi lên:', status);
+      console.log('Shipper ID gửi lên:', shipperId);
+      await updateOrderStatus(data._id, status, 'delivery', shipperId);
+      await fetchOrders();
+      console.log(`Cập nhật trạng thái thành công:`, status);
+    } catch (error) {
+      console.log(`Lỗi cập nhật trạng thái đơn hàng:`, error);
+    } finally {
+      setIsModalOrderDetail(false);
+    }
+  };
+
+  const ShipperSelect = ({onSelect, scrollViewRef}) => {
+    const [shippers, setShippers] = useState([]);
+    const [expanded, setExpanded] = useState(false);
+
+    useEffect(() => {
+      fetchShippers();
+    }, []);
+
+    const fetchShippers = async () => {
+      try {
+        const response = await getEmployeesAllAvailable();
+        setShippers(response.data);
+      } catch (error) {
+        console.log('Lỗi khi lấy danh sách shipper:', error);
+      }
+    };
+
+    useEffect(() => {
+      if (shippers.length > 0) {
+        scrollViewRef.current?.scrollToEnd({animated: true});
+      }
+    }, [shippers]);
+
+    const handleSelectShipper = shipper => {
+      console.log('Shipper được chọn:', JSON.stringify(shipper, null, 2));
+      onSelect(shipper);
+      setExpanded(false);
+    };
+
     return (
-        <Row style={[styles.row, { marginBottom: 6 }]}>
-            <NormalText text='Mã đơn hàng' />
-            <Pressable style={styles.row} onPress={() => { }}>
+      <View>
+        <Pressable
+          onPress={() => setExpanded(!expanded)}
+          style={styles.selectBox}>
+          <Title title="Chọn Shipper" icon="moped-electric" />
+        </Pressable>
+        {expanded && (
+          <View>
+            {shippers.map(item => (
+              <Pressable
+                key={item._id}
+                onPress={() => handleSelectShipper(item)}
+                style={styles.shipperItem}>
+                <Title title={`${item.firstName} ${item.lastName}`} />
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
 
-                <Text style={[styles.normalText, { fontWeight: 'bold', marginRight: 8 }]}>202407032008350</Text>
-                <Icon
-                    source='content-copy'
-                    color={colors.teal900}
-                    size={18}
-                />
+  const handleOrderStatusButtons = () => {
+    switch (data.status) {
+      case OrderStatus.PENDING_CONFIRMATION.value:
+        return (
+          <>
+            <Pressable
+              style={styles.button}
+              onPress={() =>
+                showAlert({
+                  notification: 'Xác nhận đơn hàng',
+                  message: 'Bạn có chắc chắn muốn xác nhận đơn hàng này?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.PROCESSING.value),
+                })
+              }>
+              <NormalText text="Xác nhận" style={styles.buttonText} />
             </Pressable>
+            <Pressable
+              style={styles.button1}
+              onPress={() =>
+                showAlert({
+                  notification: 'Xác nhận huỷ đơn hàng',
+                  message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.CANCELLED.value),
+                })
+              }>
+              <NormalText text="Huỷ" style={styles.buttonTextWhite} />
+            </Pressable>
+          </>
+        );
+      case OrderStatus.PROCESSING.value:
+        return (
+          <>
+            {data.deliveryMethod === DeliveryMethod.DELIVERY.value ? (
+              <ShipperSelect
+                onSelect={setSelectedShipper}
+                scrollViewRef={scrollViewRef}
+              />
+            ) : (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy',
+                    message: '"Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy"?',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.READY_FOR_PICKUP.value),
+                  })
+                }>
+                <NormalText text="Sẵn Sàng Đến Lấy" style={styles.buttonText} />
+              </Pressable>
+            )}
+          </>
+        );
+      case OrderStatus.READY_FOR_PICKUP.value:
+        return (
+          <>
+            {data.deliveryMethod === DeliveryMethod.DELIVERY.value ? (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Đơn Đang Được Giao Cho Shipper',
+                    message: 'Đơn Giao Cho Shipper Thành Công',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
+                  })
+                }>
+                <NormalText
+                  text="Giao thành công cho Shipper"
+                  style={styles.buttonText}
+                />
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Đơn Đã Hoàn Thành',
+                    message: '"Đơn Đã Hoàn Thành"?',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.COMPLETED.value),
+                  })
+                }>
+                <NormalText text="Đã Hoàn Thành" style={styles.buttonText} />
+              </Pressable>
+            )}
+          </>
+        );
+      case OrderStatus.SHIPPING_ORDER.value:
+        return (
+          <>
+            <Pressable
+              style={styles.button}
+              onPress={() =>
+                showAlert({
+                  notification: 'Đơn Đã Hoàn Thành',
+                  message: 'Đơn hàng đã được giao thành công?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.COMPLETED.value),
+                })
+              }>
+              <NormalText text="Đã Hoàn Thành" style={styles.buttonText} />
+            </Pressable>
+            <Pressable
+              style={styles.button1}
+              onPress={() =>
+                showAlert({
+                  notification: 'Giao hàng thất bại',
+                  message: 'Đơn hàng giao không thành công?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.FAILED_DELIVERY.value),
+                })
+              }>
+              <NormalText text="Giao Thất Bại" style={styles.buttonTextWhite} />
+            </Pressable>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.paymentDetailsContainer}>
+      <DualTextRow
+        leftText="CHI TIẾT THANH TOÁN"
+        leftTextStyle={styles.dualTextLeftHeader}
+      />
+      <OrderId data={data._id} />
+      {[
+        {
+          leftText: `Tạm tính (${data.orderItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+          )} sản phẩm)`,
+          rightText: TextFormatter.formatCurrency(totalPrice),
+        },
+        {
+          leftText: 'Phí giao hàng',
+          rightText: TextFormatter.formatCurrency(
+            data.deliveryMethod === DeliveryMethod.DELIVERY.value
+              ? data.shippingFee
+              : 0,
+          ),
+        },
+        {
+          leftText: 'Giảm giá',
+          rightText: `-${TextFormatter.formatCurrency(discountAmount)}`,
+          rightTextStyle: {color: colors.primary},
+        },
+        {
+          leftText: paymentStatus,
+          rightText: TextFormatter.formatCurrency(data.totalPrice || 0),
+          leftTextStyle: {
+            ...styles.dualTextStatus,
+            borderColor:
+              paymentStatus === 'Chưa thanh toán'
+                ? colors.red900
+                : colors.primary,
+            color:
+              paymentStatus === 'Chưa thanh toán'
+                ? colors.red900
+                : colors.primary,
+          },
+          rightTextStyle: {fontWeight: '700', color: colors.primary},
+        },
+        {
+          leftText: 'Thời gian đặt hàng',
+          rightText: TextFormatter.formatDateTime(data.fulfillmentDateTime),
+        },
+        {
+          leftText: 'Thanh toán',
+          rightText:
+            data.paymentMethod === PaymentMethod.COD.value
+              ? 'Tiền mặt'
+              : 'Chuyển khoản',
+          rightTextStyle: {fontWeight: '700', color: colors.primary},
+        },
+      ].map((item, index) => (
+        <DualTextRow key={index} {...item} />
+      ))}
+      {data.status !== OrderStatus.CANCELLED.value &&
+        data.status !== OrderStatus.FAILED_DELIVERY.value && (
+          <View style={styles.buttonContainer}>
+            {handleOrderStatusButtons()}
+          </View>
+        )}
+    </View>
+  );
+};
+
+const OrderId = ({data}) => {
+  return (
+    <Row style={styles.orderIdRow}>
+      <NormalText text="Mã đơn hàng" />
+      <Pressable style={styles.orderIdPressable} onPress={() => {}}>
+        <Text style={styles.orderIdText}>{data}</Text>
+        <Icon source="content-copy" color={colors.teal900} size={18} />
+      </Pressable>
+    </Row>
+  );
+};
+
+const ShipperInfo = ({shipper}) => {
+  return Object.keys(shipper || {}).length === 0 ? (
+    <Row
+      style={{
+        gap: 16,
+        marginVertical: 8,
+        marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+      }}>
+      <NormalText text="Chưa chọn Shipper" style={{fontWeight: '500'}} />
+    </Row>
+  ) : (
+    <Row
+      style={{
+        gap: 16,
+        paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
+        borderTopWidth: 1,
+        borderColor: colors.gray200,
+        margin: 16,
+      }}>
+      <Image
+        style={{width: 40, height: 40}}
+        source={require('../../assets/images/helmet.png')}
+      />
+      <Column style={{flex: 1}}>
+        <NormalText
+          text={shipper.firstName + ' '}
+          style={{fontWeight: '500'}}
+        />
+        <Row>
+          <NormalText text={`${shipper.phoneNumber}`} />
         </Row>
-    )
-}
-
-
-
-const products = [
-    {
-        id: '1',
-        name: 'Trà Xanh Sữa Hạnh Nhân (Latte)',
-        image: require('../../assets/images/product1.png'),
-        price: 69000,
-    },
-    {
-        id: '2',
-        name: 'Combo 3 Olong Tea',
-        image: require('../../assets/images/product1.png'),
-        price: 79000,
-    },
-    {
-        id: '3',
-        name: 'Combo 2 Trà Sữa Trân Châu Hoàng Kim',
-        image: require('../../assets/images/product1.png'),
-        price: 69000,
-    },
-    {
-        id: '4',
-        name: 'Trà Xanh Sữa Hạnh Nhân (Latte)',
-        image: require('../../assets/images/product1.png'),
-        price: 79000,
-    },
-];
-
-
-
+      </Column>
+    </Row>
+  );
+};
 const styles = StyleSheet.create({
-    modalContainer: {
-        backgroundColor: colors.overlay,
-        flex: 1,
-        width: '100%',
-
-    },
-    modalContent: {
-        width: '75%',
-        alignSelf: 'center',
-        backgroundColor: colors.white,
-        flexDirection: 'column',
-        gap: GLOBAL_KEYS.GAP_SMALL,
-        margin: StatusBar.currentHeight,
-        flexDirection: 'column',
-        flex: 1,
-        borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE
-    },
-    row: {
-        flexDirection: 'row',
-        gap: GLOBAL_KEYS.GAP_SMALL,
-        justifyContent: 'flex-end',
-        flex: 1
-    },
-    closeButton: {
-        backgroundColor: colors.green100,
-        alignSelf: 'flex-end'
-    },
-
-    greenText: {
-        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-        color: colors.primary,
-        fontWeight: '600'
-    },
-    titleContainer: {
-        marginVertical: 4,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: GLOBAL_KEYS.GAP_SMALL
-    },
-    areaContainer: {
-        borderBottomWidth: 5,
-        borderColor: colors.gray200,
-        paddingVertical: 8,
-        marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT
-    },
-    button: {
-        backgroundColor: colors.white,
-        borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-        padding: GLOBAL_KEYS.PADDING_DEFAULT,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderColor: colors.gray200,
-        borderWidth: 2,
-        marginVertical: 16
-    },
+  body: {
+    flex: 1,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    backgroundColor: colors.overlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewClose: {
+    width: '15%',
+    height: '100%',
+  },
+  modalContainer: {
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE,
+    backgroundColor: 'white',
+    width: '60%',
+    height: '90%',
+    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
+    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
+  modalContent: {
+    alignSelf: 'center',
+    backgroundColor: colors.white,
+    flexDirection: 'column',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE,
+  },
+  headerRow: {
+    width: '100%',
+    backgroundColor: 'white',
+    justifyContent: 'space-between',
+    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
+  headerSpacer: {
+    width: 24,
+    height: 24,
+  },
+  titleTextCenter: {
+    alignSelf: 'center',
+  },
+  closeButton: {
+    backgroundColor: colors.green100,
+    alignSelf: 'flex-end',
+  },
+  titleHeader: {
+    fontWeight: '500',
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginVertical: GLOBAL_KEYS.PADDING_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+  },
+  areaContainer: {
+    borderTopWidth: 1,
+    borderColor: colors.gray200,
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    gap: GLOBAL_KEYS.GAP_SMALL / 2,
+  },
+  productContainer: {
+    flexDirection: 'row',
+    width: width,
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    alignItems: 'center',
+  },
+  productColumn: {
+    flexDirection: 'column',
+  },
+  productInfo: {
+    flexDirection: 'row',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+  },
+  productName: {
+    fontWeight: '500',
+  },
+  productSize: {},
+  productQuantity: {},
+  productPrice: {},
+  boldText: {
+    fontWeight: '500',
+  },
+  productImage: {
+    width: 60,
+    height: 60,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+  },
+  flatList: {
+    marginTop: 8,
+  },
+  flatListContent: {
+    gap: GLOBAL_KEYS.GAP_SMALL,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+  },
+  greenText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  paymentDetailsContainer: {
+    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
+  dualTextLeftHeader: {
+    color: colors.primary,
+    fontWeight: 'bold',
+  },
+  dualTextStatus: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderWidth: 1,
+    borderRadius: 6,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: GLOBAL_KEYS.GAP_DEFAULT * 4,
+    borderTopWidth: 1,
+    borderColor: colors.gray200,
+    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: colors.gray200,
+    borderWidth: 2,
+    minWidth: '15%',
+    alignSelf: 'flex-start',
+  },
+  button1: {
+    backgroundColor: colors.red900,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderColor: colors.gray200,
+    borderWidth: 2,
+    minWidth: '15%',
+  },
+  buttonText: {
+    color: colors.white,
+  },
+  buttonTextWhite: {
+    color: colors.white,
+  },
+  orderIdRow: {
+    ...commonRowStyle, // sử dụng style row chung nếu cần, hoặc bạn có thể bỏ hoàn toàn nếu không cần
+    marginBottom: 6,
+  },
+  orderIdPressable: {
+    flexDirection: 'row',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    justifyContent: 'flex-end',
+    flex: 1,
+  },
+  orderIdText: {
+    ...commonNormalText,
+    fontWeight: 'bold',
+    marginRight: 8,
+  },
+  normalText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.black,
+  },
+  shipperRow: {
+    gap: 16,
+    borderTopWidth: 2,
+    borderColor: colors.gray200,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
+  shipperImage: {
+    width: 40,
+    height: 40,
+  },
+  shipperColumn: {
+    flex: 1,
+  },
+  shipperTitle: {
+    fontWeight: '500',
+  },
+  shipperRatingRow: {
+    gap: 8,
+  },
+  shipperActionRow: {
+    gap: 24,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+  },
+  selectBox: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  shipperItem: {
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    backgroundColor: colors.green100,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginTop: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
 });
 
-export default OrderDetailScreen;
-
+export default React.memo(OrderDetailScreen);

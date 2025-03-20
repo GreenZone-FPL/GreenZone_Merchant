@@ -1,12 +1,12 @@
-import { Tab, TabView } from '@rneui/themed';
+import {Tab, TabView} from '@rneui/themed';
 import PropTypes from 'prop-types';
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { colors, GLOBAL_KEYS } from '../../constants';
+import {StyleSheet} from 'react-native';
+import {colors, GLOBAL_KEYS} from '../../constants';
 
 const CustomTabViewPropTypes = {
-  tabIndex: PropTypes.number,
-  setTabIndex: PropTypes.func,
+  tabIndex: PropTypes.number.isRequired,
+  setTabIndex: PropTypes.func.isRequired,
   tabBarConfig: PropTypes.shape({
     titles: PropTypes.arrayOf(PropTypes.string).isRequired,
     titleStyle: PropTypes.object,
@@ -21,40 +21,12 @@ const CustomTabViewPropTypes = {
     tabViewContainerStyle: PropTypes.object,
     tabViewItemStyle: PropTypes.object,
   }),
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node,
-  ]),
+  children: PropTypes.node,
 };
-
-/**
- *
- * Usage example
- *  <CustomTabView
-      tabIndex={tabIndex}
-      setTabIndex={setTabIndex}
-      tabBarConfig={{
-        titles: ['Tab A', 'Tab B', 'Tab C'],
-      }}
-    >
-      <View>
-        <Text>Đây là nội dung của Tab A</Text>
-      </View>
-
-      <View>
-        <Text>Đây là nội dung của Tab B</Text>
-      </View>
-
-      <View>
-        <Text>Đây là nội dung của Tab C</Text>
-      </View>
-
-    </CustomTabView>
- */
 
 export const CustomTabView = ({
   tabIndex = 0,
-  setTabIndex = () => { },
+  setTabIndex = () => {},
   tabBarConfig = {
     titles: ['Tab 1', 'Tab 2', 'Tab 3'],
     titleStyle: {},
@@ -69,35 +41,38 @@ export const CustomTabView = ({
     tabViewContainerStyle: {},
     tabViewItemStyle: {},
   },
-  children
+  children,
 }) => {
   return (
     <>
       {/* Tab configuration */}
-
       <Tab
         value={tabIndex}
-        onChange={(e) => setTabIndex(e)}
+        onChange={e => setTabIndex(e)}
         indicatorStyle={[styles.indicatorStyle, tabBarConfig.indicatorStyle]}
         containerStyle={[styles.tabContainer, tabBarConfig.containerStyle]}
         variant="primary"
-        scrollable={tabBarConfig.scrollable}
-      >
-        {
-          tabBarConfig.titles.map((title, index) => {
-            return (
-              <Tab.Item
-                title={title}
-                titleStyle={[
-                  styles.titleStyle,
-                  { color: index === tabIndex ? tabBarConfig.titleActiveColor : tabBarConfig.titleInActiveColor },
-                  tabBarConfig.titleStyle
-                ]}
-                containerStyle={[styles.tabItemContainer, tabBarConfig.tabItemContainerStyle]}
-              />
-            )
-          })
-        }
+        scrollable={tabBarConfig.scrollable}>
+        {tabBarConfig.titles.map((title, index) => (
+          <Tab.Item
+            key={index}
+            title={title}
+            titleStyle={[
+              styles.titleStyle,
+              {
+                color:
+                  index === tabIndex
+                    ? tabBarConfig.titleActiveColor
+                    : tabBarConfig.titleInActiveColor,
+              },
+              tabBarConfig.titleStyle,
+            ]}
+            containerStyle={[
+              styles.tabItemContainer,
+              tabBarConfig.tabItemContainerStyle,
+            ]}
+          />
+        ))}
       </Tab>
 
       {/* TabView configuration */}
@@ -105,21 +80,24 @@ export const CustomTabView = ({
         value={tabIndex}
         onChange={setTabIndex}
         animationType="spring"
-        containerStyle={[styles.tabViewContainer, tabViewConfig.tabViewContainerStyle]}
-      >
+        containerStyle={[
+          styles.tabViewContainer,
+          tabViewConfig.tabViewContainerStyle,
+        ]}>
         {children &&
           React.Children.map(children, (child, index) => (
-            <TabView.Item key={index} style={[styles.tabViewItem, tabViewConfig.tabViewItemStyle]}>
+            <TabView.Item
+              key={`tab-view-${index}`}
+              style={[styles.tabViewItem, tabViewConfig.tabViewItemStyle]}>
               {index === tabIndex && child}
             </TabView.Item>
           ))}
       </TabView>
     </>
-  )
-}
+  );
+};
 
-CustomTabView.propTypes = CustomTabViewPropTypes
-
+CustomTabView.propTypes = CustomTabViewPropTypes;
 
 const styles = StyleSheet.create({
   indicatorStyle: {
@@ -141,6 +119,6 @@ const styles = StyleSheet.create({
   },
   titleStyle: {
     color: colors.black,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT
-  }
-})
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
+});

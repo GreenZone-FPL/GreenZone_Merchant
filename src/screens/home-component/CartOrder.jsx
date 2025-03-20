@@ -1,12 +1,12 @@
 import React, {useEffect, useState, useMemo} from 'react';
 import {
-  Dimensions,
   FlatList,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../constants';
@@ -22,15 +22,13 @@ import {CustomFlatInput, Ani_ModalLoading} from '../../components';
 import ModalCheckout from './ModalCheckout';
 import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
 
+const {width} = Dimensions.get('window');
+
 const CartOrder = ({cart, setCart}) => {
-  const [isCartEmptyModalVisible, setIsCartEmptyModalVisible] = useState(false);
   const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
-  const [voucherCode, setVoucherCode] = useState('');
-  const [message, setMessage] = useState('');
   const [isCheckout, setIsCheckout] = useState(false);
-  const [order, setOrder] = useState(null);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -99,7 +97,9 @@ const CartOrder = ({cart, setCart}) => {
       const fetchData = async () => {
         try {
           await fetchCustomerByPhone(phoneNumber);
-        } catch (error) {}
+        } catch (error) {
+          console.log(error);
+        }
       };
 
       fetchData();
@@ -239,18 +239,19 @@ const CartOrder = ({cart, setCart}) => {
         )
       ) : null}
 
-      <Text style={styles.rightTitle}>Giỏ hàng</Text>
+      {/* <Text style={styles.rightTitle}>Giỏ hàng</Text> */}
       <View style={styles.customerInfo}>
         <View
           style={{
             flexDirection: 'column',
             flex: 1,
             gap: GLOBAL_KEYS.GAP_SMALL,
+            padding: GLOBAL_KEYS.PADDING_DEFAULT,
           }}>
           <Text style={styles.customerInfoTitle}>Thông tin khách hàng</Text>
           <View>
             <CustomFlatInput
-              label={'Nhập số điện thoại hoặc quét mã để lấy thông tin'}
+              label={'Nhập số điện thoại'}
               placeholder="Số điện thoại"
               value={phoneNumber}
               setValue={setPhoneNumber}
@@ -267,12 +268,12 @@ const CartOrder = ({cart, setCart}) => {
           </View>
           <View>
             <Text>
-              Khách hàng:{' '}
+              Khách hàng:{''}
               {cart === null
                 ? 'Vui lòng chọn sản phẩm trước'
                 : customer?.customer
                 ? `${customer.customer.firstName} ${customer.customer.lastName}`
-                : 'Vãng lai'}
+                : ' Vãng lai'}
             </Text>
             <Text>
               Số điện thoại:{' '}
@@ -280,7 +281,7 @@ const CartOrder = ({cart, setCart}) => {
                 ? 'Vui lòng chọn sản phẩm trước'
                 : customer?.customer
                 ? customer?.customer?.phoneNumber
-                : 'Không'}
+                : ''}
             </Text>
           </View>
         </View>
@@ -288,9 +289,11 @@ const CartOrder = ({cart, setCart}) => {
 
       <View
         style={{
-          height: '43%',
+          flex: 1,
           borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
           overflow: 'hidden',
+          backgroundColor: colors.fbBg,
+          marginVertical: GLOBAL_KEYS.PADDING_DEFAULT,
         }}>
         {cart && cart.orderItems.length > 0 ? (
           <FlatList
@@ -298,129 +301,178 @@ const CartOrder = ({cart, setCart}) => {
             maxToRenderPerBatch={10}
             data={cart.orderItems}
             keyExtractor={item => item._id}
+            showsVerticalScrollIndicator={false}
             renderItem={({item}) => (
               <View style={styles.cartItem}>
-                <View style={styles.itemQuantity}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (item.quantity > 1) {
-                        updateItemQuantity(item._id, item.quantity - 1);
-                      }
-                    }}>
-                    <Text style={styles.buttonQuantity}>-</Text>
-                  </TouchableOpacity>
-                  <Text style={{}}>{item.quantity}</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      updateItemQuantity(item._id, item.quantity + 1);
-                    }}>
-                    <Text style={styles.buttonQuantity}>+</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={{alignItems: 'center', justifyContent: 'center'}}>
-                  <Image
-                    style={styles.cartItemImage}
-                    source={{uri: item.product.image}}
-                  />
-                </View>
-                <View style={{flexDirection: 'column', flex: 1}}>
-                  <Text style={styles.cartItemName}>
-                    {item.product.name} -{' '}
-                    <Text style={{color: colors.yellow700}}>
-                      Size: {item.size.size}
-                    </Text>
-                  </Text>
-                  <Text style={styles.cartItemTopping}>
-                    <Text>
-                      {item.topping && item.topping.length > 0 ? (
-                        <Text>
-                          {item.topping
-                            .map(topping => `${topping.name} x1`)
-                            .join('\n')}
-                        </Text>
-                      ) : (
-                        <Text>Không có topping</Text>
-                      )}
-                    </Text>
-                  </Text>
-                </View>
+                <Image
+                  style={styles.cartItemImage}
+                  source={{uri: item.product.image}}
+                />
                 <View
                   style={{
                     flexDirection: 'column',
-                    gap: GLOBAL_KEYS.GAP_DEFAULT,
+                    flex: 1,
                   }}>
+                  <Text style={styles.cartItemName}>{item.product.name} </Text>
+                  <View style={styles.cartItemTopping}>
+                    <Text
+                      style={{
+                        color: colors.pink500,
+                        fontSize: 10,
+                        fontWeight: '500',
+                      }}>
+                      {item.size.size}
+                    </Text>
+                    <Text style={{color: colors.gray850}}>
+                      {item.topping &&
+                        item.topping.length > 0 &&
+                        item.topping.map((topping, index) => (
+                          <Text
+                            key={index}
+                            style={{
+                              marginBottom: 4,
+                              fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL - 2,
+                            }}>
+                            <Text style={{fontSize: 8}}>x1 </Text>
+                            {topping.name}
+                            {'\n'}
+                          </Text>
+                        ))}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.itemContent}>
                   <Text style={styles.cartItemPrice}>
                     {TextFormatter.formatCurrency(item.totalPrice)}
                   </Text>
-                  <TouchableOpacity onPress={() => removeFromCart(item._id)}>
-                    <Text style={styles.buttonDelete}>Xoá</Text>
-                  </TouchableOpacity>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      gap: GLOBAL_KEYS.GAP_DEFAULT,
+                    }}>
+                    <View style={styles.itemQuantity}>
+                      <TouchableOpacity
+                        style={styles.buttonQuantity}
+                        onPress={() => {
+                          if (item.quantity > 1) {
+                            updateItemQuantity(item._id, item.quantity - 1);
+                          }
+                        }}>
+                        <Icon source={'minus'} color={colors.white} size={20} />
+                      </TouchableOpacity>
+                      <Text
+                        style={{
+                          width: 26,
+                          textAlign: 'center',
+                          fontWeight: '400',
+                          fontSize: 12,
+                        }}>
+                        {item.quantity}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.buttonQuantity}
+                        onPress={() => {
+                          updateItemQuantity(item._id, item.quantity + 1);
+                        }}>
+                        <Icon source={'plus'} color={colors.white} size={20} />
+                      </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity
+                      style={{alignItems: 'center'}}
+                      onPress={() => removeFromCart(item._id)}>
+                      {/* <Icon
+                        source={'delete'}
+                        color={colors.gray700}
+                        size={24}
+                      /> */}
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.pink500,
+                          textAlignVertical: 'center',
+                          textAlign: 'center',
+                        }}>
+                        Xoá
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
-            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_SMALL}}
+            contentContainerStyle={{
+              gap: GLOBAL_KEYS.GAP_SMALL,
+            }}
           />
         ) : (
-          <Text style={styles.emptyCart}>Giỏ hàng trống</Text>
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: GLOBAL_KEYS.GAP_DEFAULT,
+            }}>
+            <Image
+              style={{
+                width: '80%',
+                height: '80%',
+                resizeMode: 'contain',
+              }}
+              source={require('../../assets/images/empty_box.png')}
+            />
+            <Text style={styles.emptyCart}>Giỏ hàng trống</Text>
+          </View>
         )}
       </View>
-
-      <View>
-        <View style={{flexDirection: 'row', gap: 8, alignItems: 'center'}}>
-          <CustomFlatInput
-            label={'Nhập mã voucher hoặc quét QR'}
-            placeholder="Mã giảm giá"
-            value={voucherCode}
-            setValue={setVoucherCode}
-            rightIcon="barcode-scan"
-            onRightPress={() => {}}
-            style={{flex: 1}}
-          />
-          {message && <Text style={styles.errorText}>{message}</Text>}
-        </View>
-      </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          gap: 8,
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-        <Text
+      {cart && cart.orderItems.length > 0 && (
+        <View
           style={{
-            fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER + 3,
-            fontWeight: 'bold',
-            color: colors.primary,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: GLOBAL_KEYS.PADDING_DEFAULT,
+            backgroundColor: colors.white,
           }}>
-          Tổng tiền:{' '}
-          <Text
-            style={{
-              fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-              fontWeight: 'bold',
-              color: colors.black,
+          <View style={{flexDirection: 'column', flex: 1}}>
+            <Text
+              style={{
+                fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE - 4,
+                fontWeight: '500',
+                color: colors.black,
+              }}>
+              Tổng tiền:
+            </Text>
+            <Text
+              style={{
+                fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
+                fontWeight: 'bold',
+                color: colors.pink500,
+                width: '100%',
+              }}>
+              {TextFormatter.formatCurrency(
+                cart?.totalPrice ? cart.totalPrice : 0,
+              )}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              if (cart == null) return;
+              setIsCheckout(true);
             }}>
-            {TextFormatter.formatCurrency(
-              cart?.totalPrice ? cart.totalPrice : 0,
-            )}
-          </Text>
-        </Text>
-        <TouchableOpacity
-          onPress={() => {
-            if (cart == null) return;
-            setIsCheckout(true);
-          }}>
-          <Text
-            style={{
-              padding: 10,
-              backgroundColor: colors.primary,
-              color: colors.white,
-              fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-              fontWeight: 'bold',
-            }}>
-            Thanh Toán
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <Text
+              style={{
+                padding: 8,
+                color: colors.pink500,
+                backgroundColor: colors.white,
+                fontWeight: 'bold',
+                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+                borderWidth: 1,
+                borderColor: colors.pink500,
+              }}>
+              Thanh Toán
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
       {isCheckout && (
         <ModalCheckout
           data={filterCart(cart)}
@@ -433,113 +485,120 @@ const CartOrder = ({cart, setCart}) => {
           setScannedCode={setScannedCode}
         />
       )}
-      <Ani_ModalLoading loading={loading} />
+      {/* <Ani_ModalLoading loading={loading} /> */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   rightSection: {
-    flex: 3,
-    backgroundColor: colors.gray200,
-    padding: 10,
-    gap: 20,
+    flex: 3.5,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    marginLeft: 20,
+    backgroundColor: colors.fbBg,
   },
   cameraControls: {
     position: 'absolute',
-    right: 10,
+    right: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
   },
   switchCameraButton: {
-    marginRight: 10,
+    marginRight: GLOBAL_KEYS.PADDING_SMALL,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 8,
-    borderRadius: 5,
+    padding: GLOBAL_KEYS.PADDING_SMALL,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_,
   },
   closeCameraButton: {
     backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: 8,
-    borderRadius: 5,
+    padding: GLOBAL_KEYS.PADDING_SMALL,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
   rightTitle: {
-    fontSize: 22,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
     fontWeight: 'bold',
     textAlign: 'center',
     color: colors.primary,
   },
   customerInfo: {
     backgroundColor: colors.white,
-    borderRadius: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   customerInfoTitle: {
-    fontSize: 16,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray850,
     fontWeight: 'bold',
   },
-  customerInfoText: {
-    fontSize: 14,
-    color: colors.gray850,
-  },
   cartItem: {
     flexDirection: 'row',
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    gap: GLOBAL_KEYS.GAP_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     justifyContent: 'space-between',
     backgroundColor: colors.white,
-    elevation: 2,
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    alignItems: 'center',
+    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
   },
   cartItemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    width: width / 20,
+    height: width / 20,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 20,
+  },
+  itemContent: {
+    flexDirection: 'column',
+    padding: GLOBAL_KEYS.PADDING_SMALL,
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    position: 'absolute',
+    end: 0,
+    bottom: 0,
+    flex: 1,
   },
   itemQuantity: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 2,
-    fontWeight: '500',
-    end: '30%',
-    bottom: '30%',
-    position: 'absolute',
+    justifyContent: 'center',
   },
   buttonQuantity: {
-    width: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
-    height: GLOBAL_KEYS.ICON_SIZE_DEFAULT,
-    backgroundColor: colors.fbBg,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 2,
-    fontWeight: '500',
-    elevation: 2,
-    fontSize: 16,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+    borderWidth: 1,
   },
   cartItemName: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
     fontWeight: '500',
   },
   cartItemTopping: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    flexDirection: 'column',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL - 2,
     fontWeight: '500',
     color: colors.gray700,
   },
   cartItemPrice: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
     fontWeight: '500',
+    color: colors.black,
+    textAlign: 'right',
+    // marginRight: 5,
   },
   buttonDelete: {
     textAlign: 'center',
     textAlignVertical: 'center',
     padding: GLOBAL_KEYS.PADDING_SMALL,
-    backgroundColor: colors.gray200,
+    backgroundColor: colors.white,
     color: colors.red900,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
-  emptyCart: {fontSize: 14, color: '#777', textAlign: 'center'},
+  emptyCart: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.black,
+    textAlign: 'center',
+  },
 });
 
 export default React.memo(CartOrder);

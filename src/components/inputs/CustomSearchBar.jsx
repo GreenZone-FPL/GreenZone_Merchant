@@ -1,11 +1,8 @@
 import PropTypes from 'prop-types'; // Import thư viện PropTypes
 import React from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { GLOBAL_KEYS, colors } from '../../constants';
-
-
-
+import {Pressable, StyleSheet, TextInput, View} from 'react-native';
+import {Icon} from 'react-native-paper';
+import {GLOBAL_KEYS, colors} from '../../constants';
 
 const CustomSearchBarPropTypes = {
   placeholder: PropTypes.string,
@@ -34,13 +31,13 @@ const CustomSearchBarPropTypes = {
  *
  */
 export const CustomSearchBar = ({
-  placeholder = "Search",
+  placeholder = 'Search',
   searchQuery,
   setSearchQuery,
   onClearIconPress,
   style = {},
-  leftIcon = "magnify",
-  rightIcon = "close",
+  leftIcon = 'magnify',
+  rightIcon = 'close',
   rightIconColor = colors.primary,
   onLeftIconPress,
 }) => {
@@ -70,10 +67,7 @@ export const CustomSearchBar = ({
   );
 };
 
-CustomSearchBar.propTypes = CustomSearchBarPropTypes
-
-
-
+CustomSearchBar.propTypes = CustomSearchBarPropTypes;
 
 const styles = StyleSheet.create({
   container: {
@@ -91,5 +85,3 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
 });
-
-

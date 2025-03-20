@@ -1,295 +1,418 @@
-import React, { useState } from 'react';
-import { Dimensions, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { ButtonGroup, Column, DualTextRow, NormalText, Row, TitleText, LightStatusBar } from '../../components';
-import { colors, GLOBAL_KEYS } from '../../constants';
-import orders from '../../utils/fakeOrders';
-import { OrderGraph } from '../../layouts/graphs';
+import React, {useEffect, useState, useMemo, memo} from 'react';
+import {
+  Dimensions,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import {getOrders} from '../../axios/index';
+import {CustomTabView, LightStatusBar} from '../../components';
+import {
+  checkPaymentStatus,
+  colors,
+  GLOBAL_KEYS,
+  OrderStatus,
+  PaymentMethod,
+} from '../../constants';
+import {TextFormatter} from '../../utils';
+import OrderDetailScreen from '../order/OrderDetailScreen';
+import MerchantSocketService from '../../sevices/merchantSocketService';
 
-const { width, height } = Dimensions.get('window')
-const OrderHistoryScreen = (props) => {
-  const { navigation } = props;
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isUnconfirmedOpen, setIsUnconfirmedOpen] = useState(true); // Trạng thái ẩn/hiện đơn chưa xác nhận
-  const [isConfirmedOpen, setIsConfirmedOpen] = useState(true);     // Trạng thái ẩn/hiện đơn đã xác nhận
+const width = Dimensions.get('window').width;
 
-  const buttons = ['Đơn Tại Quầy', 'Đơn Online'];
-  const orderType = selectedIndex === 0 ? 'Offline' : 'Online';
+const OrderHistoryScreen = () => {
+  const [pendingConfirmation, setPendingConfirmation] = useState([]);
+  const [processing, setProcessing] = useState([]);
+  const [readyForPickup, setReadyForPickup] = useState([]);
+  const [shippingOrder, setShippingOrder] = useState([]);
+  const [completed, setCompleted] = useState([]);
+  const [cancelled, setCancelled] = useState([]);
+  const [failedDelivery, setFailedDelivery] = useState([]);
+
+  const [tabIndex, setTabIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [isModalOrderDetail, setIsModalOrderDetail] = useState(false);
+  const [idOrder, setIdOrder] = useState(null);
+
+  // Sử dụng useMemo để tạo mảng cấu hình cho các tab chỉ một lần khi component mount
+  const orderStatusConfig = useMemo(
+    () => [
+      {
+        status: OrderStatus.PENDING_CONFIRMATION.value,
+        setter: setPendingConfirmation,
+      },
+      {status: OrderStatus.PROCESSING.value, setter: setProcessing},
+      {status: OrderStatus.READY_FOR_PICKUP.value, setter: setReadyForPickup},
+      {status: OrderStatus.SHIPPING_ORDER.value, setter: setShippingOrder},
+      {status: OrderStatus.COMPLETED.value, setter: setCompleted},
+      {status: OrderStatus.FAILED_DELIVERY.value, setter: setFailedDelivery},
+      {status: OrderStatus.CANCELLED.value, setter: setCancelled},
+    ],
+    [],
+  );
+
+  // Hàm sắp xếp đơn hàng theo thời gian
+  const sortOrdersByDate = orders => {
+    return orders.sort(
+      (a, b) =>
+        new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
+    );
+  };
+
+  // Lấy danh sách đơn hàng theo trạng thái
+  const fetchOrdersByStatus = async (status, setOrder) => {
+    setLoading(true);
+    try {
+      const responseOrder = await getOrders(status);
+      if (responseOrder) {
+        // Sắp xếp đơn hàng ngay sau khi nhận dữ liệu
+        const sortedOrders = sortOrdersByDate(responseOrder.data);
+        setOrder(sortedOrders);
+      }
+    } catch (error) {
+      console.log('Lỗi khi lấy danh sách đơn hàng:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch đơn hàng cho tab hiện tại khi tabIndex thay đổi
+  useEffect(() => {
+    const {status, setter} = orderStatusConfig[tabIndex];
+    fetchOrdersByStatus(status, setter);
+  }, [tabIndex, orderStatusConfig]);
+
+  // Cập nhật lại đơn hàng nếu có đơn hàng mới
+  useEffect(() => {
+    const handleNewOrder = data => {
+      if (data._id !== null) {
+        const {status, setter} = orderStatusConfig[tabIndex];
+        fetchOrdersByStatus(status, setter);
+      }
+    };
+
+    MerchantSocketService.on('order.new', handleNewOrder);
+    return () => {
+      MerchantSocketService.off('order.new', handleNewOrder);
+    };
+  }, []);
+
+  const handleRepeatOrder = id => {
+    setIsModalOrderDetail(true);
+    setIdOrder(id);
+  };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
-      <LightStatusBar/>
-      <ButtonGroup
-        buttons={buttons}
-        selectedIndex={selectedIndex}
-        onSelect={(index) => setSelectedIndex(index)}
-        containerColor={colors.white}
-        selectedButtonColor={colors.pink500}
-        containerStyle={{ marginBottom: 16 }}
+    <View style={{flex: 1}}>
+      <LightStatusBar />
+      <CustomTabView
+        tabIndex={tabIndex}
+        setTabIndex={setTabIndex}
+        tabBarConfig={{
+          titles: [
+            'Chờ xác nhận',
+            'Đang xử lý',
+            'Chờ lấy hàng',
+            'Đang giao hàng',
+            'Hoàn thành',
+            'Giao hàng thất bại',
+            'Đã huỷ',
+          ],
+          titleActiveColor: colors.primary,
+          titleInActiveColor: colors.gray700,
+        }}>
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={pendingConfirmation}
+          loading={loading}
+          status={'pendingConfirmation'}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={processing}
+          loading={loading}
+          status={'processing'}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={readyForPickup}
+          loading={loading}
+          status={'readyForPickup'}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={shippingOrder}
+          loading={loading}
+          status={'shippingOrder'}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={completed}
+          loading={loading}
+          status={'completed'}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={failedDelivery}
+          loading={loading}
+          status={'failedDelivery'}
+        />
+        <OrderListView
+          handleRepeatOrder={handleRepeatOrder}
+          orders={cancelled}
+          loading={loading}
+          status={'cancelled'}
+        />
+      </CustomTabView>
+
+      <OrderDetailScreen
+        setIsModalOrderDetail={setIsModalOrderDetail}
+        isModalOrderDetail={isModalOrderDetail}
+        idOrder={idOrder}
+        setIdOrder={setIdOrder}
+        fetchOrders={() => {
+          const {status, setter} = orderStatusConfig[tabIndex];
+          fetchOrdersByStatus(status, setter);
+        }}
       />
-
-      {/* Đơn hàng chưa xác nhận */}
-      <View style={styles.card}>
-        <Pressable
-          style={styles.header}
-          onPress={() => setIsUnconfirmedOpen(!isUnconfirmedOpen)}
-        >
-          <Row style={{ alignItems: 'center', gap: 8 }}>
-            <Icon source="timelapse" size={24} color={colors.red900} />
-            <TitleText text="Đơn hàng chưa xác nhận" />
-          </Row>
-          <Icon
-            source={isUnconfirmedOpen ? 'chevron-up' : 'chevron-down'}
-            size={28}
-            color={colors.gray700}
-          />
-        </Pressable>
-
-        {isUnconfirmedOpen && (
-          <OrderGridView 
-          status="UnConfirmed"
-           orderType={orderType}
-           onItemPress={() => navigation.navigate(OrderGraph.OrderDetailScreen)}
-           />
-        )}
-      </View>
-
-      {/* Đơn hàng đã xác nhận */}
-      <Column style={styles.card}>
-        <Pressable
-          style={styles.header}
-          onPress={() => setIsConfirmedOpen(!isConfirmedOpen)}
-        >
-          <Row style={{ alignItems: 'center', gap: 8 }}>
-            <Icon source="check-circle" size={24} color={colors.green500} />
-            <TitleText text="Đơn hàng đã xác nhận" />
-          </Row>
-          <Icon
-            source={isConfirmedOpen ? 'chevron-up' : 'chevron-down'}
-            size={28}
-            color={colors.gray700}
-          />
-        </Pressable>
-
-        {isConfirmedOpen && (
-          <OrderGridView status="Confirmed" orderType={orderType} />
-        )}
-      </Column>
-    </ScrollView>
+      {/* <NormalLoading visible={loading} /> */}
+    </View>
   );
 };
 
-
-// Màn hình từng trạng thái
-const OrderGridView = ({ status, orderType, onItemPress }) => {
-  const filteredOrders = orders.filter(
-    (order) => order.status === status && order.orderType === orderType
-  );
-
+// Component OrderListView được bọc trong React.memo để tránh render lại không cần thiết
+const OrderListView = memo(({orders, loading, handleRepeatOrder, status}) => {
   return (
-    <Column style={styles.scene}>
-
-      {filteredOrders.length > 0 ? (
+    <View style={styles.scene}>
+      {orders.length > 0 ? (
         <FlatList
-          data={filteredOrders}
-          keyExtractor={(item) => item.orderId}
-          scrollEnabled={false}
-          numColumns={3}
-          columnWrapperStyle={{ justifyContent: 'space-between', gap: 16 }}
-          renderItem={({ item }) => (
-            <OrderItem
-              onPress={onItemPress}
-              order={item} />
+          data={orders}
+          keyExtractor={item => item.orderId || item._id}
+          renderItem={({item}) => (
+            <Item item={item} handleRepeatOrder={handleRepeatOrder} />
           )}
+          contentContainerStyle={{
+            gap: GLOBAL_KEYS.GAP_DEFAULT,
+          }}
         />
       ) : (
-        <EmptyView message={`Không có đơn hàng ${orderType.toLowerCase()} nào`} />
+        <EmptyView message={getEmptyMessage(status)} />
       )}
+    </View>
+  );
+});
 
-    </Column>
+// Component Item được bọc trong React.memo để tránh render lại nếu props không thay đổi
+const Item = memo(({item, handleRepeatOrder}) => {
+  const paymentMethod = checkPaymentStatus(item);
+  return (
+    <TouchableOpacity
+      onPress={() => handleRepeatOrder(item._id)}
+      style={styles.itemOrder}>
+      <ItemOrderType deliveryMethod={item.deliveryMethod} />
+      <View style={styles.view1}>
+        <View style={{flexDirection: 'row', alignItems: 'flex-end', flex: 1}}>
+          <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
+            Đơn hàng:{' '}
+          </Text>
+          <Text style={{fontWeight: '500'}}>{item._id}</Text>
+        </View>
+        <Text style={item.owner?.firstName ? styles.owner : styles.ownerNull}>
+          {item.owner?.firstName
+            ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
+            : 'Khách hàng vãng lai'}
+        </Text>
+      </View>
+      <View style={styles.view2}>
+        <ItemOrderText deliveryMethod={item.deliveryMethod} />
+        <Text style={styles.cod}>
+          {item.paymentMethod == PaymentMethod.COD.value
+            ? 'Thanh toán tiền mặt'
+            : 'Thanh toán ngân hàng'}
+        </Text>
+      </View>
+      <View style={styles.view2}>
+        <Text style={styles.price}>
+          {TextFormatter.formatCurrency(item.totalPrice)}
+        </Text>
+        <Text style={styles.date}>
+          {TextFormatter.formatDateTime(item.fulfillmentDateTime)}
+        </Text>
+      </View>
+      <View style={styles.view2}>
+        {paymentMethod === 'Chưa thanh toán' ? (
+          <Text style={styles.noPaid}>Chưa thanh toán</Text>
+        ) : (
+          <Text style={styles.paid}>Đã thanh toán</Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+});
+
+const getEmptyMessage = status => {
+  switch (status) {
+    case 'pendingConfirmation':
+      return 'Chưa có đơn hàng Chờ xác nhận';
+    case 'processing':
+      return 'Chưa có đơn hàng Đang xử lý';
+    case 'readyForPickup':
+      return 'Chưa có đơn hàng Chờ lấy hàng';
+    case 'shippingOrder':
+      return 'Chưa có đơn Đang giao hàng';
+    case 'completed':
+      return 'Chưa có đơn hàng Hoàn thành';
+    case 'failedDelivery':
+      return 'Chưa có đơn hàng Giao thất bại';
+    case 'cancelled':
+      return 'Chưa có đơn hàng Đã hủy';
+    default:
+      return 'Không có dữ liệu';
+  }
+};
+
+const ItemOrderType = ({deliveryMethod}) => {
+  const imageMap = {
+    pickup: require('../../assets/serving-method/takeaway.png'),
+    delivery: require('../../assets/serving-method/delivery.png'),
+  };
+
+  return (
+    <View style={styles.emptyContainer}>
+      <Image
+        style={styles.orderTypeIcon}
+        source={imageMap[deliveryMethod] || imageMap['pickup']}
+      />
+    </View>
   );
 };
 
-const OrderItem = ({
-  order,
-  onPress
-}) => (
-  <Pressable
-    onPress={onPress}
-    style={styles.orderItem}>
+const ItemOrderText = ({deliveryMethod}) => {
+  const textMap = {
+    pickup: 'Mang đi',
+    delivery: 'Giao tận nơi',
+  };
 
-    <DualTextRow
-      leftText={order.orderId}
-      rightText={`${order.totalAmount}`}
-      leftTextStyle={styles.orderName}
-      rightTextStyle={styles.orderTotal}
-      style={{ marginVertical: 0 }}
-    />
+  return (
+    <Text
+      style={[
+        styles.orderTime,
+        deliveryMethod === 'delivery' ? {color: colors.pink500} : {},
+      ]}>
+      {textMap[deliveryMethod] || 'Mang đi'}
+    </Text>
+  );
+};
 
-    <DualTextRow
-      leftText={order.status}
-      rightText="4 sản phẩm"
-      leftTextStyle={styles.orderStatus}
-      rightTextStyle={styles.normalText}
-      style={{ marginVertical: 0 }}
-    />
-
-
-    {/* FlatList con: Hiển thị danh sách sản phẩm */}
-    <FlatList
-      data={order.items}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-        <Column style={styles.productItem}>
-          <Image
-            source={{ uri: 'https://www.onicifood.com/cdn/shop/products/332594556_3485601318363625_7384526670140317642_n.png?v=1677766982&width=1445' }}
-            style={styles.productImage}
-          />
-          <Text style={styles.productName} numberOfLines={2} ellipsizeMode="tail">
-            {item.name}
-          </Text>
-        </Column>
-      )}
-      horizontal={true}
-      scrollEnabled={true}
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 16 }}
-    />
-
-    <Row style={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
-
-      <NormalText
-        style={{ color: colors.gray850 }}
-        text={order.createdAt} />
-
-
-    </Row>
-  </Pressable>
-);
-
-// Dữ liệu đơn hàng (cập nhật)
-
-
-const EmptyView = ({ message }) => (
-  <Column style={styles.emptyContainer}>
+const EmptyView = ({message}) => (
+  <View style={styles.emptyContainer1}>
     <Image
-      style={styles.image}
+      style={styles.emptyImage}
       resizeMode="cover"
-      source={require('../../assets/images/empty_box.png')}
+      source={require('../../assets/images/logo.png')}
     />
-    <TitleText text={message} />
-  </Column>
+    <Text
+      style={{
+        color: colors.yellow700,
+        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+      }}>
+      {message}
+    </Text>
+  </View>
 );
-
-
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'column',
-    backgroundColor: colors.fbBg,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    // marginBottom: 24
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-
-  },
-  header: {
+  container: {flex: 1, backgroundColor: colors.white},
+  itemOrder: {
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
-  },
-  scene: {
-    width: '100%',
-    backgroundColor: colors.transparent,
-    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: GLOBAL_KEYS.GAP_DEFAULT,
-    paddingVertical: 16
-  },
-  image: {
-    width: width / 4.5,
-    height: width / 4.5,
-  },
-  orderItem: {
-    backgroundColor: colors.white,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    gap: 6,
-    borderBottomColor: colors.grayBg,
-    // marginBottom: 8,
-    flex: 1,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    // maxWidth: width / 3.2
-
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderColor: colors.gray200,
   },
-  orderName: {
+  view1: {
+    flexDirection: 'column',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    alignItems: 'center',
+    width: '30%',
+  },
+  view2: {
+    flexDirection: 'column',
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    alignItems: 'center',
+    width: '20%',
+  },
+  cod: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  price: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.pink500,
+    textAlign: 'right',
+  },
+  date: {
+    color: colors.gray500,
+  },
+  ownerNull: {color: colors.black, fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT},
+  owner: {
+    color: colors.primary,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
   },
-  orderStatus: {
+  paid: {
+    color: colors.primary,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.pink500,
-    fontWeight: '500'
-
+    fontWeight: '500',
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderBottomWidth: 1,
+    borderColor: colors.primary,
   },
-  orderTotal: {
+  noPaid: {
+    color: colors.yellow700,
+    fontWeight: '500',
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.pink500,
-    fontWeight: 'bold',
-    textAlign: 'right'
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderBottomWidth: 1,
+    borderColor: colors.yellow700,
+  },
+  scene: {
+    width: '100%',
+    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
+  emptyContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+  },
+  emptyContainer1: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: width / 3,
+    height: width / 3,
   },
   orderTime: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray850,
-
+    fontWeight: '500',
   },
-
-  productItem: {
-    width: 80,
-    maxHeight: 120,
-    alignItems: 'center',
-    gap: 5
+  orderTypeIcon: {
+    width: 50,
+    height: 50,
+    resizeMode: 'cover',
   },
-  productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-
-  },
-  productName: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.black,
-    textAlign: 'center',
-    overflow: 'hidden'
-  },
-  normalText: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.gray850
-  },
-  estimatedTime: {
-    fontWeight: '400',
-    color: colors.primary,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-  }
 });
-export default OrderHistoryScreen
+
+export default OrderHistoryScreen;

@@ -1,3 +1,4 @@
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -5,13 +6,11 @@ import {
   Dimensions,
   StyleSheet,
   Modal,
-  Alert,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
 import {colors, GLOBAL_KEYS} from '../../constants';
-import {TextFormatter, AppAsyncStorage} from '../../utils';
-import {createPickUpOrder} from '../../axios';
+import {createPickUpOrder} from '../../axios/index';
 import {Ani_ModalLoading} from '../../components';
+import NomalLoading from '../../components/animations/NomalLoading';
 
 const {width, height} = Dimensions.get('window');
 
@@ -20,237 +19,117 @@ const ModalCheckout = ({
   setIsCheckout,
   isCheckout,
   setCart,
-  phoneNumber,
   setPhoneNumber,
-  customer,
   setScannedCode,
 }) => {
-  const [order, setOrder] = useState(data);
-  const [message, setMessage] = useState('');
-  const [showMessage, setShowMessage] = useState(false);
-  const [merchant, setMerchant] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
-  // lấy dữ liệu cửa hàng
-  useEffect(() => {
-    const loadMerchant = async () => {
-      try {
-        const merchantData = await AppAsyncStorage.readData('merchant');
-        if (merchantData) {
-          setMerchant(JSON.parse(merchantData));
-        }
-      } catch (error) {}
-    };
-
-    loadMerchant();
-  }, []);
-
-  // xac nhan
-  const showAlert = ({notification, message, onPress}) => {
-    Alert.alert(notification, message, [
-      {
-        text: 'Huỷ',
-        onPress: () => {
-          console.log('Xác nhận huỷ');
-        },
-        style: 'cancel',
-      },
-      {
-        text: 'Xác Nhận',
-        onPress: onPress,
-      },
-    ]);
-  };
-
-  const processCashPayment = () => {
-    const newOrder = {...order, paymentMethod: 'cod'};
-    showAlert({
-      notification: 'Xác nhận tạo đơn hàng',
-      message: 'Xác nhận đã thanh toán tiền mặt, tạo đơn hàng.',
-      onPress: async () => {
-        try {
-          await createOrder(newOrder);
-        } catch (error) {}
-      },
-    });
-  };
-
-  //tạo order
-  const createOrder = async order => {
+  // Xử lý tạo đơn hàng
+  const createOrder = async () => {
     setLoading(true);
     try {
-      const response = await createPickUpOrder(order);
+      const response = await createPickUpOrder({...data, paymentMethod: 'cod'});
       if (response.status === 201) {
-        setLoading(false);
-
-        setShowMessage(true);
-        setMessage('TẠO ĐƠN THÀNH CÔNG');
+        setMessage('Tạo đơn thành công');
         setTimeout(() => {
-          setShowMessage(false);
-          setCart(null);
           setIsCheckout(false);
-          setMessage('');
+          setCart(null);
           setPhoneNumber('');
           setScannedCode('');
-        }, 3000);
+        }, 1000);
       }
-      console.log('status:', response.status);
-      console.log('Dữ liệu gửi lên API:', JSON.stringify(order, null, 2));
-      return response;
     } catch (error) {
-      throw error;
+      console.log('Lỗi tạo đơn hàng:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <Modal visible={isCheckout} transparent animationType="slide">
       <View style={styles.container}>
         <View style={styles.modalContent}>
-          <View style={styles.infoContainer}>
-            <Item
-              title={'Cửa hàng'}
-              text={`Green Zone ${merchant?.lastName}`}
-            />
-            <Item title={'Phương thức nhận hàng'} text={order.deliveryMethod} />
-            <Item
-              title={'Thời gian hoàn tất đơn hàng'}
-              text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
-            />
-            <Item
-              title={'Người đặt hàng'}
-              text={
-                customer
-                  ? customer?.customer?.firstName +
-                    ' ' +
-                    customer?.customer?.lastName
-                  : 'Khách vãng lai'
-              }
-            />
-            <Item
-              title={'Ghi chú'}
-              text={order.note ? order.note : 'không có ghi chú'}
-            />
-            <Item title={'Phương thức thanh toán'} text={order.paymentMethod} />
-            <Item
-              title={'Địa chỉ giao hàng'}
-              text={order.shippingAddress ? order.shippingAddress : 'Tại quán'}
-            />
-            <Item
-              title={'Mã giảm giá'}
-              text={order.voucher ? order.voucher : 'Không có'}
-            />
-            <Item
-              title={'Tổng giá trị đơn hàng'}
-              text={TextFormatter.formatCurrency(order.totalPrice)}
-            />
+          <View style={styles.textContainer}>
+            <Text style={styles.headerText}>Xác nhận</Text>
+            <Text style={styles.subText}>Bạn xác nhận tạo đơn hàng</Text>
           </View>
+
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={styles.paymentButton}
-              onPress={() => {
-                processCashPayment();
-              }}>
-              <Text style={styles.buttonText}>Thanh Toán Tiền Mặt</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.paymentButton}>
-              <Text style={styles.buttonText}>Thanh Toán Chuyển Khoản</Text>
+              style={styles.cancelButton}
+              onPress={() => setIsCheckout(false)}>
+              <Text style={styles.buttonText}>Đóng</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setIsCheckout(false)}
-              style={styles.cancelButton}>
-              <Text style={styles.buttonText}>Quay Lại</Text>
+              style={styles.paymentButton}
+              onPress={createOrder}>
+              <Text style={styles.buttonText}>Đồng ý</Text>
             </TouchableOpacity>
           </View>
-          {showMessage && <Message message={message} />}
         </View>
       </View>
-      <Ani_ModalLoading loading={loading} />
+      <NomalLoading visible={loading} />
     </Modal>
   );
 };
 
-const Message = ({message}) => {
-  return (
-    <View
-      style={{
-        position: 'absolute',
-      }}>
-      <Text style={styles.showMessage}>{message}</Text>
-    </View>
-  );
-};
-const Item = ({title, text}) => {
-  return (
-    <View style={styles.itemContainer}>
-      <Text style={styles.itemTitle}>{title}:</Text>
-      <Text style={styles.itemText}>{text}</Text>
-    </View>
-  );
-};
+export default React.memo(ModalCheckout);
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: colors.overlay,
-    width: width,
-    height: height,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
   modalContent: {
-    flex: 1,
-    margin: '10%',
+    width: '50%',
+    padding: GLOBAL_KEYS.PADDING_DEFAULT * 2,
     backgroundColor: colors.white,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     alignItems: 'center',
-    gap: GLOBAL_KEYS.GAP_DEFAULT * 5,
-    justifyContent: 'center',
+    elevation: 5,
   },
-  infoContainer: {
-    gap: GLOBAL_KEYS.GAP_SMALL,
+  textContainer: {
+    alignSelf: 'flex-start',
+  },
+  headerText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  subText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.black,
+    marginVertical: GLOBAL_KEYS.PADDING_SMALL,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: GLOBAL_KEYS.GAP_DEFAULT * 2,
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    marginTop: GLOBAL_KEYS.PADDING_DEFAULT,
+    alignSelf: 'flex-end',
   },
   paymentButton: {
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     backgroundColor: colors.primary,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    minWidth: 100,
   },
   cancelButton: {
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    backgroundColor: colors.red900,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: colors.gray700,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    minWidth: 100,
   },
   buttonText: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '600',
     color: colors.white,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: GLOBAL_KEYS.GAP_DEFAULT,
-    width: '100%',
-  },
-  itemTitle: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-    fontWeight: '500',
-    width: '20%',
-  },
-  itemText: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  showMessage: {
-    width: 400,
-    height: 200,
-    backgroundColor: colors.white,
-    color: colors.primary,
-    borderRadius: 10,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER + 5,
-    elevation: 4,
     textAlign: 'center',
-    textAlignVertical: 'center',
-    fontWeight: '700',
   },
 });
-
-export default React.memo(ModalCheckout);

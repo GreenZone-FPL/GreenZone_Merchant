@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
   Dimensions,
   Modal,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,7 +12,6 @@ import {
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {AppAsyncStorage, TextFormatter} from '../../utils';
 
-import {Ani_ModalLoading} from '../../components';
 const {width} = Dimensions.get('window').width;
 
 const ModalToping = ({
@@ -26,8 +25,6 @@ const ModalToping = ({
   setSelectedSize,
   selectedToppings,
   setSelectedToppings,
-  phoneNumber,
-  setPhoneNumber,
 }) => {
   const [merchant, setMerchant] = useState(null);
 
@@ -53,7 +50,7 @@ const ModalToping = ({
   }, [selectedProduct]);
   //chọn topping
   const toggleTopping = topping => {
-    if (selectedToppings.length === 3) return;
+    // if (selectedToppings.length === 3) return;
     setSelectedToppings(prev =>
       prev.some(t => t._id === topping._id)
         ? prev.filter(t => t._id !== topping._id)
@@ -125,9 +122,9 @@ const ModalToping = ({
           fulfillmentDateTime: new Date().toISOString(),
           note: null,
           totalPrice: newItem.totalPrice,
-          paymentMethod: null,
+          paymentMethod: 'cod',
           shippingAddress: null,
-          store: merchant?._id,
+          store: merchant?.workingStore,
           owner: null,
           voucher: null,
           orderItems: [newItem],
@@ -184,7 +181,7 @@ const ModalToping = ({
     <Modal visible={openMenu} transparent animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>Chọn Size</Text>
+          <Text style={styles.modalTitle}>Chọn Size</Text>
           <View style={styles.sizeContainer}>
             {selectedProduct?.variant?.map(item => (
               <TouchableOpacity
@@ -205,14 +202,17 @@ const ModalToping = ({
             ))}
           </View>
 
-          <Text style={styles.modalTitle}>Chọn Topping</Text>
-          <ScrollView style={styles.toppingList}>
-            {selectedProduct?.topping?.map(item => {
-              const isSelected = selectedToppings.some(t => t._id === item._id);
+          <Text style={styles.modalTitle}>
+            {selectedProduct?.topping.length > 0 && 'Chọn Topping'}
+          </Text>
 
+          <FlatList
+            data={selectedProduct?.topping}
+            keyExtractor={item => item._id}
+            renderItem={({item}) => {
+              const isSelected = selectedToppings.some(t => t._id === item._id);
               return (
                 <TouchableOpacity
-                  key={item._id}
                   style={[
                     styles.toppingOption,
                     isSelected && styles.selectedTopping,
@@ -228,8 +228,10 @@ const ModalToping = ({
                   </Text>
                 </TouchableOpacity>
               );
-            })}
-          </ScrollView>
+            }}
+            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
+            showsVerticalScrollIndicator={false}
+          />
 
           <View style={styles.modalButtonContainer}>
             <TouchableOpacity
@@ -259,85 +261,81 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.overlay,
   },
   modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
     flex: 1,
-    margin: 20,
+    backgroundColor: colors.white,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    alignItems: 'center',
+    margin: GLOBAL_KEYS.PADDING_DEFAULT * 2,
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
     fontWeight: 'bold',
-    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   sizeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 10,
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
   sizeOption: {
-    padding: GLOBAL_KEYS.PADDING_DEFAULT - 4,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    marginHorizontal: 5,
-    backgroundColor: colors.gray200,
+    borderColor: colors.gray200,
   },
   selectedSize: {
     backgroundColor: colors.primary,
-    borderColor: colors.yellow500,
   },
   sizeText: {
     color: colors.primary,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '600',
   },
   selectedSizeText: {
     color: colors.white,
-  },
-  toppingList: {
-    flex: 1,
+    fontWeight: '500',
   },
   toppingOption: {
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     paddingHorizontal: '20%',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    backgroundColor: colors.gray200,
-    marginVertical: GLOBAL_KEYS.GAP_SMALL / 2,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    backgroundColor: colors.white,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   selectedTopping: {
     backgroundColor: colors.primary,
-    borderColor: colors.yellow500,
+    fontWeight: 'bold',
   },
-  toppingText: {
-    fontSize: 16,
-    color: colors.primary,
-  },
+
   selectedToppingText: {
-    color: 'white',
+    color: colors.white,
     fontWeight: 'bold',
   },
   modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    marginTop: 10,
+    marginTop: GLOBAL_KEYS.PADDING_SMALL,
   },
   confirmButton: {
     backgroundColor: '#299345',
-    padding: 20,
-    borderRadius: 5,
-    marginHorizontal: 20,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
     alignItems: 'center',
+    minWidth: '10%',
   },
   confirmButtonText: {
-    color: '#fff',
+    color: colors.white,
     fontWeight: 'bold',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
   },
 });
 export default React.memo(ModalToping);
