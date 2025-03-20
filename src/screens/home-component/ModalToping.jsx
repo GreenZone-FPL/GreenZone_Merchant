@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   Modal,
@@ -10,10 +10,12 @@ import {
   Image,
 } from 'react-native';
 
-import {colors, GLOBAL_KEYS} from '../../constants';
-import {AppAsyncStorage, TextFormatter} from '../../utils';
+import { colors, GLOBAL_KEYS } from '../../constants';
+import { AppAsyncStorage, TextFormatter } from '../../utils';
+import { Row, Column, TitleText } from '../../components';
+import { Icon } from 'react-native-paper';
 
-const {width} = Dimensions.get('window').width;
+const { width } = Dimensions.get('window').width;
 
 const ModalToping = ({
   openMenu,
@@ -35,9 +37,9 @@ const ModalToping = ({
       try {
         const merchantData = await AppAsyncStorage.readData('merchant');
         if (merchantData) {
-          setMerchant(JSON.parse(merchantData));
+          setMerchant(merchantData);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
 
     loadMerchant();
@@ -136,7 +138,7 @@ const ModalToping = ({
           item =>
             item.variant === newItem.variant &&
             JSON.stringify(item.toppingItems) ===
-              JSON.stringify(newItem.toppingItems),
+            JSON.stringify(newItem.toppingItems),
         );
 
         if (existingItemIndex !== -1) {
@@ -181,92 +183,104 @@ const ModalToping = ({
   return (
     <Modal visible={openMenu} transparent animationType="slide">
       <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: GLOBAL_KEYS.GAP_DEFAULT,
-              alignSelf: 'flex-start',
-            }}>
-            <Image
-              style={{width: 80, height: 80, borderRadius: 80}}
-              source={{uri: selectedProduct?.image}}
-            />
-            <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
-          </View>
-          <Text style={styles.modalTitle}>Chọn Size</Text>
-          <View style={styles.sizeContainer}>
-            {selectedProduct?.variant?.map(item => (
-              <TouchableOpacity
-                key={item._id}
-                style={[
-                  styles.sizeOption,
-                  selectedSize?._id === item._id && styles.selectedSize,
-                ]}
-                onPress={() => setSelectedSize(item)}>
-                <Text
-                  style={[
-                    styles.sizeText,
-                    selectedSize?._id === item._id && styles.selectedSizeText,
-                  ]}>
-                  {item.size} - {item.sellingPrice.toLocaleString()} VNĐ
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
 
-          <Text style={styles.modalTitle}>
-            {selectedProduct?.topping.length > 0 && 'Chọn Topping'}
-          </Text>
+        <Column style={styles.modalContent}>
 
-          <FlatList
-            data={selectedProduct?.topping}
-            keyExtractor={item => item._id}
-            renderItem={({item}) => {
-              const isSelected = selectedToppings.some(t => t._id === item._id);
-              return (
-                <TouchableOpacity
-                  style={[
-                    styles.toppingOption,
-                    isSelected && styles.selectedTopping,
-                  ]}
-                  onPress={() => toggleTopping(item)}>
-                  <Text
-                    style={[
-                      styles.sizeText,
-                      isSelected && styles.selectedToppingText,
-                    ]}>
-                    {item.name} ( +{' '}
-                    {TextFormatter.formatCurrency(item.extraPrice)} )
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
-            showsVerticalScrollIndicator={false}
-          />
+          <Row style={styles.headerContainer}>
+            <Row style={{ gap: 16 }}>
 
-          <View style={styles.modalButtonContainer}>
+              <Image
+                style={{ width: 100, height: 100, borderRadius: 80 }}
+                source={{ uri: selectedProduct?.image }}
+              />
+              <TitleText text={selectedProduct?.name} style={{ color: colors.black2 }} />
+            </Row>
+
+
             <TouchableOpacity
-              style={styles.confirmButton}
-              onPress={confirmAddToCart}>
-              <Text style={styles.confirmButtonText}>Xác nhận</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.confirmButton, {backgroundColor: 'red'}]}
+              style={{ borderRadius: 20, backgroundColor: colors.green100, padding: 10 }}
               onPress={() => {
                 setSelectedToppings([]);
                 setSelectedSize(null);
                 setSelectedProduct(null);
                 setOpenMenu(false);
               }}>
-              <Text style={styles.confirmButtonText}>Hủy</Text>
+              <Icon
+                source="close"
+                color={colors.primary}
+                size={24}
+              />
             </TouchableOpacity>
-          </View>
-        </View>
+          </Row>
+
+
+
+          <Row style={{ gap: 30, flex: 1 }}>
+
+            <Column style={{ backgroundColor: colors.white, height: '100%', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6, width: '30%' }}>
+              <TitleText text='Size' style={{ color: colors.orange700 }} />
+
+              <Column style={{ gap: 16, }}>
+                {selectedProduct?.variant?.map(item => (
+                  <TouchableOpacity
+                    key={item._id}
+                    style={[styles.sizeOption, selectedSize?._id === item._id && styles.selectedSize]}
+                    onPress={() => setSelectedSize(item)}
+                  >
+                    <Text style={[styles.sizeText, selectedSize?._id === item._id && styles.selectedSizeText]}>
+                      {item.size} - {item.sellingPrice.toLocaleString()} VNĐ
+                    </Text>
+                  </TouchableOpacity>
+
+                ))}
+              </Column>
+            </Column>
+
+
+            {
+              selectedProduct?.topping.length > 0 &&
+
+              <Column style={{ flex: 1, backgroundColor: colors.white, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6 }}>
+                <TitleText text='Topping' style={{ color: colors.orange700 }} />
+
+                <FlatList
+                  data={selectedProduct?.topping}
+                  keyExtractor={item => item._id}
+                  renderItem={({ item }) => {
+                    const isSelected = selectedToppings.some(t => t._id === item._id);
+                    return (
+                      <TouchableOpacity style={[styles.toppingOption, isSelected && styles.selectedTopping]} onPress={() => toggleTopping(item)}>
+                        <Text style={[styles.sizeText, isSelected && styles.selectedToppingText]}>
+                          {item.name} (+ {TextFormatter.formatCurrency(item.extraPrice)})
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+                  contentContainerStyle={{ flexGrow: 1, gap: GLOBAL_KEYS.GAP_DEFAULT }}
+                  showsVerticalScrollIndicator={false}
+                  style={{ flex: 1 }} // Đảm bảo FlatList có thể mở rộng và cuộn
+                />
+              </Column>
+
+
+            }
+
+
+          </Row>
+
+          <Row style={{ backgroundColor: colors.white, width: '100%', justifyContent: 'flex-end', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6 }}>
+
+            <TouchableOpacity
+              style={[styles.confirmButton, { backgroundColor: colors.primary }]}
+              onPress={confirmAddToCart}>
+              <Text style={styles.confirmButtonText}>Xác nhận</Text>
+            </TouchableOpacity>
+
+          </Row>
+
+        </Column>
       </View>
-    </Modal>
+    </Modal >
   );
 };
 
@@ -276,71 +290,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.overlay,
+
   },
   modalContent: {
     flex: 1,
-    backgroundColor: colors.white,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    width: '70%',
+    backgroundColor: colors.fbBg,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     alignItems: 'center',
-    margin: GLOBAL_KEYS.PADDING_DEFAULT * 2,
     gap: GLOBAL_KEYS.GAP_DEFAULT,
+    margin: 50
   },
-  modalTitle: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
-    fontWeight: 'bold',
-  },
-  sizeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: GLOBAL_KEYS.GAP_DEFAULT,
-  },
+  headerContainer: { justifyContent: 'space-between', backgroundColor: colors.white, width: '100%', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6, alignItems: 'flex-start' },
   sizeOption: {
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.gray200,
+    borderColor: '#EBEBEB',
   },
   selectedSize: {
     borderWidth: 1,
-    borderColor: colors.black,
+    borderColor: colors.primary,
   },
   sizeText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
   },
   selectedSizeText: {
-    color: colors.black2,
-    fontWeight: '500',
+    color: colors.black2
   },
   toppingOption: {
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
-    paddingHorizontal: '20%',
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     backgroundColor: colors.white,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.gray200,
+    borderColor: '#EBEBEB',
   },
   selectedTopping: {
     fontWeight: 'bold',
     borderWidth: 1,
-    borderColor: colors.black,
+    borderColor: colors.primary,
   },
 
   selectedToppingText: {
     color: colors.black,
-    fontWeight: 'bold',
   },
-  modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: '100%',
-    marginTop: GLOBAL_KEYS.PADDING_SMALL,
-  },
+
   confirmButton: {
-    backgroundColor: colors.gray300,
+    backgroundColor: colors.gray400,
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
