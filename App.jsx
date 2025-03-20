@@ -1,24 +1,26 @@
 import './gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import LoginScreen from './src/screens/auth/LoginScreen';
 import MainNavigation from './src/layouts/MainNavigation';
-import OrderDetailScreen from './src/screens/order/OrderDetailScreen';
+import LoginScreen from './src/screens/auth/LoginScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
 import Toast, {BaseToast} from 'react-native-toast-message';
 import {Dimensions, Platform} from 'react-native';
 import {colors} from './src/constants';
+import {AppAsyncStorage} from './src/utils';
 
-// Kiểm tra thiết bị có phải là tablet không
+// Hàm kiểm tra thiết bị có phải là tablet không
 const isTablet = () => {
   const {width, height} = Dimensions.get('window');
-  return Math.min(width, height) >= 600; // Nếu chiều nhỏ nhất >= 600px => Tablet
+  return Math.min(width, height) >= 600;
 };
 
+// Khai báo BaseStack để sử dụng trong việc điều hướng giữa các màn hình
 const BaseStack = createNativeStackNavigator();
 
+// Cấu hình toast với các tùy chỉnh giao diện
 const customToastConfig = {
   success: ({text1, text2, props}) => (
     <BaseToast
@@ -47,19 +49,24 @@ const customToastConfig = {
   ),
 };
 
+// Hàm chính của ứng dụng
 function App() {
+  const [name, setName] = useState('LoginScreen');
+
+  // Khởi tạo socket khi có storeId
   useEffect(() => {
     async function setupSocket() {
       const storeId = await AppAsyncStorage.readData('storeId');
       if (storeId) {
         MerchantSocketService.initialize();
       } else {
-        console.log(' Chưa có storeId, không khởi tạo socket!');
+        console.log('Chưa có storeId, không khởi tạo socket!');
       }
     }
     setupSocket();
   }, []);
 
+  // Lắng nghe sự kiện đơn hàng mới từ socket
   useEffect(() => {
     const handleNewOrder = data => {
       Toast.show({
@@ -90,18 +97,26 @@ function App() {
     };
   }, []);
 
+  // Kiểm tra token khi mở ứng dụng để quyết định điều hướng đến màn hình nào
+  useEffect(() => {
+    const checkToken = async () => {
+      if (await AppAsyncStorage.isTokenValid()) {
+        setName('MainNavigation');
+      }
+    };
+    checkToken();
+  }, []);
+
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <BaseStack.Navigator screenOptions={{headerShown: false}}>
+        <BaseStack.Navigator
+          screenOptions={{headerShown: false}}
+          initialRouteName={name}>
           <BaseStack.Screen name={'LoginScreen'} component={LoginScreen} />
           <BaseStack.Screen
             name={'MainNavigation'}
             component={MainNavigation}
-          />
-          <BaseStack.Screen
-            name={'OrderDetailScreen'}
-            component={OrderDetailScreen}
           />
         </BaseStack.Navigator>
       </NavigationContainer>

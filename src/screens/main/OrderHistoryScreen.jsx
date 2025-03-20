@@ -85,12 +85,6 @@ const OrderHistoryScreen = () => {
     fetchOrdersByStatus(status, setter);
   }, [tabIndex, orderStatusConfig]);
 
-  // Fetch dữ liệu cho tab đầu tiên khi component mount
-  useEffect(() => {
-    const {status, setter} = orderStatusConfig[tabIndex];
-    fetchOrdersByStatus(status, setter);
-  }, [orderStatusConfig, tabIndex]);
-
   // Cập nhật lại đơn hàng nếu có đơn hàng mới
   useEffect(() => {
     const handleNewOrder = data => {
@@ -104,7 +98,7 @@ const OrderHistoryScreen = () => {
     return () => {
       MerchantSocketService.off('order.new', handleNewOrder);
     };
-  }, [tabIndex, orderStatusConfig]);
+  }, []);
 
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
