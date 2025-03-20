@@ -31,15 +31,30 @@ export const createPickUpOrder = async order => {
 
 export const getOrders = async status => {
   try {
-    const responses = await axiosInstance.get(`/v1/order/store/all`, {
-      params: {status},
+    const response = await axiosInstance.get(`/v1/order/store/all`, {
+      params: {
+        status: status,
+      },
     });
-    return responses.data;
+    return response.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
     throw error;
   }
 };
+// export const getOrders = async status => {
+//   try {
+//     const url = status
+//       ? `/v1/order/store/all?status=${status}`
+//       : '/v1/order/store/all';
+
+//     const response = await axiosInstance.get(url);
+//     return response.data;
+//   } catch (error) {
+//     console.log('error', error);
+//     throw error;
+//   }
+// };
 
 export const getOrderDetail = async orderId => {
   try {

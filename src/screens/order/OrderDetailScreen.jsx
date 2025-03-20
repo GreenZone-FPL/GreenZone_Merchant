@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Dimensions,
@@ -24,6 +24,7 @@ import {
   OverlayStatusBar,
   Row,
   TitleText,
+  Column,
 } from '../../components';
 import {
   DeliveryMethod,
@@ -34,9 +35,17 @@ import {
   colors,
 } from '../../constants';
 import {TextFormatter} from '../../utils';
-import {white} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const {width} = Dimensions.get('window');
+
+// Định nghĩa một số style chung để tránh tham chiếu động bên trong StyleSheet
+const commonRowStyle = {
+  // Nếu bạn có style row dùng chung, định nghĩa ở đây (nếu không, có thể để trống)
+};
+const commonNormalText = {
+  fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  color: colors.black,
+};
 
 const OrderDetailScreen = ({
   idOrder,
@@ -45,9 +54,16 @@ const OrderDetailScreen = ({
   isModalOrderDetail,
   fetchOrders,
 }) => {
+  const scrollViewRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [orderDetail, setOrderDetail] = useState(null);
   const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({animated: true});
+    }, 1000);
+  }, []);
 
   const fetchOrderDetail = async () => {
     setLoading(true);
@@ -55,7 +71,6 @@ const OrderDetailScreen = ({
       const response = await getOrderDetail(idOrder);
       setOrderDetail(response.data);
       setStatus(response.data.status);
-      console.log('>>>>>>', JSON.stringify(response.data, null, 2));
     } catch (error) {
       console.log('Lỗi lấy chi tiết đơn hàng:', error);
     } finally {
@@ -74,6 +89,13 @@ const OrderDetailScreen = ({
     }
   }, [status]);
 
+  const statusKey = orderDetail
+    ? Object.keys(OrderStatus).find(
+        key => OrderStatus[key].value === orderDetail?.status,
+      )
+    : null;
+  const statusLabel = statusKey ? OrderStatus[statusKey].label : '';
+
   return (
     <Modal visible={isModalOrderDetail} transparent animationType="fade">
       <OverlayStatusBar />
@@ -84,6 +106,7 @@ const OrderDetailScreen = ({
         />
         <View style={styles.modalContainer}>
           <ScrollView
+            ref={scrollViewRef}
             showsVerticalScrollIndicator={false}
             style={styles.modalContent}>
             <Row style={styles.headerRow}>
@@ -102,13 +125,7 @@ const OrderDetailScreen = ({
             </Row>
 
             <Title
-              title={
-                OrderStatus[
-                  Object.keys(OrderStatus).find(
-                    key => OrderStatus[key].value === orderDetail?.status,
-                  )
-                ]?.label || ''
-              }
+              title={statusLabel}
               titleStyle={[
                 styles.titleHeader,
                 {
@@ -120,6 +137,9 @@ const OrderDetailScreen = ({
                 },
               ]}
             />
+            {Object.keys(orderDetail?.shippingAddress || {}).length > 0 && (
+              <ShipperInfo shipper={orderDetail?.shipper} />
+            )}
             <MerchantInfo data={orderDetail?.store} />
             <RecipientInfo data={orderDetail} />
             <ProductsInfo data={orderDetail?.orderItems} />
@@ -128,6 +148,7 @@ const OrderDetailScreen = ({
               setIsModalOrderDetail={setIsModalOrderDetail}
               fetchOrders={fetchOrders}
               setIdOrder={setIdOrder}
+              scrollViewRef={scrollViewRef}
             />
           </ScrollView>
         </View>
@@ -136,65 +157,7 @@ const OrderDetailScreen = ({
           style={styles.viewClose}
         />
       </View>
-
-      {/* <Ani_ModalLoading loading={loading} /> */}
     </Modal>
-  );
-};
-
-const ShipperSelect = ({onSelect}) => {
-  const [shippers, setShippers] = useState([]);
-  const [expanded, setExpanded] = useState(false);
-  const [selectedShipper, setSelectedShipper] = useState(null);
-
-  useEffect(() => {
-    fetchShippers();
-  }, []);
-
-  const fetchShippers = async () => {
-    try {
-      const response = await getEmployeesAllAvailable();
-      console.log('Danh sách shipper:', JSON.stringify(response.data, null, 2));
-      setShippers(response.data);
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách shipper:', error);
-    }
-  };
-
-  const handleSelectShipper = shipper => {
-    console.log('Shipper được chọn:', JSON.stringify(shipper, null, 2));
-    setSelectedShipper(shipper);
-    setExpanded(false);
-    onSelect(shipper);
-  };
-
-  return (
-    <View>
-      <Pressable
-        onPress={() => setExpanded(!expanded)}
-        style={styles.selectBox}>
-        {selectedShipper ? (
-          <Title
-            title={`${selectedShipper.firstName} ${selectedShipper.lastName}`}
-          />
-        ) : (
-          <Title title="Chọn Shipper" icon="moped-electric" />
-        )}
-      </Pressable>
-
-      {expanded && (
-        <View>
-          {shippers.map(item => (
-            <Pressable
-              key={item._id}
-              onPress={() => handleSelectShipper(item)}
-              style={styles.shipperItem}>
-              <Title title={`${item.firstName} ${item.lastName}`} />
-            </Pressable>
-          ))}
-        </View>
-      )}
-    </View>
   );
 };
 
@@ -211,7 +174,7 @@ const MerchantInfo = ({data}) => {
 
 const RecipientInfo = ({data}) => (
   <View style={styles.areaContainer}>
-    <Title title="Người nhận" icon="map-marker" />
+    <Title title="Người nhận" icon="map-marker-outline" />
     <Title
       title={
         data?.owner && Object.keys(data.owner).length > 0
@@ -234,7 +197,7 @@ const RecipientInfo = ({data}) => (
 
 const ProductsInfo = ({data}) => {
   return (
-    <View style={[styles.areaContainer, styles.areaContainerBorder]}>
+    <View style={[styles.areaContainer]}>
       <Title title="Danh sách sản phẩm" icon="sticker-text-outline" />
       <FlatList
         data={data || []}
@@ -315,24 +278,17 @@ const PaymentDetails = ({
   setIsModalOrderDetail,
   fetchOrders,
   setIdOrder,
+  scrollViewRef,
 }) => {
   if (!data) return null;
 
-  const {
-    orderItems = [],
-    voucher,
-    shippingFee = 0,
-    paymentMethod,
-    status,
-    fulfillmentDateTime,
-    deliveryMethod,
-    totalPrice: totalFromData,
-    _id,
-  } = data;
+  const totalPrice = calculateTotalPrice(data.orderItems);
 
-  const totalPrice = calculateTotalPrice(orderItems);
+  // Check if voucher is valid before calculating the discount
+  const voucher =
+    data.voucher && Object.keys(data.voucher).length > 0 ? data.voucher : null;
   const discountAmount = calculateVoucher(totalPrice, voucher);
-  const finalTotal = totalPrice - discountAmount + (shippingFee || 0);
+  const finalTotal = totalPrice - discountAmount + (data.shippingFee || 0);
   const paymentStatus = checkPaymentStatus(data);
   const [selectedShipper, setSelectedShipper] = useState(null);
 
@@ -356,14 +312,18 @@ const PaymentDetails = ({
 
   const updateStatus = async (status, deliveryMethod) => {
     try {
-      const response = await updateOrderStatus(_id, status, deliveryMethod);
-
+      const response = await updateOrderStatus(
+        data._id,
+        status,
+        deliveryMethod,
+      );
       return response.data;
     } catch (error) {
       console.log(`Lỗi khi cập nhật trạng thái đơn hàng:`, error);
       throw error;
     }
   };
+
   const showAlert = ({notification, message, onPress}) => {
     Alert.alert(notification, message, [
       {text: 'Huỷ', style: 'cancel'},
@@ -374,8 +334,7 @@ const PaymentDetails = ({
   const handleStatusUpdate = async newStatus => {
     try {
       await updateStatus(newStatus);
-
-      fetchOrders();
+      await fetchOrders();
       setIdOrder(null);
     } catch (error) {
       console.error(`Cập nhật trạng thái đơn hàng thất bại:`, error);
@@ -384,40 +343,235 @@ const PaymentDetails = ({
     }
   };
 
+  useEffect(() => {
+    if (!selectedShipper || !selectedShipper._id) {
+      return;
+    }
+    showAlert({
+      notification: 'Xác nhận giao hàng',
+      message:
+        'Chuyển trạng thái đơn hàng sang "Đơn Hàng Đã Giao Cho Shipper"?',
+      onPress: async () => {
+        await handleStatusUpdateWithShipper(
+          OrderStatus.READY_FOR_PICKUP.value,
+          selectedShipper._id,
+        );
+        setSelectedShipper(null);
+      },
+    });
+  }, [selectedShipper]);
+
   const handleStatusUpdateWithShipper = async (status, shipperId) => {
     try {
       console.log('Status gửi lên:', status);
       console.log('Shipper ID gửi lên:', shipperId);
-
-      await updateOrderStatus(_id, status, 'delivery', shipperId);
-      console.log(`Cập nhật trạng thái thành công:`, status);
+      await updateOrderStatus(data._id, status, 'delivery', shipperId);
       await fetchOrders();
+      console.log(`Cập nhật trạng thái thành công:`, status);
     } catch (error) {
       console.error(`Lỗi cập nhật trạng thái đơn hàng:`, error);
     } finally {
       setIsModalOrderDetail(false);
     }
   };
+
+  const ShipperSelect = ({onSelect, scrollViewRef}) => {
+    const [shippers, setShippers] = useState([]);
+    const [expanded, setExpanded] = useState(false);
+
+    useEffect(() => {
+      fetchShippers();
+    }, []);
+
+    const fetchShippers = async () => {
+      try {
+        const response = await getEmployeesAllAvailable();
+        setShippers(response.data);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách shipper:', error);
+      }
+    };
+
+    useEffect(() => {
+      if (shippers.length > 0) {
+        scrollViewRef.current?.scrollToEnd({animated: true});
+      }
+    }, [shippers]);
+
+    const handleSelectShipper = shipper => {
+      console.log('Shipper được chọn:', JSON.stringify(shipper, null, 2));
+      onSelect(shipper);
+      setExpanded(false);
+    };
+
+    return (
+      <View>
+        <Pressable
+          onPress={() => setExpanded(!expanded)}
+          style={styles.selectBox}>
+          <Title title="Chọn Shipper" icon="moped-electric" />
+        </Pressable>
+        {expanded && (
+          <View>
+            {shippers.map(item => (
+              <Pressable
+                key={item._id}
+                onPress={() => handleSelectShipper(item)}
+                style={styles.shipperItem}>
+                <Title title={`${item.firstName} ${item.lastName}`} />
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const handleOrderStatusButtons = () => {
+    switch (data.status) {
+      case OrderStatus.PENDING_CONFIRMATION.value:
+        return (
+          <>
+            <Pressable
+              style={styles.button}
+              onPress={() =>
+                showAlert({
+                  notification: 'Xác nhận đơn hàng',
+                  message: 'Bạn có chắc chắn muốn xác nhận đơn hàng này?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.PROCESSING.value),
+                })
+              }>
+              <NormalText text="Xác nhận" style={styles.buttonText} />
+            </Pressable>
+            <Pressable
+              style={styles.button1}
+              onPress={() =>
+                showAlert({
+                  notification: 'Xác nhận huỷ đơn hàng',
+                  message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.CANCELLED.value),
+                })
+              }>
+              <NormalText text="Huỷ" style={styles.buttonTextWhite} />
+            </Pressable>
+          </>
+        );
+      case OrderStatus.PROCESSING.value:
+        return (
+          <>
+            {data.deliveryMethod === DeliveryMethod.DELIVERY.value ? (
+              <ShipperSelect
+                onSelect={setSelectedShipper}
+                scrollViewRef={scrollViewRef}
+              />
+            ) : (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy',
+                    message: '"Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy"?',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.READY_FOR_PICKUP.value),
+                  })
+                }>
+                <NormalText text="Sẵn Sàng Đến Lấy" style={styles.buttonText} />
+              </Pressable>
+            )}
+          </>
+        );
+      case OrderStatus.READY_FOR_PICKUP.value:
+        return (
+          <>
+            {data.deliveryMethod === DeliveryMethod.DELIVERY.value ? (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Đơn Đang Được Giao Cho Shipper',
+                    message: 'Đơn Giao Cho Shipper Thành Công',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
+                  })
+                }>
+                <NormalText
+                  text="Giao thành công cho Shipper"
+                  style={styles.buttonText}
+                />
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Đơn Đã Hoàn Thành',
+                    message: '"Đơn Đã Hoàn Thành"?',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.COMPLETED.value),
+                  })
+                }>
+                <NormalText text="Đã Hoàn Thành" style={styles.buttonText} />
+              </Pressable>
+            )}
+          </>
+        );
+      case OrderStatus.SHIPPING_ORDER.value:
+        return (
+          <>
+            <Pressable
+              style={styles.button}
+              onPress={() =>
+                showAlert({
+                  notification: 'Đơn Đã Hoàn Thành',
+                  message: 'Đơn hàng đã được giao thành công?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.COMPLETED.value),
+                })
+              }>
+              <NormalText text="Đã Hoàn Thành" style={styles.buttonText} />
+            </Pressable>
+            <Pressable
+              style={styles.button1}
+              onPress={() =>
+                showAlert({
+                  notification: 'Giao hàng thất bại',
+                  message: 'Đơn hàng giao không thành công?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.FAILED_DELIVERY.value),
+                })
+              }>
+              <NormalText text="Giao Thất Bại" style={styles.buttonTextWhite} />
+            </Pressable>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <View style={styles.paymentDetailsContainer}>
-      {/* Tiêu đề chi tiết thanh toán */}
       <DualTextRow
         leftText="CHI TIẾT THANH TOÁN"
         leftTextStyle={styles.dualTextLeftHeader}
       />
-      {/* Hiển thị ID đơn hàng */}
-      <OrderId data={_id} />
-
-      {/* Các thông tin chi tiết thanh toán */}
+      <OrderId data={data._id} />
       {[
         {
-          leftText: `Tạm tính (${orderItems.length} sản phẩm)`,
+          leftText: `Tạm tính (${data.orderItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+          )} sản phẩm)`,
           rightText: TextFormatter.formatCurrency(totalPrice),
         },
         {
           leftText: 'Phí giao hàng',
           rightText: TextFormatter.formatCurrency(
-            deliveryMethod === DeliveryMethod.DELIVERY.value ? shippingFee : 0,
+            data.deliveryMethod === DeliveryMethod.DELIVERY.value
+              ? data.shippingFee
+              : 0,
           ),
         },
         {
@@ -427,7 +581,7 @@ const PaymentDetails = ({
         },
         {
           leftText: paymentStatus,
-          rightText: TextFormatter.formatCurrency(totalFromData || 0),
+          rightText: TextFormatter.formatCurrency(data.totalPrice || 0),
           leftTextStyle: {
             ...styles.dualTextStatus,
             borderColor:
@@ -443,12 +597,12 @@ const PaymentDetails = ({
         },
         {
           leftText: 'Thời gian đặt hàng',
-          rightText: TextFormatter.formatDateTime(fulfillmentDateTime),
+          rightText: TextFormatter.formatDateTime(data.fulfillmentDateTime),
         },
         {
           leftText: 'Thanh toán',
           rightText:
-            paymentMethod === PaymentMethod.COD.value
+            data.paymentMethod === PaymentMethod.COD.value
               ? 'Tiền mặt'
               : 'Chuyển khoản',
           rightTextStyle: {fontWeight: '700', color: colors.primary},
@@ -456,177 +610,10 @@ const PaymentDetails = ({
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
       ))}
-
-      {/* Kiểm tra trạng thái đơn hàng để hiển thị các nút tương ứng */}
-      {status !== OrderStatus.CANCELLED.value &&
-        status !== OrderStatus.FAILED_DELIVERY.value && (
+      {data.status !== OrderStatus.CANCELLED.value &&
+        data.status !== OrderStatus.FAILED_DELIVERY.value && (
           <View style={styles.buttonContainer}>
-            {/* Trạng thái đang chờ xác nhận */}
-            {status === OrderStatus.PENDING_CONFIRMATION.value && (
-              <>
-                <Pressable
-                  style={styles.button}
-                  onPress={() =>
-                    showAlert({
-                      notification: 'Xác nhận đơn hàng',
-                      message: 'Bạn có chắc chắn muốn xác nhận đơn hàng này?',
-                      onPress: () =>
-                        handleStatusUpdate(OrderStatus.PROCESSING.value), // Cập nhật trạng thái đơn hàng
-                    })
-                  }>
-                  <NormalText text="Xác nhận" style={styles.buttonText} />
-                </Pressable>
-
-                <Pressable
-                  style={styles.button1}
-                  onPress={() =>
-                    showAlert({
-                      notification: 'Xác nhận huỷ đơn hàng',
-                      message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
-                      onPress: () =>
-                        handleStatusUpdate(OrderStatus.CANCELLED.value), // Cập nhật trạng thái huỷ đơn hàng
-                    })
-                  }>
-                  <NormalText text="Huỷ" style={styles.buttonTextWhite} />
-                </Pressable>
-              </>
-            )}
-
-            {/* Trạng thái đơn hàng đang xử lý */}
-            {status === OrderStatus.PROCESSING.value && (
-              <>
-                {deliveryMethod === DeliveryMethod.DELIVERY.value ? (
-                  <>
-                    {/* Chọn shipper nếu phương thức giao hàng là giao tận nơi */}
-                    <ShipperSelect onSelect={setSelectedShipper} />
-
-                    <Pressable
-                      style={[
-                        styles.button,
-                        !selectedShipper && styles.buttonDisabled, // Nút disabled nếu chưa chọn shipper
-                      ]}
-                      onPress={() => {
-                        if (!selectedShipper) {
-                          Alert.alert(
-                            'Thông báo',
-                            'Vui lòng chọn Shipper trước khi xác nhận.',
-                          );
-                          return;
-                        }
-                        showAlert({
-                          notification: 'Xác nhận giao hàng',
-                          message:
-                            'Chuyển trạng thái đơn hàng sang "Đơn Hàng Đã Giao Cho Shipper"?',
-                          onPress: () =>
-                            handleStatusUpdateWithShipper(
-                              OrderStatus.READY_FOR_PICKUP.value,
-                              selectedShipper?._id, // Cập nhật trạng thái và ID shipper
-                            ),
-                        });
-                      }}>
-                      <NormalText
-                        text="Giao Cho Shipper"
-                        style={styles.buttonText}
-                      />
-                    </Pressable>
-                  </>
-                ) : (
-                  // Nếu phương thức giao hàng không phải giao tận nơi
-                  <Pressable
-                    style={styles.button}
-                    onPress={() =>
-                      showAlert({
-                        notification: 'Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy',
-                        message: '"Đơn Đã Hoàn Tất Sẵn Sàng Đến Lấy"?',
-                        onPress: () =>
-                          handleStatusUpdate(
-                            OrderStatus.READY_FOR_PICKUP.value, // Cập nhật trạng thái là sẵn sàng để lấy
-                          ),
-                      })
-                    }>
-                    <NormalText
-                      text="Sẵn Sàng Đến Lấy"
-                      style={styles.buttonText}
-                    />
-                  </Pressable>
-                )}
-              </>
-            )}
-
-            {/* Trạng thái đơn hàng đã sẵn sàng để giao */}
-            {status === OrderStatus.READY_FOR_PICKUP.value && (
-              <>
-                {deliveryMethod === DeliveryMethod.DELIVERY.value ? (
-                  <Pressable
-                    style={styles.button}
-                    onPress={() =>
-                      showAlert({
-                        notification: 'Đơn Đang Được Giao',
-                        message: '"Đơn Đang Được Giao"?',
-                        onPress: () =>
-                          handleStatusUpdate(
-                            OrderStatus.SHIPPING_ORDER.value, // Cập nhật trạng thái đơn hàng đang giao
-                          ),
-                      })
-                    }>
-                    <NormalText
-                      text="Đang Được Giao"
-                      style={styles.buttonText}
-                    />
-                  </Pressable>
-                ) : (
-                  <Pressable
-                    style={styles.button}
-                    onPress={() =>
-                      showAlert({
-                        notification: 'Đơn Đã Hoàn Thành',
-                        message: '"Đơn Đã Hoàn Thành"?',
-                        onPress: () =>
-                          handleStatusUpdate(OrderStatus.COMPLETED.value), // Cập nhật trạng thái hoàn thành đơn hàng
-                      })
-                    }>
-                    <NormalText
-                      text="Đã Hoàn Thành"
-                      style={styles.buttonText}
-                    />
-                  </Pressable>
-                )}
-              </>
-            )}
-
-            {/* Trạng thái đơn hàng đang giao */}
-            {status === OrderStatus.SHIPPING_ORDER.value && (
-              <>
-                <Pressable
-                  style={styles.button}
-                  onPress={() =>
-                    showAlert({
-                      notification: 'Đơn Đã Hoàn Thành',
-                      message: 'Đơn hàng đã được giao thành công?',
-                      onPress: () =>
-                        handleStatusUpdate(OrderStatus.COMPLETED.value), // Cập nhật trạng thái hoàn thành đơn hàng
-                    })
-                  }>
-                  <NormalText text="Đã Hoàn Thành" style={styles.buttonText} />
-                </Pressable>
-
-                <Pressable
-                  style={styles.button1}
-                  onPress={() =>
-                    showAlert({
-                      notification: 'Giao hàng thất bại',
-                      message: 'Đơn hàng giao không thành công?',
-                      onPress: () =>
-                        handleStatusUpdate(OrderStatus.FAILED_DELIVERY.value), // Cập nhật trạng thái giao thất bại
-                    })
-                  }>
-                  <NormalText
-                    text="Giao Thất Bại"
-                    style={styles.buttonTextWhite}
-                  />
-                </Pressable>
-              </>
-            )}
+            {handleOrderStatusButtons()}
           </View>
         )}
     </View>
@@ -645,6 +632,41 @@ const OrderId = ({data}) => {
   );
 };
 
+const ShipperInfo = ({shipper}) => {
+  return Object.keys(shipper || {}).length === 0 ? (
+    <Row
+      style={{
+        gap: 16,
+        marginVertical: 8,
+        marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+      }}>
+      <NormalText text="Chưa chọn Shipper" style={{fontWeight: '500'}} />
+    </Row>
+  ) : (
+    <Row
+      style={{
+        gap: 16,
+        paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
+        borderTopWidth: 1,
+        borderColor: colors.gray200,
+        margin: 16,
+      }}>
+      <Image
+        style={{width: 40, height: 40}}
+        source={require('../../assets/images/helmet.png')}
+      />
+      <Column style={{flex: 1}}>
+        <NormalText
+          text={shipper.firstName + ' '}
+          style={{fontWeight: '500'}}
+        />
+        <Row>
+          <NormalText text={`${shipper.phoneNumber}`} />
+        </Row>
+      </Column>
+    </Row>
+  );
+};
 const styles = StyleSheet.create({
   body: {
     flex: 1,
@@ -658,7 +680,6 @@ const styles = StyleSheet.create({
     width: '15%',
     height: '100%',
   },
-
   modalContainer: {
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE,
     backgroundColor: 'white',
@@ -693,11 +714,12 @@ const styles = StyleSheet.create({
   },
   titleHeader: {
     fontWeight: '500',
-    margin: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginVertical: GLOBAL_KEYS.PADDING_SMALL,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
   },
   areaContainer: {
-    borderTopWidth: 2,
+    borderTopWidth: 1,
     borderColor: colors.gray200,
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
@@ -764,7 +786,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: GLOBAL_KEYS.GAP_DEFAULT * 4,
-    borderTopWidth: 2,
+    borderTopWidth: 1,
     borderColor: colors.gray200,
     paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
   },
@@ -777,6 +799,7 @@ const styles = StyleSheet.create({
     borderColor: colors.gray200,
     borderWidth: 2,
     minWidth: '15%',
+    alignSelf: 'flex-start',
   },
   button1: {
     backgroundColor: colors.red900,
@@ -795,7 +818,7 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   orderIdRow: {
-    ...this?.row, // nếu cần kế thừa row, có thể dùng spread hoặc sao chép
+    ...commonRowStyle, // sử dụng style row chung nếu cần, hoặc bạn có thể bỏ hoàn toàn nếu không cần
     marginBottom: 6,
   },
   orderIdPressable: {
@@ -805,11 +828,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   orderIdText: {
-    ...styles?.normalText,
+    ...commonNormalText,
     fontWeight: 'bold',
     marginRight: 8,
   },
-  // Nếu styles.normalText đã được định nghĩa ở nơi khác, có thể import lại
   normalText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
@@ -842,6 +864,10 @@ const styles = StyleSheet.create({
     height: 40,
   },
   selectBox: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -849,14 +875,8 @@ const styles = StyleSheet.create({
     gap: GLOBAL_KEYS.GAP_DEFAULT,
     backgroundColor: colors.green100,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    marginVertical: GLOBAL_KEYS.PADDING_SMALL,
-    padding: GLOBAL_KEYS.PADDING_SMALL,
-  },
-  selectBox: {
-    borderWidth: 1,
-    borderColor: colors.primary,
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    marginTop: GLOBAL_KEYS.PADDING_DEFAULT,
   },
 });
 

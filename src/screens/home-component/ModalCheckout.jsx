@@ -34,22 +34,7 @@ const ModalCheckout = ({
   const [order, setOrder] = useState(data);
   const [message, setMessage] = useState('');
   const [showMessage, setShowMessage] = useState(false);
-  const [merchant, setMerchant] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // lấy dữ liệu cửa hàng
-  useEffect(() => {
-    const loadMerchant = async () => {
-      try {
-        const merchantData = await AppAsyncStorage.readData('merchant');
-        if (merchantData) {
-          setMerchant(JSON.parse(merchantData));
-        }
-      } catch (error) {}
-    };
-
-    loadMerchant();
-  }, []);
 
   // xac nhan
   const showAlert = ({notification, message, onPress}) => {
@@ -100,16 +85,16 @@ const ModalCheckout = ({
           setMessage('');
           setPhoneNumber('');
           setScannedCode('');
-        }, 3000);
+        }, 1000);
       }
-      console.log('status:', response.status);
-      console.log(
-        'Dữ liệu gửi lên API:',
-        JSON.stringify(response.data, null, 2),
-      );
+      console.log('Trạng thái tạo đơn:', response.status);
+      // console.log(
+      //   'Dữ liệu gửi lên API:',
+      //   JSON.stringify(response.data, null, 2),
+      // );
       return response;
     } catch (error) {
-      console.error('Lỗi tạo đơn hàng:', error);
+      console.log('Lỗi tạo đơn hàng:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -131,18 +116,14 @@ const ModalCheckout = ({
       <View style={styles.container}>
         <View style={styles.modalContent}>
           <View style={styles.infoContainer}>
-            <Item
+            {/* <Item
               title={'Phương thức nhận hàng'}
               text={
                 order.deliveryMethod === DeliveryMethod.PICK_UP.value &&
                 DeliveryMethod.PICK_UP.label
               }
-            />
+            /> */}
 
-            <Item
-              title={'Thời gian hoàn tất đơn hàng'}
-              text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
-            />
             <Item
               title={'Người đặt hàng'}
               text={
@@ -153,25 +134,14 @@ const ModalCheckout = ({
                   : 'Khách vãng lai'
               }
             />
-            <Item
-              title={'Ghi chú'}
-              text={order.note ? order.note : 'không có ghi chú'}
-            />
-            <Item
-              title={'Phương thức thanh toán'}
-              text={' Thanh toán tiền mặt'}
-            />
-            <Item
-              title={'Địa chỉ giao hàng'}
-              text={order.shippingAddress ? order.shippingAddress : 'Tại quán'}
-            />
-            <Item
-              title={'Mã giảm giá'}
-              text={order.voucher ? order.voucher : 'Không có'}
-            />
+            <Item title={'Phương thức'} text={'Thanh toán tiền mặt'} />
             <Item
               title={'Tổng giá trị đơn hàng'}
               text={TextFormatter.formatCurrency(order.totalPrice)}
+            />
+            <Item
+              title={'Thời gian'}
+              text={TextFormatter.formatDateTime(order.fulfillmentDateTime)}
             />
           </View>
           <View style={styles.buttonContainer}>

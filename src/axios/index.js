@@ -5,3 +5,4 @@ export * from './modules/product';
 export * from './modules/order';
 export * from './modules/user';
 export * from './modules/employee';
+export * from './modules/merchant';

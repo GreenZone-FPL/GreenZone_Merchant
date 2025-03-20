@@ -44,22 +44,20 @@ export class AppAsyncStorage {
   }
 
   static async isTokenValid() {
-    const accessToken = await AppAsyncStorage.readData(
-      AppAsyncStorage.STORAGE_KEYS.accessToken,
-    );
+    const accessToken = await AppAsyncStorage.readData('accessToken');
+
     if (!accessToken) {
       return false;
     }
 
     try {
-      const decoded = jwtDecode(accessToken); // Sử dụng jwt_decode thay vì jwtDecode
-      console.log('decoded', decoded);
-      const currentTime = Math.floor(Date.now() / 1000); // Thời gian hiện tại (tính theo giây)
-
-      return decoded.exp > currentTime; // Nếu exp lớn hơn currentTime thì token còn hạn
+      const decoded = jwtDecode(accessToken);
+      console.log('decoded:', decoded);
+      const currentTime = Math.floor(Date.now() / 1000);
+      return decoded.exp > currentTime;
     } catch (error) {
       console.log('Lỗi khi decode token:', error);
-      return false; // Token không hợp lệ
+      return false;
     }
   }
 }

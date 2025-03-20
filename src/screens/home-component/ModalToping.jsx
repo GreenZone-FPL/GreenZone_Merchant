@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
   Dimensions,
   Modal,
-  ScrollView,
+  FlatList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -25,8 +25,6 @@ const ModalToping = ({
   setSelectedSize,
   selectedToppings,
   setSelectedToppings,
-  phoneNumber,
-  setPhoneNumber,
 }) => {
   const [merchant, setMerchant] = useState(null);
 
@@ -52,7 +50,7 @@ const ModalToping = ({
   }, [selectedProduct]);
   //chọn topping
   const toggleTopping = topping => {
-    if (selectedToppings.length === 3) return;
+    // if (selectedToppings.length === 3) return;
     setSelectedToppings(prev =>
       prev.some(t => t._id === topping._id)
         ? prev.filter(t => t._id !== topping._id)
@@ -204,14 +202,17 @@ const ModalToping = ({
             ))}
           </View>
 
-          <Text style={styles.modalTitle}>Chọn Topping</Text>
-          <ScrollView style={styles.toppingList}>
-            {selectedProduct?.topping?.map(item => {
-              const isSelected = selectedToppings.some(t => t._id === item._id);
+          <Text style={styles.modalTitle}>
+            {selectedProduct?.topping.length > 0 && 'Chọn Topping'}
+          </Text>
 
+          <FlatList
+            data={selectedProduct?.topping}
+            keyExtractor={item => item._id}
+            renderItem={({item}) => {
+              const isSelected = selectedToppings.some(t => t._id === item._id);
               return (
                 <TouchableOpacity
-                  key={item._id}
                   style={[
                     styles.toppingOption,
                     isSelected && styles.selectedTopping,
@@ -227,8 +228,10 @@ const ModalToping = ({
                   </Text>
                 </TouchableOpacity>
               );
-            })}
-          </ScrollView>
+            }}
+            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
+            showsVerticalScrollIndicator={false}
+          />
 
           <View style={styles.modalButtonContainer}>
             <TouchableOpacity
@@ -261,63 +264,56 @@ const styles = StyleSheet.create({
     backgroundColor: colors.overlay,
   },
   modalContent: {
+    flex: 1,
     backgroundColor: colors.white,
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     alignItems: 'center',
-    flex: 1,
-    margin: GLOBAL_KEYS.PADDING_DEFAULT,
+    margin: GLOBAL_KEYS.PADDING_DEFAULT * 2,
     gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
   modalTitle: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE, // thay vì 18
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
     fontWeight: 'bold',
-    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   sizeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: GLOBAL_KEYS.PADDING_SMALL, // thay vì 10
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
   sizeOption: {
-    padding: GLOBAL_KEYS.PADDING_DEFAULT - 4, // giảm 4 đơn vị so với PADDING_DEFAULT
-    borderWidth: 1,
-    borderColor: colors.gray400, // dùng màu xám từ colors
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    marginHorizontal: GLOBAL_KEYS.PADDING_SMALL,
-    backgroundColor: colors.gray200,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   selectedSize: {
     backgroundColor: colors.primary,
-    borderColor: colors.yellow500,
   },
   sizeText: {
     color: colors.primary,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '600',
   },
   selectedSizeText: {
     color: colors.white,
-  },
-  toppingList: {
-    flex: 1,
+    fontWeight: '500',
   },
   toppingOption: {
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     paddingHorizontal: '20%',
-    borderWidth: 1,
-    borderColor: colors.gray400,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    backgroundColor: colors.gray200,
-    marginVertical: GLOBAL_KEYS.GAP_SMALL / 2,
+    backgroundColor: colors.white,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   selectedTopping: {
     backgroundColor: colors.primary,
-    borderColor: colors.yellow500,
+    fontWeight: 'bold',
   },
-  toppingText: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.primary,
-  },
+
   selectedToppingText: {
     color: colors.white,
     fontWeight: 'bold',
@@ -334,6 +330,7 @@ const styles = StyleSheet.create({
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
     alignItems: 'center',
+    minWidth: '10%',
   },
   confirmButtonText: {
     color: colors.white,

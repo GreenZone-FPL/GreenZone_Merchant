@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -12,13 +12,9 @@ import {
   getAllCategories,
   getAllProducts,
   getProductsById,
+  getMerchant,
 } from '../../axios/index';
-import {
-  Ani_ModalLoading,
-  ButtonGroup,
-  CustomSearchBar,
-  Indicator,
-} from '../../components';
+import {Ani_ModalLoading, ButtonGroup, CustomSearchBar} from '../../components';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import CartOrder from '../home-component/CartOrder';
 import ModalToping from '../home-component/ModalToping';
@@ -42,6 +38,7 @@ const HomeScreen = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [merchant, setMerchant] = useState(null);
+  const flatListRef = useRef(null);
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
@@ -49,8 +46,12 @@ const HomeScreen = () => {
     try {
       const response = await getAllCategories();
       const categoriesData = [
-        {_id: 'cate18-06', name: 'Tất cả', icon: ''},
-        ...response.data,
+        {
+          _id: 'cate18-06',
+          name: 'Tất cả',
+          icon: 'https://greenzone.motcaiweb.io.vn/uploads/1cbc176f-2f59-4828-bcf7-5454044e3f26.png',
+        },
+        ...response.data.docs,
       ];
       setCategories(categoriesData);
     } catch (error) {
@@ -118,49 +119,101 @@ const HomeScreen = () => {
     }
   };
 
-  // Lấy dữ liệu cửa hàng
+  // Lấy dữ liệu id cửa hàng
   useEffect(() => {
     const loadMerchant = async () => {
       try {
-        const merchantData = await AppAsyncStorage.readData('merchant');
-        if (merchantData) {
-          setMerchant(JSON.parse(merchantData));
+        const storeId = await AppAsyncStorage.readData('storeId');
+        if (storeId) {
+          const response = await getMerchant(storeId);
+          setMerchant(response.data);
         }
       } catch (error) {
         console.log(error);
       }
     };
+
     loadMerchant();
   }, []);
+
+  // cuon flatlist
+  const scrollToEnd = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({animated: true});
+    }
+  };
+  const scrollToStart = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({index: 0, animated: true});
+    }
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <View style={styles.searchContainer}>
-          <Text style={styles.title2}>
-            {merchant?.firstName + ' ' + merchant?.lastName}
-          </Text>
-          <CustomSearchBar
-            placeholder="Tìm kiếm sản phẩm..."
-            searchQuery={searchTerm}
-            setSearchQuery={setSearchTerm}
-            onClearIconPress={() => setSearchTerm('')}
+        <View style={{gap: GLOBAL_KEYS.GAP_SMALL}}>
+          <Text style={styles.headerText}>{merchant?.name}</Text>
+          <Text
+            style={
+              styles.titleText
+            }>{`${merchant?.specificAddress}, ${merchant?.ward}, ${merchant?.district}, ${merchant?.province}`}</Text>
+        </View>
+        <CustomSearchBar
+          placeholder="Tìm kiếm sản phẩm..."
+          searchQuery={searchTerm}
+          setSearchQuery={setSearchTerm}
+          onClearIconPress={() => setSearchTerm('')}
+          style={{
+            backgroundColor: colors.white,
+            borderWidth: 1,
+            borderColor: colors.gray200,
+          }}
+        />
+        <View>
+          <FlatList
+            ref={flatListRef}
+            horizontal={true}
+            data={categories.length > 0 && categories}
+            keyExtractor={item => item._id.toString()}
+            renderItem={({item, index}) => (
+              <View>
+                <TouchableOpacity
+                  style={[
+                    styles.buttonDefault,
+                    selectedIndex === index && styles.buttonSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedIndex(index);
+                    if (index > categories.length / 2 && index !== 0) {
+                      scrollToEnd();
+                    } else {
+                      scrollToStart();
+                    }
+                  }}>
+                  <Image
+                    style={{width: 24, height: 24}}
+                    source={{uri: item.icon}}
+                  />
+                  <Text
+                    style={[
+                      styles.textDefault,
+                      selectedIndex == index && styles.textSelected,
+                    ]}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
+            style={{width: '100%'}}
+            showsHorizontalScrollIndicator={false}
           />
         </View>
-        <View style={styles.optionContainer}>
-          {/* <Text style={styles.title}>Chọn danh mục:</Text> */}
-          <ButtonGroup
-            buttons={
-              categories ? categories.map(category => category.name) : []
-            }
-            selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
-          />
-        </View>
+
         <FlatList
           data={searchTerm.length > 0 ? filteredProducts : productsByCate}
           keyExtractor={item => item._id.toString()}
-          numColumns={5}
+          numColumns={4}
           initialNumToRender={5}
           maxToRenderPerBatch={10}
           removeClippedSubviews={false}
@@ -171,25 +224,25 @@ const HomeScreen = () => {
               onPress={() => handleAddProduct(item._id)}>
               <Image source={{uri: item.image}} style={styles.productImage} />
               <View style={styles.productDetails}>
+                <Text style={styles.productPrice}>
+                  {TextFormatter.formatCurrency(item.sellingPrice)}
+                </Text>
                 <Text numberOfLines={2} style={styles.productName}>
                   {item.name}
                 </Text>
-                <Text style={styles.productPrice}>
-                  {item.sellingPrice
-                    ? `${TextFormatter.formatCurrency(
-                        item.originalPrice,
-                      )} - ${TextFormatter.formatCurrency(item.sellingPrice)}`
-                    : TextFormatter.formatCurrency(item.originalPrice)}
-                </Text>
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={styles.addButton}
                   onPress={() => handleAddProduct(item._id)}>
-                  <Text style={styles.addButtonText}>Thêm</Text>
-                </TouchableOpacity>
+                  <Icon
+                    source={'plus'}
+                    size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
+                    color={colors.primary}
+                  />
+                </TouchableOpacity> */}
               </View>
             </TouchableOpacity>
           )}
-          // contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT / 2}}
+          contentContainerStyle={styles.flatListContainer}
         />
       </View>
       <CartOrder cart={cart} setCart={setCart} />
@@ -215,71 +268,110 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     backgroundColor: colors.white,
+    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
   },
 
-  optionContainer: {
-    alignItems: 'flex-start',
-    gap: GLOBAL_KEYS.GAP_SMALL,
-  },
   leftSection: {
-    flex: 7,
+    flex: 6.5,
     backgroundColor: colors.white,
+    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
     gap: GLOBAL_KEYS.GAP_DEFAULT,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
-  title: {
+  headerText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-    fontWeight: 'bold',
-  },
-  title2: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-    fontWeight: 'bold',
     color: colors.primary,
-    textAlign: 'center',
-    marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
+    fontWeight: 'bold',
+    textAlign: 'left',
   },
-  productCard: {
-    width: '19%',
-    margin: '0.5%',
-    backgroundColor: colors.white,
+  titleText: {
+    // fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.black,
+    fontWeight: 'bold',
+    textAlign: 'left',
+  },
+
+  buttonDefault: {
+    flexDirection: 'row',
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderWidth: 1,
+    borderColor: colors.gray200,
+    minWidth: 130,
+  },
+  buttonSelected: {
+    backgroundColor: colors.pink500,
+  },
+  textDefault: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+  },
+  textSelected: {
+    color: colors.white,
+  },
+  flatListContainer: {
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    overflow: 'hidden',
+  },
+
+  productCard: {
+    flex: 1,
+    height: width / 4.5,
+    maxWidth:
+      ((width / 10) * 7) / 4 -
+      GLOBAL_KEYS.PADDING_DEFAULT * 2 -
+      GLOBAL_KEYS.GAP_SMALL,
+    backgroundColor: colors.white,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    marginVertical: GLOBAL_KEYS.PADDING_SMALL,
+    marginHorizontal: GLOBAL_KEYS.PADDING_SMALL,
+    overflow: 'hidden',
   },
   productImage: {
-    width: width / 10,
-    height: width / 10,
+    width: '100%',
+    height: '100%',
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     resizeMode: 'cover',
   },
   productDetails: {
     alignItems: 'center',
-    marginTop: GLOBAL_KEYS.PADDING_SMALL,
-    height: width / 11,
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    width: '100%',
+    height: '100%',
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
   productName: {
+    flex: 1,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: 'bold',
-    textAlign: 'center',
-    flex: 1,
+    color: colors.white,
+    alignSelf: 'flex-start',
+    textAlignVertical: 'bottom',
+    padding: 8,
+    marginBottom: '20%',
   },
   productPrice: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
     color: colors.gray700,
-    marginVertical: GLOBAL_KEYS.PADDING_SMALL / 2,
+    padding: GLOBAL_KEYS.PADDING_SMALL,
     textAlign: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 6,
+    fontWeight: '500',
+    color: colors.primary,
+    alignSelf: 'flex-end',
+    margin: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   addButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
-    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    backgroundColor: colors.white,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    marginTop: GLOBAL_KEYS.PADDING_SMALL,
+    margin: GLOBAL_KEYS.PADDING_DEFAULT,
+    alignSelf: 'flex-end',
   },
   addButtonText: {
     color: colors.white,
