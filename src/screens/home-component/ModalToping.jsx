@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../constants';
@@ -181,6 +182,19 @@ const ModalToping = ({
     <Modal visible={openMenu} transparent animationType="slide">
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: GLOBAL_KEYS.GAP_DEFAULT,
+              alignSelf: 'flex-start',
+            }}>
+            <Image
+              style={{width: 80, height: 80, borderRadius: 80}}
+              source={{uri: selectedProduct?.image}}
+            />
+            <Text style={styles.modalTitle}>{selectedProduct?.name}</Text>
+          </View>
           <Text style={styles.modalTitle}>Chọn Size</Text>
           <View style={styles.sizeContainer}>
             {selectedProduct?.variant?.map(item => (
@@ -289,15 +303,15 @@ const styles = StyleSheet.create({
     borderColor: colors.gray200,
   },
   selectedSize: {
-    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.black,
   },
   sizeText: {
-    color: colors.primary,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '600',
+    color: colors.black,
   },
   selectedSizeText: {
-    color: colors.white,
+    color: colors.black2,
     fontWeight: '500',
   },
   toppingOption: {
@@ -310,12 +324,13 @@ const styles = StyleSheet.create({
     borderColor: colors.gray200,
   },
   selectedTopping: {
-    backgroundColor: colors.primary,
     fontWeight: 'bold',
+    borderWidth: 1,
+    borderColor: colors.black,
   },
 
   selectedToppingText: {
-    color: colors.white,
+    color: colors.black,
     fontWeight: 'bold',
   },
   modalButtonContainer: {
@@ -325,7 +340,7 @@ const styles = StyleSheet.create({
     marginTop: GLOBAL_KEYS.PADDING_SMALL,
   },
   confirmButton: {
-    backgroundColor: '#299345',
+    backgroundColor: colors.gray300,
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
