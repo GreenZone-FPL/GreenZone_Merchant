@@ -279,21 +279,22 @@ const PaymentDetails = ({
   setIdOrder,
   scrollViewRef,
 }) => {
-  if (!data) return null;
+  const totalPrice = calculateTotalPrice(data?.orderItems || []);
 
-  const totalPrice = calculateTotalPrice(data.orderItems);
-
-  // Check if voucher is valid before calculating the discount
+  // Kiểm tra voucher hợp lệ
   const voucher =
-    data.voucher && Object.keys(data.voucher).length > 0 ? data.voucher : null;
+    data?.voucher && Object.keys(data?.voucher).length > 0
+      ? data?.voucher
+      : null;
   const discountAmount = calculateVoucher(totalPrice, voucher);
-  const finalTotal = totalPrice - discountAmount + (data.shippingFee || 0);
+  const finalTotal = totalPrice - discountAmount + (data?.shippingFee || 0);
   const paymentStatus = checkPaymentStatus(data);
   const [selectedShipper, setSelectedShipper] = useState(null);
 
   function calculateTotalPrice(items) {
+    if (!Array.isArray(items)) return 0; // Đảm bảo items là mảng
     return items.reduce((total, item) => {
-      const itemTotal = item.price * item.quantity;
+      const itemTotal = (item.price || 0) * (item.quantity || 0);
       const toppingTotal = (item.toppingItems || []).reduce(
         (sum, topping) => sum + (topping.price || 0) * (topping.quantity || 1),
         0,
@@ -312,7 +313,7 @@ const PaymentDetails = ({
   const updateStatus = async (status, deliveryMethod) => {
     try {
       const response = await updateOrderStatus(
-        data._id,
+        data?._id,
         status,
         deliveryMethod,
       );
@@ -364,7 +365,7 @@ const PaymentDetails = ({
     try {
       console.log('Status gửi lên:', status);
       console.log('Shipper ID gửi lên:', shipperId);
-      await updateOrderStatus(data._id, status, 'delivery', shipperId);
+      await updateOrderStatus(data?._id, status, 'delivery', shipperId);
       await fetchOrders();
       console.log(`Cập nhật trạng thái thành công:`, status);
     } catch (error) {
@@ -427,7 +428,7 @@ const PaymentDetails = ({
   };
 
   const handleOrderStatusButtons = () => {
-    switch (data.status) {
+    switch (data?.status) {
       case OrderStatus.PENDING_CONFIRMATION.value:
         return (
           <>
@@ -556,11 +557,11 @@ const PaymentDetails = ({
         leftText="CHI TIẾT THANH TOÁN"
         leftTextStyle={styles.dualTextLeftHeader}
       />
-      <OrderId data={data._id} />
+      <OrderId data={data?._id} />
       {[
         {
-          leftText: `Tạm tính (${data.orderItems.reduce(
-            (sum, item) => sum + item.quantity,
+          leftText: `Tạm tính (${(data?.orderItems || []).reduce(
+            (sum, item) => sum + (item.quantity || 0),
             0,
           )} sản phẩm)`,
           rightText: TextFormatter.formatCurrency(totalPrice),
@@ -568,8 +569,8 @@ const PaymentDetails = ({
         {
           leftText: 'Phí giao hàng',
           rightText: TextFormatter.formatCurrency(
-            data.deliveryMethod === DeliveryMethod.DELIVERY.value
-              ? data.shippingFee
+            data?.deliveryMethod === DeliveryMethod.DELIVERY.value
+              ? data?.shippingFee || 0
               : 0,
           ),
         },
@@ -580,7 +581,7 @@ const PaymentDetails = ({
         },
         {
           leftText: paymentStatus,
-          rightText: TextFormatter.formatCurrency(data.totalPrice || 0),
+          rightText: TextFormatter.formatCurrency(data?.totalPrice || 0),
           leftTextStyle: {
             ...styles.dualTextStatus,
             borderColor:
@@ -596,12 +597,12 @@ const PaymentDetails = ({
         },
         {
           leftText: 'Thời gian đặt hàng',
-          rightText: TextFormatter.formatDateTime(data.fulfillmentDateTime),
+          rightText: TextFormatter.formatDateTime(data?.fulfillmentDateTime),
         },
         {
           leftText: 'Thanh toán',
           rightText:
-            data.paymentMethod === PaymentMethod.COD.value
+            data?.paymentMethod === PaymentMethod.COD.value
               ? 'Tiền mặt'
               : 'Chuyển khoản',
           rightTextStyle: {fontWeight: '700', color: colors.primary},
@@ -609,8 +610,8 @@ const PaymentDetails = ({
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
       ))}
-      {data.status !== OrderStatus.CANCELLED.value &&
-        data.status !== OrderStatus.FAILED_DELIVERY.value && (
+      {data?.status !== OrderStatus.CANCELLED.value &&
+        data?.status !== OrderStatus.FAILED_DELIVERY.value && (
           <View style={styles.buttonContainer}>
             {handleOrderStatusButtons()}
           </View>
