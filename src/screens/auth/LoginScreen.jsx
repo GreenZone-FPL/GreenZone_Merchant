@@ -29,8 +29,8 @@ const isTablet = width >= 768;
 
 const LoginScreen = props => {
   const {navigation} = props;
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('0911111111');
+  const [password, setPassword] = useState('123456');
   const [checked, setChecked] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);

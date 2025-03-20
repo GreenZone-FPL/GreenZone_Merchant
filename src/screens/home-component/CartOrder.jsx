@@ -359,7 +359,7 @@ const CartOrder = ({cart, setCart}) => {
                       flexDirection: 'row',
                       gap: GLOBAL_KEYS.GAP_DEFAULT,
                       alignItems: 'center',
-                      justifyContent: 'center',
+  
                     }}>
                     <View style={styles.itemQuantity}>
                       <TouchableOpacity
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     alignItems: 'center',
     paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
-    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   cartItemImage: {
     width: width / 20,
