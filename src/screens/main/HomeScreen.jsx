@@ -3,6 +3,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -177,7 +178,7 @@ const HomeScreen = () => {
             keyExtractor={item => item._id.toString()}
             renderItem={({item, index}) => (
               <View>
-                <TouchableOpacity
+                <Pressable
                   style={[
                     styles.buttonDefault,
                     selectedIndex === index && styles.buttonSelected,
@@ -201,7 +202,7 @@ const HomeScreen = () => {
                     ]}>
                     {item.name}
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               </View>
             )}
             contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
@@ -302,14 +303,16 @@ const styles = StyleSheet.create({
     minWidth: 130,
   },
   buttonSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.primary
   },
   textDefault: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
   },
   textSelected: {
-    color: colors.white,
+    color: colors.primary,
   },
   flatListContainer: {
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,

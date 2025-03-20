@@ -318,7 +318,7 @@ const CartOrder = ({cart, setCart}) => {
                     <Text
                       style={{
                         color: colors.pink500,
-                        fontSize: 10,
+                        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                         fontWeight: '500',
                       }}>
                       {item.size.size}
@@ -349,6 +349,7 @@ const CartOrder = ({cart, setCart}) => {
                     style={{
                       flexDirection: 'row',
                       gap: GLOBAL_KEYS.GAP_DEFAULT,
+                      alignItems: 'center'
                     }}>
                     <View style={styles.itemQuantity}>
                       <TouchableOpacity
@@ -365,7 +366,7 @@ const CartOrder = ({cart, setCart}) => {
                           width: 26,
                           textAlign: 'center',
                           fontWeight: '400',
-                          fontSize: 12,
+                          fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                         }}>
                         {item.quantity}
                       </Text>
@@ -387,7 +388,7 @@ const CartOrder = ({cart, setCart}) => {
                       /> */}
                       <Text
                         style={{
-                          fontSize: 12,
+                          fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                           color: colors.pink500,
                           textAlignVertical: 'center',
                           textAlign: 'center',
@@ -540,7 +541,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     alignItems: 'center',
     paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
-    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   cartItemImage: {
     width: width / 20,
@@ -570,7 +571,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   cartItemName: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
   },
   cartItemTopping: {
@@ -580,7 +581,7 @@ const styles = StyleSheet.create({
     color: colors.gray700,
   },
   cartItemPrice: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
     color: colors.black,
     textAlign: 'right',
