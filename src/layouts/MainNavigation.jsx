@@ -67,6 +67,7 @@ const CustomDrawerContent = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.drawerContent}>
+      
       <Column style={styles.drawerItems}>
         <DrawerItems
           navigation={navigation}
