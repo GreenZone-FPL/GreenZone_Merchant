@@ -46,6 +46,20 @@ const commonNormalText = {
   fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
   color: colors.black,
 };
+const Title = ({
+  title,
+  icon,
+  titleStyle,
+  iconColor = colors.primary,
+  iconSize = GLOBAL_KEYS.ICON_SIZE_DEFAULT,
+}) => {
+  return (
+    <View style={styles.titleContainer}>
+      {icon && <Icon source={icon} color={iconColor} size={iconSize} />}
+      <Text style={[styles.greenText, titleStyle]}>{title}</Text>
+    </View>
+  );
+};
 
 const OrderDetailScreen = ({
   idOrder,
@@ -258,21 +272,6 @@ const ProductsInfo = ({data}) => {
   );
 };
 
-const Title = ({
-  title,
-  icon,
-  titleStyle,
-  iconColor = colors.primary,
-  iconSize = GLOBAL_KEYS.ICON_SIZE_DEFAULT,
-}) => {
-  return (
-    <View style={styles.titleContainer}>
-      {icon && <Icon source={icon} color={iconColor} size={iconSize} />}
-      <Text style={[styles.greenText, titleStyle]}>{title}</Text>
-    </View>
-  );
-};
-
 const PaymentDetails = ({
   data,
   setIsModalOrderDetail,
@@ -337,7 +336,7 @@ const PaymentDetails = ({
       await fetchOrders();
       setIdOrder(null);
     } catch (error) {
-      console.error(`Cập nhật trạng thái đơn hàng thất bại:`, error);
+      console.log(`Cập nhật trạng thái đơn hàng thất bại:`, error);
     } finally {
       setIsModalOrderDetail(false);
     }
@@ -369,7 +368,7 @@ const PaymentDetails = ({
       await fetchOrders();
       console.log(`Cập nhật trạng thái thành công:`, status);
     } catch (error) {
-      console.error(`Lỗi cập nhật trạng thái đơn hàng:`, error);
+      console.log(`Lỗi cập nhật trạng thái đơn hàng:`, error);
     } finally {
       setIsModalOrderDetail(false);
     }
@@ -388,7 +387,7 @@ const PaymentDetails = ({
         const response = await getEmployeesAllAvailable();
         setShippers(response.data);
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách shipper:', error);
+        console.log('Lỗi khi lấy danh sách shipper:', error);
       }
     };
 

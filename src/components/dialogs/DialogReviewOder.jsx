@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Dimensions,
   Modal,
@@ -8,17 +8,17 @@ import {
   TouchableOpacity,
   View,
   Image,
-  Linking
+  Linking,
 } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { GLOBAL_KEYS, colors } from '../../constants';
-import { PrimaryButton } from '../buttons/PrimaryButton';
-import { NormalText } from '../texts/NormalText';
-import { Row } from '../containers/Row';
-import { Column } from '../containers/Column';
-import { DialogBasic } from './DialogBasic';
+import {Icon} from 'react-native-paper';
+import {GLOBAL_KEYS, colors} from '../../constants';
+import {PrimaryButton} from '../buttons/PrimaryButton';
+import {NormalText} from '../texts/NormalText';
+import {Row} from '../containers/Row';
+import {Column} from '../containers/Column';
+import {DialogBasic} from './DialogBasic';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
 const DialogReviewOderPropTypes = {
   isVisible: PropTypes.bool.isRequired,
@@ -28,10 +28,12 @@ const DialogReviewOderPropTypes = {
 
 const handlePress = () => {
   const phoneNumber = '0866158144';
-  Linking.openURL(`tel:${phoneNumber}`).catch(err => console.error('Không thể gọi điện thoại', err));
+  Linking.openURL(`tel:${phoneNumber}`).catch(err =>
+    console.log('Không thể gọi điện thoại', err),
+  );
 };
 
-export const DialogReviewOder = ({ isVisible, onHide, item }) => {
+export const DialogReviewOder = ({isVisible, onHide, item}) => {
   if (!item) return null;
 
   const [voteRating, setVoteRating] = useState(false);
@@ -43,10 +45,9 @@ export const DialogReviewOder = ({ isVisible, onHide, item }) => {
         <TouchableOpacity
           key={index}
           activeOpacity={1}
-          onPress={() => setDefaultRating(rating)}
-        >
+          onPress={() => setDefaultRating(rating)}>
           <Icon
-            source={defaultRating >= rating ? "star" : "star-outline"}
+            source={defaultRating >= rating ? 'star' : 'star-outline'}
             size={35}
             color={colors.yellow500}
           />
@@ -55,49 +56,52 @@ export const DialogReviewOder = ({ isVisible, onHide, item }) => {
     </View>
   );
   return (
-    <DialogBasic isVisible={isVisible}
+    <DialogBasic
+      isVisible={isVisible}
       onHide={onHide}
       title={'Trạng thái đơn hàng'}>
       <View style={styles.bgImage}>
-        <Image
-          source={require('../../assets/images/ic_coffee_cup.png')}
-        />
+        <Image source={require('../../assets/images/ic_coffee_cup.png')} />
       </View>
 
-
-      <NormalText text='Thời gian giao dự kiến' />
+      <NormalText text="Thời gian giao dự kiến" />
       <Text style={styles.statusText}>Hoàn tất</Text>
       <Row style={styles.support}>
-        <PrimaryButton title='Đánh giá' style={styles.btnSupport} onPress={() => setVoteRating(true)} />
-        <PrimaryButton title='Gọi hỗ trợ' style={styles.btnSupport} onPress={handlePress} />
+        <PrimaryButton
+          title="Đánh giá"
+          style={styles.btnSupport}
+          onPress={() => setVoteRating(true)}
+        />
+        <PrimaryButton
+          title="Gọi hỗ trợ"
+          style={styles.btnSupport}
+          onPress={handlePress}
+        />
       </Row>
-
 
       <Text style={styles.detailText}>Thông tin đơn hàng</Text>
       <Row style={styles.detail}>
         <Column style={styles.column}>
-          <NormalText text='Người nhận' />
+          <NormalText text="Người nhận" />
           <Text>Nguyễn Văn A</Text>
         </Column>
-        <Column style={{ paddingVertical: GLOBAL_KEYS.PADDING_SMALL }}>
-          <NormalText text='Số điện thoại' />
+        <Column style={{paddingVertical: GLOBAL_KEYS.PADDING_SMALL}}>
+          <NormalText text="Số điện thoại" />
           <Text>0987654321</Text>
         </Column>
       </Row>
-      <NormalText text='đặt tại bàn' style={styles.detail} />
+      <NormalText text="đặt tại bàn" style={styles.detail} />
       <Column style={styles.detail}>
-        <NormalText text='Trạng thái thanh toán:' />
+        <NormalText text="Trạng thái thanh toán:" />
         <Row>
-          <NormalText text='PAID' style={styles.pay} />
+          <NormalText text="PAID" style={styles.pay} />
           <Text>Đã thanh toán</Text>
         </Row>
       </Column>
       <Column style={styles.detail}>
-        <NormalText text='Mã đơn hàng:' />
+        <NormalText text="Mã đơn hàng:" />
         <Text>I923422332234</Text>
       </Column>
-
-
 
       <Text style={styles.detailText}>Sản phẩm đã chọn</Text>
       <Row style={styles.row}>
@@ -105,16 +109,12 @@ export const DialogReviewOder = ({ isVisible, onHide, item }) => {
         <NormalText text={item.price} />
       </Row>
 
-
       <Text style={styles.detailText}>Tổng cộng</Text>
       <Row style={styles.row}>
-        <NormalText text='Thành tiền' />
+        <NormalText text="Thành tiền" />
         <NormalText text={item.price} />
       </Row>
 
-
-
-      
       <Modal
         visible={voteRating}
         animationType="slide"
@@ -134,12 +134,16 @@ export const DialogReviewOder = ({ isVisible, onHide, item }) => {
               </TouchableOpacity>
             </View>
             <View style={styles.body}>
-              <NormalText text='Tại cửa hàng'/>
+              <NormalText text="Tại cửa hàng" />
               <Text style={styles.modalItemText}>{item.title}</Text>
               <CustomRatingBar />
               <PrimaryButton
                 title="Gửi đánh giá"
-                style={defaultRating === 0 ? { backgroundColor: colors.gray200 } : { backgroundColor: colors.primary }}
+                style={
+                  defaultRating === 0
+                    ? {backgroundColor: colors.gray200}
+                    : {backgroundColor: colors.primary}
+                }
                 onPress={() => {
                   if (defaultRating > 0) {
                     setVoteRating(false);
@@ -151,7 +155,6 @@ export const DialogReviewOder = ({ isVisible, onHide, item }) => {
           </View>
         </View>
       </Modal>
-
     </DialogBasic>
   );
 };
@@ -162,7 +165,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 4,
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
   modalItemText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
-    fontWeight: '700'
+    fontWeight: '700',
   },
   bgImage: {
     backgroundColor: colors.green100,
@@ -248,7 +251,7 @@ const styles = StyleSheet.create({
     gap: GLOBAL_KEYS.GAP_DEFAULT,
     borderBottomWidth: 1,
     borderColor: colors.gray200,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   voteRatingbgContainer: {
     flex: 1,
@@ -262,6 +265,6 @@ const styles = StyleSheet.create({
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   body: {
-    gap: GLOBAL_KEYS.GAP_DEFAULT
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
   },
 });

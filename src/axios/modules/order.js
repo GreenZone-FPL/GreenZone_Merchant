@@ -102,7 +102,7 @@ export const updateOrderStatus = async (
 //     console.log('Cập nhật trạng thái đơn hàng thành công:', response.data);
 //     return response.data;
 //   } catch (error) {
-//     console.error(
+//     console.(
 //       'Lỗi khi cập nhật trạng thái đơn hàng:',
 //       error.response ? error.response.data : error.message,
 //     );

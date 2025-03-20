@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import axios from 'axios';
 import hmacSHA256 from 'react-native-hmac';
 
@@ -9,7 +9,7 @@ const checkSum = '<checkSum>'; // Lấy từ PayOs
 const usePayment = () => {
   const [paymentLink, setPaymentLink] = useState('');
 
-  const createPaymentLink = async (amount) => {
+  const createPaymentLink = async amount => {
     try {
       const orderCode = Date.now(); // Mã đơn hàng duy nhất
       const cancelUrl = 'https://yourdomain.com/cancel';
@@ -19,7 +19,7 @@ const usePayment = () => {
       // Tạo chữ ký bảo mật HMAC SHA256
       const signature = await hmacSHA256(
         `amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`,
-        checkSum
+        checkSum,
       );
 
       // Gửi yêu cầu tạo link thanh toán
@@ -38,21 +38,21 @@ const usePayment = () => {
             'x-client-id': clientID,
             'x-api-key': apiKey,
           },
-        }
+        },
       );
 
       // Lưu link thanh toán vào state
       if (response.data.code === 0) {
         setPaymentLink(response.data.data.checkoutUrl);
       } else {
-        console.error('Lỗi tạo link thanh toán:', response.data.message);
+        console.log('Lỗi tạo link thanh toán:', response.data.message);
       }
     } catch (error) {
-      console.error('Lỗi khi tạo link thanh toán:', error);
+      console.log('Lỗi khi tạo link thanh toán:', error);
     }
   };
 
-  return { paymentLink, createPaymentLink };
+  return {paymentLink, createPaymentLink};
 };
 
 export default usePayment;
