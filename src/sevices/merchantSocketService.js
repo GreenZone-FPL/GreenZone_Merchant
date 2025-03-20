@@ -47,7 +47,7 @@ class MerchantSocketService {
         });
 
         this.socket.on('connect_error', error => {
-          console.error('Lỗi kết nối:', error);
+          console.log('Lỗi kết nối:', error);
         });
       } catch (error) {
         console.log('Lỗi khi khởi tạo socket:', error);

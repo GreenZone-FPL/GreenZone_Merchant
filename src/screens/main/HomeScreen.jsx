@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     minWidth: 130,
   },
   buttonSelected: {
-    backgroundColor: colors.pink500,
+    backgroundColor: colors.primary,
   },
   textDefault: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
