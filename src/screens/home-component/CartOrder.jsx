@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -267,7 +267,10 @@ const CartOrder = ({cart, setCart}) => {
             </TouchableOpacity>
           </View>
           <View>
-            <Text>
+            <Text
+              style={{
+                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+              }}>
               Khách hàng:{''}
               {cart === null
                 ? 'Vui lòng chọn sản phẩm trước'
@@ -275,7 +278,10 @@ const CartOrder = ({cart, setCart}) => {
                 ? `${customer.customer.firstName} ${customer.customer.lastName}`
                 : ' Vãng lai'}
             </Text>
-            <Text>
+            <Text
+              style={{
+                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+              }}>
               Số điện thoại:{' '}
               {cart === null
                 ? 'Vui lòng chọn sản phẩm trước'
@@ -318,7 +324,7 @@ const CartOrder = ({cart, setCart}) => {
                     <Text
                       style={{
                         color: colors.pink500,
-                        fontSize: 10,
+                        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                         fontWeight: '500',
                       }}>
                       {item.size.size}
@@ -331,9 +337,12 @@ const CartOrder = ({cart, setCart}) => {
                             key={index}
                             style={{
                               marginBottom: 4,
-                              fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL - 2,
+                              fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
                             }}>
-                            <Text style={{fontSize: 8}}>x1 </Text>
+                            <Text
+                              style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL}}>
+                              x1{' '}
+                            </Text>
                             {topping.name}
                             {'\n'}
                           </Text>
@@ -349,6 +358,8 @@ const CartOrder = ({cart, setCart}) => {
                     style={{
                       flexDirection: 'row',
                       gap: GLOBAL_KEYS.GAP_DEFAULT,
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}>
                     <View style={styles.itemQuantity}>
                       <TouchableOpacity
@@ -365,7 +376,7 @@ const CartOrder = ({cart, setCart}) => {
                           width: 26,
                           textAlign: 'center',
                           fontWeight: '400',
-                          fontSize: 12,
+                          fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                         }}>
                         {item.quantity}
                       </Text>
@@ -378,7 +389,7 @@ const CartOrder = ({cart, setCart}) => {
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity
-                      style={{alignItems: 'center'}}
+                      style={{alignItems: 'center', justifyContent: 'center'}}
                       onPress={() => removeFromCart(item._id)}>
                       {/* <Icon
                         source={'delete'}
@@ -387,7 +398,7 @@ const CartOrder = ({cart, setCart}) => {
                       /> */}
                       <Text
                         style={{
-                          fontSize: 12,
+                          fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                           color: colors.pink500,
                           textAlignVertical: 'center',
                           textAlign: 'center',
@@ -570,17 +581,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   cartItemName: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
   },
   cartItemTopping: {
     flexDirection: 'column',
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL - 2,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
     fontWeight: '500',
     color: colors.gray700,
   },
   cartItemPrice: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
     color: colors.black,
     textAlign: 'right',
