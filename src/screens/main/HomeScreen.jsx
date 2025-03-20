@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   titleText: {
-    // fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
     fontWeight: 'bold',
     textAlign: 'left',
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     marginBottom: '20%',
   },
   productPrice: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray700,
     padding: GLOBAL_KEYS.PADDING_SMALL,
     textAlign: 'center',

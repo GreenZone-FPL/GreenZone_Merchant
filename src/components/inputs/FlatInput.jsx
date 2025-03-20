@@ -181,7 +181,7 @@ CustomFlatInput.propTypes = CustomFlatInputPropTypes;
 
 const styles = StyleSheet.create({
   input: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     backgroundColor: colors.white,
     elevation: 3,
     shadowColor: colors.primary,

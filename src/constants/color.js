@@ -9,6 +9,7 @@ export const colors = Object.freeze({
   teal900: '#018786',
   teal700: '#06988B',
   black: '#232323',
+  black2: '#383836',
   gray900: '#434343',
   gray850: '#494949',
   gray700: '#666666',
@@ -33,5 +34,5 @@ export const colors = Object.freeze({
   transparent: 'transparent',
   overlay: 'rgba(0, 0, 0, 0.5)',
   grayBg: '#F5F5F5',
-  fbBg: '#F2F4F7'
+  fbBg: '#F2F4F7',
 });
