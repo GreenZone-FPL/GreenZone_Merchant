@@ -258,11 +258,9 @@ const ModalToping = ({
                   }}
                   contentContainerStyle={{ flexGrow: 1, gap: GLOBAL_KEYS.GAP_DEFAULT }}
                   showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }} // Đảm bảo FlatList có thể mở rộng và cuộn
+                  style={{ flex: 1 }} 
                 />
               </Column>
-
-
             }
 
 
