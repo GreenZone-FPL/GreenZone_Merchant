@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, memo } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -9,17 +9,16 @@ import {
   View,
 } from 'react-native';
 import { getOrders } from '../../axios/index';
-import { CustomTabView, LightStatusBar, NormalText, Row, Column } from '../../components';
+import { Column, CustomTabView, LightStatusBar, NormalText } from '../../components';
 import {
-  checkPaymentStatus,
   colors,
   GLOBAL_KEYS,
   OrderStatus,
-  PaymentMethod,
+  PaymentMethod
 } from '../../constants';
+import MerchantSocketService from '../../sevices/merchantSocketService';
 import { TextFormatter } from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
-import MerchantSocketService from '../../sevices/merchantSocketService';
 
 const width = Dimensions.get('window').width;
 
@@ -186,7 +185,7 @@ const OrderHistoryScreen = () => {
 
 const OrderListView = memo(({ orders, handleRepeatOrder }) => {
   return (
-    <View style={{paddingHorizontal: 16}}>
+    <View style={{}}>
       {orders.length > 0 ? (
         <FlatList
           showsVerticalScrollIndicator={false}
@@ -210,6 +209,17 @@ const OrderListView = memo(({ orders, handleRepeatOrder }) => {
 
 const Item = memo(({ item, handleRepeatOrder }) => {
 
+  const { shippingAddress } = item;
+  const {
+    consigneeName = "Chưa có tên",
+    consigneePhone = "Chưa có số điện thoại",
+    specificAddress = "Chưa có địa chỉ",
+    ward = "Chưa có phường",
+    district = "Chưa có quận",
+    province = "Chưa có tỉnh"
+  } = shippingAddress;
+
+  const formattedAddress = `${specificAddress}, ${ward}, ${district}, ${province}`;
 
   const getOrderItemsText = () => {
     const items = item?.orderItems || [];
@@ -221,40 +231,43 @@ const Item = memo(({ item, handleRepeatOrder }) => {
       items.map(item => item.product.name).join(' - ') || 'Chưa có sản phẩm'
     );
   };
+
+
   return (
     <TouchableOpacity
       onPress={() => handleRepeatOrder(item._id)}
       style={styles.itemOrder}>
       <ItemOrderType deliveryMethod={item.deliveryMethod} item={item} />
 
-      <Column style={{ width: '30%' }}>
+      <Column style={{ flex: 1, justifyContent: 'center'}}>
 
-        <NormalText text={`#${item._id}`} style={{ fontWeight: '500', }} />
+        <NormalText text={`#${item._id}`} style={{ fontWeight: '500', textAlign: 'center' }} />
 
         <Text numberOfLines={2} style={styles.orderName}>
           {getOrderItemsText()}
         </Text>
 
-        <NormalText text={item.owner?.firstName
-          ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
-          : 'Khách vãng lai'}
-
-          style={{ color: item.owner?.firstName ? colors.primary : colors.black }}
-        />
       </Column>
 
-    
+      <Column style={{ flex: 1, alignItems: 'center' }}>
+        {
+          item.deliveryMethod === 'delivery' ?
+            <Column >
+              <NormalText text={`${consigneeName} || ${consigneePhone}`} style={styles.recipientText} />
+              <NormalText text={formattedAddress} style={{ textAlign: 'center' }} />
+            </Column>
+            :
+            <NormalText text='Khách vãng lai' style={{ textAlign: 'center' }} />
+        }
 
-      <Column style={{ width: '20%' }}>
+      </Column>
 
+
+
+      <Column style={{ justifyContent: 'center' }}>
         <NormalText
-          style={{ color: colors.pink500, fontWeight: '500' }}
+          style={{ color: colors.pink500, fontWeight: '500', textAlign: 'center' }}
           text={TextFormatter.formatCurrency(item.totalPrice)} />
-
-        <NormalText text={TextFormatter.formatDateTime(item.fulfillmentDateTime)} />
-
-      </Column>
-      <Column style={{ width: '20%', justifyContent: 'center' }}>
         <NormalText
           style={{ color: colors.black2, textAlign: 'center' }}
           text={item.paymentMethod === PaymentMethod.COD.value
@@ -282,26 +295,6 @@ const getPaymentStatus = (status, paymentMethod) => {
   return { text: 'Đã thanh toán', color: colors.primary };
 };
 
-const getEmptyMessage = status => {
-  switch (status) {
-    case 'pendingConfirmation':
-      return 'Chưa có đơn hàng Chờ xác nhận';
-    case 'processing':
-      return 'Chưa có đơn hàng Đang xử lý';
-    case 'readyForPickup':
-      return 'Chưa có đơn hàng Chờ lấy hàng';
-    case 'shippingOrder':
-      return 'Chưa có đơn Đang giao hàng';
-    case 'completed':
-      return 'Chưa có đơn hàng Hoàn thành';
-    case 'failedDelivery':
-      return 'Chưa có đơn hàng Giao thất bại';
-    case 'cancelled':
-      return 'Chưa có đơn hàng Đã hủy';
-    default:
-      return 'Không có dữ liệu';
-  }
-};
 
 const ItemOrderType = ({ deliveryMethod, item }) => {
   const imageMap = {
@@ -310,14 +303,15 @@ const ItemOrderType = ({ deliveryMethod, item }) => {
   };
 
   return (
-    <Column style={{backgroundColor: 'green', width: '15%', alignItems: 'center'}}>
-      <Image
+    <Column style={{ alignItems: 'center', backgroundColor: 'white' }}>
+      {/* <Image
         style={styles.orderTypeIcon}
         source={imageMap[deliveryMethod] || imageMap['pickup']}
-      />
+      /> */}
 
+      <NormalText text={TextFormatter.formatDateTime(item.fulfillmentDateTime)} />
       <NormalText
-        style={{ color: item.deliveryMethod === 'delivery' ? colors.gray850 : colors.pink500, textAlign: 'center' }}
+        style={{ color: item.deliveryMethod === 'delivery' ? colors.brown700 : colors.orange700, textAlign: 'center' }}
         text={item.deliveryMethod === 'pickup' ? 'Mang đi' : 'Giao tận nơi'} />
     </Column>
   );
@@ -325,7 +319,7 @@ const ItemOrderType = ({ deliveryMethod, item }) => {
 
 
 const EmptyView = () => (
-  <View style={styles.emptyContainer1}>
+  <View style={styles.emptyContainer}>
     <Image
       style={styles.emptyImage}
       resizeMode="cover"
@@ -337,27 +331,20 @@ const EmptyView = () => (
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
   itemOrder: {
+    paddingHorizontal: 24,
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    justifyContent: 'space-around',
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderColor: colors.gray200,
+    gap: 16
   },
-  orderName: { fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500', color: colors.primary },
+  orderName: { fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500', color: colors.primary, textAlign: 'center' },
 
-  scene: {
-    width: '100%',
-    paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
-  },
+
   emptyContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 1,
-  },
-  emptyContainer1: {
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -365,11 +352,13 @@ const styles = StyleSheet.create({
     width: width / 3,
     height: width / 3,
   },
-  orderTypeIcon: {
+  orderTypeeIcon: {
     width: 50,
     height: 50,
     resizeMode: 'cover',
   },
+
+  recipientText: { color: colors.black, fontWeight: '500', textAlign: 'center' },
 });
 
 export default OrderHistoryScreen;
