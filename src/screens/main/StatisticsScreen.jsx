@@ -5,6 +5,7 @@ import { colors, GLOBAL_KEYS } from '../../constants';
 import { Column, Row } from '../../components';
 import { Icon, IconButton } from 'react-native-paper';
 import { AppAsyncStorage } from '../../utils';
+import { Pressable } from 'react-native';
 
 const StatisticsScreen = ({ navigation }) => {
   const currentMonth = new Date().getMonth();
@@ -45,13 +46,25 @@ const StatisticsScreen = ({ navigation }) => {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.container}>
-      <TouchableOpacity onPress={async () => {
-        await AppAsyncStorage.removeData('accessToken');
-        navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
-      }} style={styles.logoutButton}>
+
+
+      <Pressable
+        onPress={async () => {
+          console.log( 'acb')
+          await AppAsyncStorage.removeData('accessToken');
+          navigation.reset({ index: 0, routes: [{ name: 'LoginScreen' }] });
+        }}
+        style={styles.logoutButton}
+      >
         <Text style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500' }}>Đăng xuất</Text>
-        <IconButton icon="logout" size={GLOBAL_KEYS.ICON_SIZE_SMALL} iconColor={colors.primary} style={styles.closeButton} />
-      </TouchableOpacity>
+        <Icon
+          source="logout"
+          size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+          color={colors.primary}
+        />
+      </Pressable>
+
+
       <Text style={styles.title}>Biểu Đồ Doanh Số Cả Năm 2024</Text>
       <BarChart style={styles.chart} data={data} xAxis={xAxis} animation={{ durationX: 1500 }} chartDescription={{ text: '' }} drawValueAboveBar yAxis={{ left: { axisMinimum: 0, textSize: 14 }, right: { enabled: false } }} marker={{ enabled: true, markerColor: processColor(colors.green500), textColor: processColor(colors.black), textSize: 14 }} drawRoundedBar legend={{ enabled: false }} />
       <Column style={styles.card}>
@@ -73,12 +86,12 @@ const StatisticsScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, backgroundColor: colors.white, padding: 20, justifyContent: 'center' },
-  logoutButton: { position: 'absolute', end: 20, top: 20, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  logoutButton: { position: 'absolute', end: 20, top: 20, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, backgroundColor: 'green', padding: 6 },
   closeButton: { backgroundColor: colors.green100, alignSelf: 'flex-end' },
   title: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   chart: { height: 350 },
   card: { margin: 20, backgroundColor: colors.white, padding: 20, borderRadius: 12, elevation: 1.5, shadowColor: colors.black, shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 } },
-  cardTitle: { fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE, color: colors.black},
+  cardTitle: { fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE, color: colors.black },
   cardValue: { fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE, fontWeight: 'bold', color: colors.primary },
 });
 
