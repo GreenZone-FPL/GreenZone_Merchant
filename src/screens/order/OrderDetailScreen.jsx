@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {Icon, IconButton} from 'react-native-paper';
+import { Icon, IconButton } from 'react-native-paper';
 import {
   getEmployeesAllAvailable,
   getOrderDetail,
@@ -25,6 +25,7 @@ import {
   Row,
   TitleText,
   Column,
+  HorizontalProductItem,
 } from '../../components';
 import {
   DeliveryMethod,
@@ -34,9 +35,9 @@ import {
   checkPaymentStatus,
   colors,
 } from '../../constants';
-import {TextFormatter} from '../../utils';
+import { TextFormatter } from '../../utils';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 // Định nghĩa một số style chung để tránh tham chiếu động bên trong StyleSheet
 const commonRowStyle = {
@@ -75,7 +76,7 @@ const OrderDetailScreen = ({
 
   useEffect(() => {
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({animated: true});
+      scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 1000);
   }, []);
 
@@ -92,6 +93,13 @@ const OrderDetailScreen = ({
     }
   };
 
+  const getOrderStatusLabel = value => {
+    const statusEntry = Object.values(OrderStatus).find(
+      status => status.value === value,
+    );
+    return statusEntry ? statusEntry.label : 'Trạng thái không xác định';
+  };
+
   useEffect(() => {
     if (idOrder == null) return;
     fetchOrderDetail();
@@ -105,8 +113,8 @@ const OrderDetailScreen = ({
 
   const statusKey = orderDetail
     ? Object.keys(OrderStatus).find(
-        key => OrderStatus[key].value === orderDetail?.status,
-      )
+      key => OrderStatus[key].value === orderDetail?.status,
+    )
     : null;
   const statusLabel = statusKey ? OrderStatus[statusKey].label : '';
 
@@ -131,32 +139,34 @@ const OrderDetailScreen = ({
               />
               <IconButton
                 icon="close"
-                size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
                 iconColor={colors.primary}
                 style={styles.closeButton}
                 onPress={() => setIsModalOrderDetail(false)}
               />
             </Row>
 
-            <Title
-              title={statusLabel}
-              titleStyle={[
-                styles.titleHeader,
-                {
-                  color:
-                    orderDetail?.status === OrderStatus.CANCELLED.value ||
-                    orderDetail?.status === OrderStatus.FAILED_DELIVERY.value
-                      ? colors.red900
-                      : colors.primary,
-                },
-              ]}
-            />
+            <Row
+              style={{
+                paddingVertical: 8,
+                marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+                marginBottom: GLOBAL_KEYS.GAP_SMALL,
+                justifyContent: 'space-between',
+                flex: 1
+              }}>
+              <Title title="Trạng thái đơn hàng" titleStyle={{ color: colors.black2 }} />
+
+              <Text style={[styles.status, { color: orderDetail?.status === 'cancelled' ? colors.black : colors.green500 }]}>
+                {getOrderStatusLabel(orderDetail?.status)}
+              </Text>
+            </Row>
+
             {Object.keys(orderDetail?.shippingAddress || {}).length > 0 && (
               <ShipperInfo shipper={orderDetail?.shipper} />
             )}
             <MerchantInfo data={orderDetail?.store} />
             <RecipientInfo data={orderDetail} />
-            <ProductsInfo data={orderDetail?.orderItems} />
+            <ProductsInfo orderItems={orderDetail?.orderItems} />
             <PaymentDetails
               data={orderDetail}
               setIsModalOrderDetail={setIsModalOrderDetail}
@@ -175,10 +185,11 @@ const OrderDetailScreen = ({
   );
 };
 
-const MerchantInfo = ({data}) => {
+const MerchantInfo = ({ data }) => {
   return (
     <View style={styles.areaContainer}>
-      <Title title={data?.name} titleStyle={{color: colors.black}} />
+      <Title title="Cửa hàng" icon="store" />
+      <Title title={data?.name} titleStyle={{ color: colors.black }} />
       <Text style={styles.normalText}>
         {`${data?.specificAddress}, ${data?.ward}, ${data?.district}, ${data?.province}`}
       </Text>
@@ -186,19 +197,19 @@ const MerchantInfo = ({data}) => {
   );
 };
 
-const RecipientInfo = ({data}) => (
+const RecipientInfo = ({ data }) => (
   <View style={styles.areaContainer}>
-    <Title title="Người nhận" icon="map-marker-outline" />
+    <Title title="Người nhận" icon="map-marker" />
     <Title
       title={
         data?.owner && Object.keys(data.owner).length > 0
           ? `${data?.owner.firstName} ${data?.owner.lastName} | ${data?.owner.phoneNumber}`
           : 'Khách vãng lai'
       }
-      titleStyle={{color: colors.black}}
+      titleStyle={{ color: colors.black }}
     />
-    <Title
-      title={
+    <NormalText
+      text={
         DeliveryMethod[
           Object.keys(DeliveryMethod).find(
             key => DeliveryMethod[key].value === data?.deliveryMethod,
@@ -209,63 +220,36 @@ const RecipientInfo = ({data}) => (
   </View>
 );
 
-const ProductsInfo = ({data}) => {
+const ProductsInfo = ({ orderItems }) => {
   return (
-    <View style={[styles.areaContainer]}>
-      <Title title="Danh sách sản phẩm" icon="sticker-text-outline" />
+    <View style={[styles.areaContainer, { borderBottomWidth: 0 }]}>
+
+      <Title title={'Danh sách sản phẩm'} icon="clipboard-list" />
+
+
       <FlatList
-        data={data || []}
+        data={orderItems}
         keyExtractor={item => item.product._id}
-        renderItem={({item}) => (
-          <View style={styles.productContainer}>
-            <Image
-              style={styles.productImage}
-              source={{uri: item.product.image}}
+        renderItem={({ item }) => {
+          const formattedItem = {
+            productName: item.product.name,
+            image: item.product.image,
+            variantName: item.product.size,
+            price: item.price,
+            quantity: item.quantity,
+            isVariantDefault: false,
+            toppingItems: Array.isArray(item.toppingItems)
+              ? item.toppingItems
+              : [],
+          };
+          return (
+            <HorizontalProductItem
+              item={formattedItem}
+              enableAction={false}
             />
-            <View style={styles.productColumn}>
-              <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.product.name},</Text>
-                <Text style={styles.productSize}>
-                  Size: <Text style={styles.boldText}>{item.product.size}</Text>
-                  ,
-                </Text>
-                <Text style={styles.productQuantity}>
-                  Số lượng:{' '}
-                  <Text style={styles.boldText}>x{item.quantity}</Text>,
-                </Text>
-                <Text style={styles.productPrice}>
-                  Đơn giá:{' '}
-                  <Text style={styles.boldText}>
-                    {TextFormatter.formatCurrency(item?.price)}
-                  </Text>
-                </Text>
-              </View>
-              {item.toppingItems.length > 0 &&
-                item.toppingItems.some(
-                  topping => Object.keys(topping).length > 0,
-                ) && (
-                  <Text style={styles.toppingText}>
-                    Topping:{' '}
-                    {item.toppingItems
-                      .filter(topping => Object.keys(topping).length > 0)
-                      .map((topping, index) => (
-                        <Text key={index}>
-                          {topping.name || 'Không'}{' '}
-                          <Text style={styles.boldText}>
-                            {topping.price
-                              ? TextFormatter.formatCurrency(topping.price)
-                              : 'Không'}
-                          </Text>
-                          {index !== item.toppingItems.length - 1 ? ', ' : ''}
-                        </Text>
-                      ))}
-                  </Text>
-                )}
-            </View>
-          </View>
-        )}
-        contentContainerStyle={styles.flatListContent}
-        style={styles.flatList}
+          );
+        }}
+        contentContainerStyle={styles.flatListContentContainer}
         scrollEnabled={false}
       />
     </View>
@@ -281,14 +265,29 @@ const PaymentDetails = ({
 }) => {
   const totalPrice = calculateTotalPrice(data?.orderItems || []);
 
-  // Kiểm tra voucher hợp lệ
+
   const voucher =
     data?.voucher && Object.keys(data?.voucher).length > 0
       ? data?.voucher
       : null;
   const discountAmount = calculateVoucher(totalPrice, voucher);
-  const finalTotal = totalPrice - discountAmount + (data?.shippingFee || 0);
-  const paymentStatus = checkPaymentStatus(data);
+
+
+  const getPaymentStatus = (status, paymentMethod) => {
+    if (status === 'completed') {
+      return { text: 'Đã thanh toán', color: colors.primary };
+    }
+    if (paymentMethod === 'cod') {
+      return { text: 'Chưa thanh toán', color: colors.orange700 };
+    }
+    if (status === 'awaitingPayment') {
+      return { text: 'Chờ thanh toán', color: colors.pink500 };
+    }
+    return { text: 'Đã thanh toán', color: colors.primary };
+  };
+
+
+  const paymentStatus = getPaymentStatus(data?.status, data?.paymentMethod);
   const [selectedShipper, setSelectedShipper] = useState(null);
 
   function calculateTotalPrice(items) {
@@ -324,10 +323,10 @@ const PaymentDetails = ({
     }
   };
 
-  const showAlert = ({notification, message, onPress}) => {
+  const showAlert = ({ notification, message, onPress }) => {
     Alert.alert(notification, message, [
-      {text: 'Huỷ', style: 'cancel'},
-      {text: 'Xác Nhận', onPress},
+      { text: 'Huỷ', style: 'cancel' },
+      { text: 'Xác Nhận', onPress },
     ]);
   };
 
@@ -375,7 +374,7 @@ const PaymentDetails = ({
     }
   };
 
-  const ShipperSelect = ({onSelect, scrollViewRef}) => {
+  const ShipperSelect = ({ onSelect, scrollViewRef }) => {
     const [shippers, setShippers] = useState([]);
     const [expanded, setExpanded] = useState(false);
 
@@ -394,7 +393,7 @@ const PaymentDetails = ({
 
     useEffect(() => {
       if (shippers.length > 0) {
-        scrollViewRef.current?.scrollToEnd({animated: true});
+        scrollViewRef.current?.scrollToEnd({ animated: true });
       }
     }, [shippers]);
 
@@ -577,23 +576,26 @@ const PaymentDetails = ({
         {
           leftText: 'Giảm giá',
           rightText: `-${TextFormatter.formatCurrency(discountAmount)}`,
-          rightTextStyle: {color: colors.primary},
+          rightTextStyle: { color: colors.primary },
         },
         {
-          leftText: paymentStatus,
-          rightText: TextFormatter.formatCurrency(data?.totalPrice || 0),
+          leftText: 'Tổng tiền',
+          rightText: `${(totalPrice).toLocaleString('vi-VN')}đ`,
+          rightTextStyle: { color: colors.primary, fontWeight: '700', fontSize: 18 },
+          leftTextStyle: { color: colors.primary, fontWeight: '700' },
+        },
+        {
+          leftText: 'Trạng thái thanh toán',
+          rightText: paymentStatus.text,
           leftTextStyle: {
-            ...styles.dualTextStatus,
-            borderColor:
-              paymentStatus === 'Chưa thanh toán'
-                ? colors.red900
-                : colors.primary,
-            color:
-              paymentStatus === 'Chưa thanh toán'
-                ? colors.red900
-                : colors.primary,
+            paddingHorizontal: 4,
+            paddingVertical: 2,
+            borderWidth: 1,
+            borderRadius: 6,
+            borderColor: paymentStatus.color,
+            color: paymentStatus.color,
           },
-          rightTextStyle: {fontWeight: '700', color: colors.primary},
+          rightTextStyle: { color: paymentStatus.color },
         },
         {
           leftText: 'Thời gian đặt hàng',
@@ -604,8 +606,9 @@ const PaymentDetails = ({
           rightText:
             data?.paymentMethod === PaymentMethod.COD.value
               ? 'Tiền mặt'
+
               : 'Chuyển khoản',
-          rightTextStyle: {fontWeight: '700', color: colors.primary},
+          rightTextStyle: { fontWeight: '700', color: colors.primary },
         },
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
@@ -620,11 +623,11 @@ const PaymentDetails = ({
   );
 };
 
-const OrderId = ({data}) => {
+const OrderId = ({ data }) => {
   return (
     <Row style={styles.orderIdRow}>
       <NormalText text="Mã đơn hàng" />
-      <Pressable style={styles.orderIdPressable} onPress={() => {}}>
+      <Pressable style={styles.orderIdPressable} onPress={() => { }}>
         <Text style={styles.orderIdText}>{data}</Text>
         <Icon source="content-copy" color={colors.teal900} size={18} />
       </Pressable>
@@ -632,7 +635,7 @@ const OrderId = ({data}) => {
   );
 };
 
-const ShipperInfo = ({shipper}) => {
+const ShipperInfo = ({ shipper }) => {
   return Object.keys(shipper || {}).length === 0 ? (
     <Row
       style={{
@@ -640,29 +643,20 @@ const ShipperInfo = ({shipper}) => {
         marginVertical: 8,
         marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
       }}>
-      <NormalText text="Chưa chọn Shipper" style={{fontWeight: '500'}} />
+      <NormalText text="Chưa chọn Shipper" style={{ fontWeight: '500' }} />
     </Row>
   ) : (
-    <Row
-      style={{
-        gap: 16,
-        paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
-        borderTopWidth: 1,
-        borderColor: colors.gray200,
-        margin: 16,
-      }}>
+    <Row style={{ gap: 16, margin: 16 }}>
       <Image
-        style={{width: 40, height: 40}}
+        style={{ width: 40, height: 40 }}
         source={require('../../assets/images/helmet.png')}
       />
-      <Column style={{flex: 1}}>
-        <NormalText
-          text={shipper.firstName + ' '}
-          style={{fontWeight: '500'}}
-        />
-        <Row>
-          <NormalText text={`${shipper.phoneNumber}`} />
-        </Row>
+      <Column style={{ flex: 1 }}>
+        <NormalText text="Nhân viên giao hàng" style={{ fontWeight: '500' }} />
+        <Text
+          style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, color: colors.orange700 }}>
+          {shipper?.firstName ? `${shipper.firstName} ${shipper.lastName} ` : 'Đang chuẩn bị ...'}
+        </Text>
       </Column>
     </Row>
   );
@@ -699,7 +693,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: 'white',
     justifyContent: 'space-between',
-    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   headerSpacer: {
     width: 24,
@@ -771,6 +765,7 @@ const styles = StyleSheet.create({
   paymentDetailsContainer: {
     marginBottom: GLOBAL_KEYS.PADDING_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    gap: 6
   },
   dualTextLeftHeader: {
     color: colors.primary,
@@ -878,6 +873,8 @@ const styles = StyleSheet.create({
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     marginTop: GLOBAL_KEYS.PADDING_DEFAULT,
   },
+
+  status: { fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, color: colors.green500, fontWeight: '500' },
 });
 
 export default React.memo(OrderDetailScreen);
