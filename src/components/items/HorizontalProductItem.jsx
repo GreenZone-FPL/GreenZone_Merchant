@@ -1,13 +1,19 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
-import {Icon} from 'react-native-paper';
-import {GLOBAL_KEYS, colors} from '../../constants';
-import {TextFormatter} from '../../utils';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icon } from 'react-native-paper';
+import { GLOBAL_KEYS, colors } from '../../constants';
+import { TextFormatter } from '../../utils';
+import { Row } from '../containers/Row';
+import { Column } from '../containers/Column';
+import { NormalText } from '../texts/NormalText';
+import { color } from '@rneui/base';
+
 
 const HorizontalProductItemPropTypes = {
   item: PropTypes.object.isRequired,
   enableAction: PropTypes.bool,
+  enableDelete: PropTypes.bool,
   onAction: PropTypes.func,
   imageStyle: PropTypes.object,
   containerStyle: PropTypes.object,
@@ -18,9 +24,11 @@ const HorizontalProductItemPropTypes = {
   oldPriceStyle: PropTypes.object,
 };
 
+
 export const HorizontalProductItem = ({
   item,
   enableAction,
+  enableDelete,
   onAction,
   imageStyle,
   containerStyle,
@@ -28,34 +36,61 @@ export const HorizontalProductItem = ({
   optionStyle,
   noteStyle,
   priceStyle,
+  confirmDelete,
   oldPriceStyle,
 }) => (
   <View style={[styles.itemProduct, containerStyle]}>
     <View style={styles.imageWrapper}>
-      <Image style={[styles.itemImage, imageStyle]} source={item.image} />
+      <Image
+        style={[styles.itemImage, imageStyle]}
+        source={{ uri: item.image }}
+      />
       <View style={styles.quantityBadge}>
-        <Text style={styles.quantityText}>x5</Text>
+        <Text style={styles.quantityText}>x{item.quantity}</Text>
       </View>
     </View>
 
-    <View style={styles.productInfo}>
-      <Text style={[styles.productName, titleStyle]}>{item.name}</Text>
-      <Text style={[styles.normalText, {color: colors.gray700}, optionStyle]}>
-        Lớn
-      </Text>
-      <Text style={[styles.normalText, {color: colors.gray700}, optionStyle]}>
-        Kem Phô Mai Macchiato
-      </Text>
-      <Text style={[styles.normalText, {color: colors.orange700}, noteStyle]}>
-        Note: Ít cafe, Nhiều sữa
-      </Text>
-    </View>
+    <Column style={styles.productInfo}>
+      <Text style={[styles.productName, titleStyle]}>{item.productName}</Text>
+      {item.variantName && !item.isVariantDefault && (
+        <Text
+          style={[styles.normalText, { color: colors.pink500, fontWeight: '500' }, optionStyle]}>
+          {item.variantName}
+        </Text>
+      )}
 
-    <View style={styles.priceContainer}>
+      {item.toppingItems?.map(topping => {
+        if (topping.quantity > 0) {
+          return (
+            <Text
+              key={topping._id}
+              style={[styles.normalText, { color: colors.gray850 }, optionStyle]}>
+              x{topping.quantity} {topping.name}
+            </Text>
+          );
+        }
+        return null;
+      })}
+
+      {item.note && (
+        <Text style={[styles.normalText, { color: colors.orange700 }, noteStyle]}>
+          Note: {item.note}
+        </Text>
+      )}
+    </Column>
+
+    <Column style={styles.priceContainer}>
       <Text style={[styles.productPrice, priceStyle]}>
-        {TextFormatter.formatCurrency(item.price)}
+        {TextFormatter.formatCurrency(item.price * item.quantity)}
       </Text>
-      <Text style={[styles.lineThroughText, oldPriceStyle]}>70.000đ</Text>
+
+      {enableDelete && (
+        <Pressable onPress={confirmDelete}>
+          <NormalText text="Xóa" style={{ color: colors.orange700 }} />
+        </Pressable>
+      )}
+
+      {/* <Text style={[styles.lineThroughText, oldPriceStyle]}>{TextFormatter.formatCurrency(item.price)}</Text> */}
       {enableAction && (
         <Pressable onPress={onAction}>
           <Icon
@@ -65,24 +100,23 @@ export const HorizontalProductItem = ({
           />
         </Pressable>
       )}
-    </View>
+    </Column>
   </View>
 );
 
-HorizontalProductItem.propTypes = HorizontalProductItemPropTypes;
+HorizontalProductItem.propTypes = HorizontalProductItemPropTypes
+
+
 
 const styles = StyleSheet.create({
   itemProduct: {
     flexDirection: 'row',
-    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
+    padding: GLOBAL_KEYS.PADDING_SMALL,
+    borderRadius: 4,
     gap: GLOBAL_KEYS.GAP_SMALL,
     backgroundColor: colors.white,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    elevation: 4,
-    shadowColor: colors.black,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
     marginBottom: 8,
   },
   itemImage: {
@@ -96,6 +130,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
+
   },
   productInfo: {
     flexDirection: 'column',
@@ -105,11 +140,12 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
+
   },
   productPrice: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
-    fontWeight: '500',
+    fontWeight: '500'
   },
 
   imageWrapper: {
@@ -136,11 +172,11 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'column',
     justifyContent: 'space-around',
-    alignItems: 'flex-end',
+    alignItems: 'flex-end'
   },
   lineThroughText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray700,
     textDecorationLine: 'line-through',
   },
-});
+})
