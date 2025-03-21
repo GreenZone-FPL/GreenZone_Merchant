@@ -94,7 +94,7 @@ const ModalToping = ({
       quantity: 1,
       price: selectedSize.sellingPrice,
       toppingItems: (selectedToppings || []).map(item => ({
-        topping: item._id,
+        topping: item?._id,
         quantity: 1,
         price: item.extraPrice,
       })),
@@ -223,12 +223,12 @@ const ModalToping = ({
               <Column style={{ gap: 16, }}>
                 {selectedProduct?.variant?.map(item => (
                   <TouchableOpacity
-                    key={item._id}
+                    key={item?._id}
                     style={[styles.sizeOption, selectedSize?._id === item._id && styles.selectedSize]}
                     onPress={() => setSelectedSize(item)}
                   >
-                    <Text style={[styles.sizeText, selectedSize?._id === item._id && styles.selectedSizeText]}>
-                      {item.size} - {item.sellingPrice.toLocaleString()} VNĐ
+                    <Text style={[styles.sizeText, selectedSize?._id === item?._id && styles.selectedSizeText]}>
+                      {item?.size} - {item?.sellingPrice} VNĐ
                     </Text>
                   </TouchableOpacity>
 
@@ -238,31 +238,29 @@ const ModalToping = ({
 
 
             {
-              selectedProduct?.topping.length > 0 &&
+              selectedProduct?.topping?.length > 0 &&
 
               <Column style={{ flex: 1, backgroundColor: colors.white, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6 }}>
                 <TitleText text='Topping' style={{ color: colors.orange700 }} />
 
                 <FlatList
                   data={selectedProduct?.topping}
-                  keyExtractor={item => item._id}
+                  keyExtractor={item => item?._id}
                   renderItem={({ item }) => {
-                    const isSelected = selectedToppings.some(t => t._id === item._id);
+                    const isSelected = selectedToppings.some(t => t?._id === item?._id);
                     return (
-                      <TouchableOpacity style={[styles.toppingOption, isSelected && styles.selectedTopping]} onPress={() => toggleTopping(item)}>
+                      <TouchableOpacity key={item?._id} style={[styles.toppingOption, isSelected && styles.selectedTopping]} onPress={() => toggleTopping(item)}>
                         <Text style={[styles.sizeText, isSelected && styles.selectedToppingText]}>
-                          {item.name} (+ {TextFormatter.formatCurrency(item.extraPrice)})
+                          {item?.name} (+ {item?.extraPrice})
                         </Text>
                       </TouchableOpacity>
                     );
                   }}
                   contentContainerStyle={{ flexGrow: 1, gap: GLOBAL_KEYS.GAP_DEFAULT }}
                   showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }} // Đảm bảo FlatList có thể mở rộng và cuộn
+                  style={{ flex: 1 }} 
                 />
               </Column>
-
-
             }
 
 

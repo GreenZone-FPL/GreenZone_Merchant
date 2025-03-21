@@ -337,10 +337,10 @@ const CartOrder = ({cart, setCart}) => {
                             key={index}
                             style={{
                               marginBottom: 4,
-                              fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+                              fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                             }}>
                             <Text
-                              style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL}}>
+                              style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
                               x1{' '}
                             </Text>
                             {topping.name}
