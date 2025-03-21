@@ -17,7 +17,7 @@ const MainNavigation = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.gray700,
         tabBarStyle: {
-          backgroundColor: colors.white,
+          backgroundColor: colors.fbBg,
         },
         tabBarLabelStyle: {
           fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,

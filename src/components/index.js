@@ -10,7 +10,6 @@ export * from './animations/NomalLoading';
 
 // bottom-sheets
 export * from './bottom-sheets/MerchantDetailSheet';
-export * from './bottom-sheets/ProductDetailSheet';
 export * from './bottom-sheets/VoucherDetailSheet';
 
 // buttons
@@ -20,8 +19,7 @@ export * from './buttons/PrimaryButton';
 export * from './buttons/QuantityButton';
 export * from './buttons/QuantitySelector';
 
-// carousel
-export * from './carousel/CarouselBanner';
+
 
 // containers
 export * from './containers/Column';
@@ -36,7 +34,6 @@ export * from './dialogs/DialogReviewOder';
 // flatlists
 export * from './flatlists/ProductsListHorizontal';
 export * from './flatlists/ProductsListVertical';
-export * from './flatlists/SaleProductsListHorizontal';
 export * from './flatlists/NotificationList';
 
 // footer

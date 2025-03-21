@@ -1,11 +1,6 @@
-import {io} from 'socket.io-client';
-import {AppAsyncStorage} from '../utils';
-import mitt from 'mitt';
-
 class MerchantSocketService {
   constructor() {
     this.socket = null;
-    this.emitter = mitt(); // Tạo emitter để phát sự kiện
   }
 
   async initialize() {
@@ -15,6 +10,7 @@ class MerchantSocketService {
           AppAsyncStorage.STORAGE_KEYS.accessToken,
         );
         const storeId = await AppAsyncStorage.readData('storeId');
+
         console.log('Token:', token);
         console.log('storeId:', storeId);
 
@@ -28,7 +24,7 @@ class MerchantSocketService {
         this.socket = io('https://greenzone.motcaiweb.io.vn', {
           path: '/socket.io/',
           transports: ['websocket'],
-          auth: {token},
+          auth: { token },
         });
 
         this.socket.on('connect', () => {
@@ -37,16 +33,15 @@ class MerchantSocketService {
           console.log(`Merchant joined store room: ${storeId}`);
         });
 
-        this.socket.on('order.new', data => {
+        this.socket.on('order.new', (data) => {
           console.log('New Order:', data);
-          this.emitter.emit('order.new', data);
         });
 
         this.socket.on('disconnect', () => {
           console.log('Disconnected');
         });
 
-        this.socket.on('connect_error', error => {
+        this.socket.on('connect_error', (error) => {
           console.log('Lỗi kết nối:', error);
         });
       } catch (error) {
@@ -55,14 +50,39 @@ class MerchantSocketService {
     }
   }
 
+  /**
+   * Lắng nghe sự kiện từ server
+   * @param {string} event - Tên sự kiện
+   * @param {function} callback - Hàm xử lý khi sự kiện xảy ra
+   */
   on(event, callback) {
-    this.emitter.on(event, callback); // Đăng ký lắng nghe sự kiện
+    if (this.socket) {
+      this.socket.on(event, callback);
+    } else {
+      console.warn(`⚠️ Socket chưa được khởi tạo, không thể lắng nghe sự kiện: ${event}`);
+    }
   }
 
+  /**
+   * Hủy lắng nghe sự kiện
+   * @param {string} event - Tên sự kiện
+   * @param {function} callback - Hàm callback đã đăng ký trước đó (tuỳ chọn)
+   */
   off(event, callback) {
-    this.emitter.off(event, callback); // Hủy lắng nghe sự kiện
+    if (this.socket) {
+      if (callback) {
+        this.socket.off(event, callback);
+      } else {
+        this.socket.off(event);
+      }
+    } else {
+      console.warn(`⚠️ Socket chưa được khởi tạo, không thể huỷ lắng nghe sự kiện: ${event}`);
+    }
   }
 
+  /**
+   * Ngắt kết nối socket
+   */
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();

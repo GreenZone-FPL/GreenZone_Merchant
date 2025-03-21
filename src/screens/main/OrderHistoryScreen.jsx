@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useMemo, memo} from 'react';
+import React, { useEffect, useState, useMemo, memo } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -8,8 +8,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {getOrders} from '../../axios/index';
-import {CustomTabView, LightStatusBar} from '../../components';
+import { getOrders } from '../../axios/index';
+import { CustomTabView, LightStatusBar, NormalText, Row, Column } from '../../components';
 import {
   checkPaymentStatus,
   colors,
@@ -17,7 +17,7 @@ import {
   OrderStatus,
   PaymentMethod,
 } from '../../constants';
-import {TextFormatter} from '../../utils';
+import { TextFormatter } from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
 import MerchantSocketService from '../../sevices/merchantSocketService';
 
@@ -44,12 +44,12 @@ const OrderHistoryScreen = () => {
         status: OrderStatus.PENDING_CONFIRMATION.value,
         setter: setPendingConfirmation,
       },
-      {status: OrderStatus.PROCESSING.value, setter: setProcessing},
-      {status: OrderStatus.READY_FOR_PICKUP.value, setter: setReadyForPickup},
-      {status: OrderStatus.SHIPPING_ORDER.value, setter: setShippingOrder},
-      {status: OrderStatus.COMPLETED.value, setter: setCompleted},
-      {status: OrderStatus.FAILED_DELIVERY.value, setter: setFailedDelivery},
-      {status: OrderStatus.CANCELLED.value, setter: setCancelled},
+      { status: OrderStatus.PROCESSING.value, setter: setProcessing },
+      { status: OrderStatus.READY_FOR_PICKUP.value, setter: setReadyForPickup },
+      { status: OrderStatus.SHIPPING_ORDER.value, setter: setShippingOrder },
+      { status: OrderStatus.COMPLETED.value, setter: setCompleted },
+      { status: OrderStatus.FAILED_DELIVERY.value, setter: setFailedDelivery },
+      { status: OrderStatus.CANCELLED.value, setter: setCancelled },
     ],
     [],
   );
@@ -81,7 +81,7 @@ const OrderHistoryScreen = () => {
 
   // Fetch đơn hàng cho tab hiện tại khi tabIndex thay đổi
   useEffect(() => {
-    const {status, setter} = orderStatusConfig[tabIndex];
+    const { status, setter } = orderStatusConfig[tabIndex];
     fetchOrdersByStatus(status, setter);
   }, [tabIndex, orderStatusConfig]);
 
@@ -89,7 +89,7 @@ const OrderHistoryScreen = () => {
   useEffect(() => {
     const handleNewOrder = data => {
       if (data._id !== null) {
-        const {status, setter} = orderStatusConfig[tabIndex];
+        const { status, setter } = orderStatusConfig[tabIndex];
         fetchOrdersByStatus(status, setter);
       }
     };
@@ -106,7 +106,7 @@ const OrderHistoryScreen = () => {
   };
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1, backgroundColor: colors.fbBg, gap: 16 }}>
       <LightStatusBar />
       <CustomTabView
         tabIndex={tabIndex}
@@ -174,84 +174,113 @@ const OrderHistoryScreen = () => {
         idOrder={idOrder}
         setIdOrder={setIdOrder}
         fetchOrders={() => {
-          const {status, setter} = orderStatusConfig[tabIndex];
+          const { status, setter } = orderStatusConfig[tabIndex];
           fetchOrdersByStatus(status, setter);
         }}
       />
-      {/* <NormalLoading visible={loading} /> */}
+
     </View>
   );
 };
 
-// Component OrderListView được bọc trong React.memo để tránh render lại không cần thiết
-const OrderListView = memo(({orders, loading, handleRepeatOrder, status}) => {
+
+const OrderListView = memo(({ orders, handleRepeatOrder }) => {
   return (
-    <View style={styles.scene}>
+    <View style={{paddingHorizontal: 16}}>
       {orders.length > 0 ? (
         <FlatList
+          showsVerticalScrollIndicator={false}
           data={orders}
           keyExtractor={item => item.orderId || item._id}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <Item item={item} handleRepeatOrder={handleRepeatOrder} />
           )}
           contentContainerStyle={{
-            gap: GLOBAL_KEYS.GAP_DEFAULT,
+            gap: GLOBAL_KEYS.GAP_SMALL,
+            backgroundColor: colors.fbBg
           }}
         />
       ) : (
-        <EmptyView message={getEmptyMessage(status)} />
+        <EmptyView />
       )}
     </View>
   );
 });
 
-// Component Item được bọc trong React.memo để tránh render lại nếu props không thay đổi
-const Item = memo(({item, handleRepeatOrder}) => {
-  const paymentMethod = checkPaymentStatus(item);
+
+const Item = memo(({ item, handleRepeatOrder }) => {
+
+
+  const getOrderItemsText = () => {
+    const items = item?.orderItems || [];
+    if (items.length > 2) {
+      return `${items[0].product.name} - ${items[1].product.name} và ${items.length - 2
+        } sản phẩm khác`;
+    }
+    return (
+      items.map(item => item.product.name).join(' - ') || 'Chưa có sản phẩm'
+    );
+  };
   return (
     <TouchableOpacity
       onPress={() => handleRepeatOrder(item._id)}
       style={styles.itemOrder}>
-      <ItemOrderType deliveryMethod={item.deliveryMethod} />
-      <View style={styles.view1}>
-        <View style={{flexDirection: 'row', alignItems: 'flex-end', flex: 1}}>
-          <Text style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
-            Đơn hàng:{' '}
-          </Text>
-          <Text style={{fontWeight: '500'}}>{item._id}</Text>
-        </View>
-        <Text style={item.owner?.firstName ? styles.owner : styles.ownerNull}>
-          {item.owner?.firstName
-            ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
-            : 'Khách hàng vãng lai'}
+      <ItemOrderType deliveryMethod={item.deliveryMethod} item={item} />
+
+      <Column style={{ width: '30%' }}>
+
+        <NormalText text={`#${item._id}`} style={{ fontWeight: '500', }} />
+
+        <Text numberOfLines={2} style={styles.orderName}>
+          {getOrderItemsText()}
         </Text>
-      </View>
-      <View style={styles.view2}>
-        <ItemOrderText deliveryMethod={item.deliveryMethod} />
-        <Text style={styles.cod}>
-          {item.paymentMethod == PaymentMethod.COD.value
-            ? 'Thanh toán tiền mặt'
-            : 'Thanh toán ngân hàng'}
-        </Text>
-      </View>
-      <View style={styles.view2}>
-        <Text style={styles.price}>
-          {TextFormatter.formatCurrency(item.totalPrice)}
-        </Text>
-        <Text style={styles.date}>
-          {TextFormatter.formatDateTime(item.fulfillmentDateTime)}
-        </Text>
-      </View>
-      <View style={styles.view2}>
-        {paymentMethod === 'Chưa thanh toán' ? (
-          <Text style={styles.noPaid}>Chưa thanh toán</Text>
-        ) : (
-          <Text style={styles.paid}>Đã thanh toán</Text>
-        )}
-      </View>
+
+        <NormalText text={item.owner?.firstName
+          ? 'Khách hàng: ' + item.owner.firstName + ' ' + item.owner.lastName
+          : 'Khách vãng lai'}
+
+          style={{ color: item.owner?.firstName ? colors.primary : colors.black }}
+        />
+      </Column>
+
+    
+
+      <Column style={{ width: '20%' }}>
+
+        <NormalText
+          style={{ color: colors.pink500, fontWeight: '500' }}
+          text={TextFormatter.formatCurrency(item.totalPrice)} />
+
+        <NormalText text={TextFormatter.formatDateTime(item.fulfillmentDateTime)} />
+
+      </Column>
+      <Column style={{ width: '20%', justifyContent: 'center' }}>
+        <NormalText
+          style={{ color: colors.black2, textAlign: 'center' }}
+          text={item.paymentMethod === PaymentMethod.COD.value
+            ? 'Tiền mặt'
+            : 'Chuyển khoản'} />
+        <NormalText
+          style={{ color: getPaymentStatus(item.status, item.paymentMethod).color, textAlign: 'center' }}
+          text={getPaymentStatus(item.status, item.paymentMethod).text} />
+
+      </Column>
     </TouchableOpacity>
   );
 });
+
+const getPaymentStatus = (status, paymentMethod) => {
+  if (status === 'completed') {
+    return { text: 'Đã thanh toán', color: colors.primary };
+  }
+  if (paymentMethod === 'cod') {
+    return { text: 'Chưa thanh toán', color: 'red' };
+  }
+  if (status === 'awaitingPayment') {
+    return { text: 'Chờ thanh toán', color: 'orange' };
+  }
+  return { text: 'Đã thanh toán', color: colors.primary };
+};
 
 const getEmptyMessage = status => {
   switch (status) {
@@ -274,58 +303,39 @@ const getEmptyMessage = status => {
   }
 };
 
-const ItemOrderType = ({deliveryMethod}) => {
+const ItemOrderType = ({ deliveryMethod, item }) => {
   const imageMap = {
     pickup: require('../../assets/serving-method/takeaway.png'),
     delivery: require('../../assets/serving-method/delivery.png'),
   };
 
   return (
-    <View style={styles.emptyContainer}>
+    <Column style={{backgroundColor: 'green', width: '15%', alignItems: 'center'}}>
       <Image
         style={styles.orderTypeIcon}
         source={imageMap[deliveryMethod] || imageMap['pickup']}
       />
-    </View>
+
+      <NormalText
+        style={{ color: item.deliveryMethod === 'delivery' ? colors.gray850 : colors.pink500, textAlign: 'center' }}
+        text={item.deliveryMethod === 'pickup' ? 'Mang đi' : 'Giao tận nơi'} />
+    </Column>
   );
 };
 
-const ItemOrderText = ({deliveryMethod}) => {
-  const textMap = {
-    pickup: 'Mang đi',
-    delivery: 'Giao tận nơi',
-  };
 
-  return (
-    <Text
-      style={[
-        styles.orderTime,
-        deliveryMethod === 'delivery' ? {color: colors.pink500} : {},
-      ]}>
-      {textMap[deliveryMethod] || 'Mang đi'}
-    </Text>
-  );
-};
-
-const EmptyView = ({message}) => (
+const EmptyView = () => (
   <View style={styles.emptyContainer1}>
     <Image
       style={styles.emptyImage}
       resizeMode="cover"
       source={require('../../assets/images/logo.png')}
     />
-    <Text
-      style={{
-        color: colors.yellow700,
-        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-      }}>
-      {message}
-    </Text>
   </View>
 );
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.white},
+  container: { flex: 1, backgroundColor: colors.white },
   itemOrder: {
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
@@ -336,56 +346,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: colors.gray200,
   },
-  view1: {
-    flexDirection: 'column',
-    gap: GLOBAL_KEYS.GAP_SMALL,
-    alignItems: 'center',
-    width: '30%',
-  },
-  view2: {
-    flexDirection: 'column',
-    gap: GLOBAL_KEYS.GAP_SMALL,
-    alignItems: 'center',
-    width: '20%',
-  },
-  cod: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '500',
-    color: colors.primary,
-  },
-  price: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '500',
-    color: colors.pink500,
-    textAlign: 'right',
-  },
-  date: {
-    color: colors.gray500,
-  },
-  ownerNull: {color: colors.black, fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT},
-  owner: {
-    color: colors.primary,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '500',
-  },
-  paid: {
-    color: colors.primary,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '500',
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    borderBottomWidth: 1,
-    borderColor: colors.primary,
-  },
-  noPaid: {
-    color: colors.yellow700,
-    fontWeight: '500',
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-    borderBottomWidth: 1,
-    borderColor: colors.yellow700,
-  },
+  orderName: { fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500', color: colors.primary },
+
   scene: {
     width: '100%',
     paddingTop: GLOBAL_KEYS.PADDING_DEFAULT,
@@ -402,11 +364,6 @@ const styles = StyleSheet.create({
   emptyImage: {
     width: width / 3,
     height: width / 3,
-  },
-  orderTime: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.gray850,
-    fontWeight: '500',
   },
   orderTypeIcon: {
     width: 50,
