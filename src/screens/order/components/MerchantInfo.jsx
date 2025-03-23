@@ -1,0 +1,40 @@
+import React from 'react';
+import {View, Text, StyleSheet} from 'react-native';
+import {colors, GLOBAL_KEYS} from '../../../constants';
+
+const MerchantInfo = ({data}) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Cửa hàng</Text>
+      <Text style={styles.name}>{data?.name}</Text>
+      <Text style={styles.address}>
+        {`${data?.specificAddress}, ${data?.ward}, ${data?.district}, ${data?.province}`}
+      </Text>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    borderTopWidth: 1,
+    borderColor: colors.gray200,
+    paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+    marginBottom: GLOBAL_KEYS.GAP_SMALL,
+  },
+  title: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  name: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.black,
+  },
+  address: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.black,
+  },
+});
+
+export default MerchantInfo;
