@@ -6,7 +6,7 @@ class MerchantSocketService {
     this.socket = null;
   }
 
-  async initialize() {
+  async initialize(callback) {
     if (!this.socket) {
       try {
         const token = await AppAsyncStorage.readData(
@@ -37,7 +37,17 @@ class MerchantSocketService {
         });
 
         this.socket.on('order.new', (data) => {
-          console.log('New Order:', data);
+          console.log('📩 Received new order:', data);
+          /**
+           New Order: {"message": "📦 Đơn hàng mới #67e036a784526a4a39d6509e cần xử lý trước
+           3/18/2025, 9:28:15 PM", "orderId": "67e036a784526a4a39d6509e", "storeId": "67b68d7698c1fc822e49fabd"}
+           */
+           if(callback){
+            callback(data);
+            console.log('✅ Callback executed');
+          } else {
+            console.log('⚠️ Callback is undefined');
+          }
         });
 
         this.socket.on('disconnect', () => {
@@ -54,19 +64,6 @@ class MerchantSocketService {
   }
 
   /**
-   * Lắng nghe sự kiện từ server
-   * @param {string} event - Tên sự kiện
-   * @param {function} callback - Hàm xử lý khi sự kiện xảy ra
-   */
-  on(event, callback) {
-    if (this.socket) {
-      this.socket.on(event, callback);
-    } else {
-      console.warn(`⚠️ Socket chưa được khởi tạo, không thể lắng nghe sự kiện: ${event}`);
-    }
-  }
-
-  /**
    * Hủy lắng nghe sự kiện
    * @param {string} event - Tên sự kiện
    * @param {function} callback - Hàm callback đã đăng ký trước đó (tuỳ chọn)
@@ -79,7 +76,7 @@ class MerchantSocketService {
         this.socket.off(event);
       }
     } else {
-      console.warn(`⚠️ Socket chưa được khởi tạo, không thể huỷ lắng nghe sự kiện: ${event}`);
+      console.log(`⚠️ Socket chưa được khởi tạo, không thể huỷ lắng nghe sự kiện: ${event}`);
     }
   }
 
