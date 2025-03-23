@@ -77,24 +77,6 @@ const StatisticsScreen = ({navigation}) => {
     <ScrollView
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.container}>
-      <Pressable
-        onPress={async () => {
-          console.log('acb');
-          await AppAsyncStorage.clearAll();
-          navigation.navigate('LoginScreen');
-        }}
-        style={styles.logoutButton}>
-        <Text
-          style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500'}}>
-          Đăng xuất
-        </Text>
-        <Icon
-          source="logout"
-          size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-          color={colors.primary}
-        />
-      </Pressable>
-
       <Text style={styles.title}>Biểu Đồ Doanh Số Cả Năm 2024</Text>
       <BarChart
         style={styles.chart}
@@ -150,17 +132,7 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'center',
   },
-  logoutButton: {
-    position: 'absolute',
-    end: 20,
-    top: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'green',
-    padding: 6,
-  },
+
   closeButton: {backgroundColor: colors.green100, alignSelf: 'flex-end'},
   title: {
     fontSize: 20,

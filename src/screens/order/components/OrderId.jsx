@@ -7,7 +7,7 @@ import {NormalText} from '../../../components';
 const OrderId = ({data}) => {
   return (
     <View style={styles.container}>
-      <NormalText text="Mã đơn hàng" />
+      <NormalText text="Mã đơn hàng: " />
       <Pressable style={styles.pressable} onPress={() => {}}>
         <Text style={styles.orderIdText}>{data}</Text>
         <Icon source="content-copy" color={colors.teal900} size={18} />
@@ -17,8 +17,13 @@ const OrderId = ({data}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {flexDirection: 'row', marginBottom: 6},
-  pressable: {flexDirection: 'row', alignItems: 'center', flex: 1},
+  container: {
+    flexDirection: 'row',
+    marginBottom: 6,
+    justifyContent: 'space-between',
+    width: 670,
+  },
+  pressable: {flexDirection: 'row', alignItems: 'center'},
   orderIdText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,

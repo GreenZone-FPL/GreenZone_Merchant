@@ -3,6 +3,7 @@ import {View, Text, StyleSheet} from 'react-native';
 import {DeliveryMethod, colors, GLOBAL_KEYS} from '../../../constants';
 
 const RecipientInfo = ({data}) => {
+  console.log(data);
   const recipientLabel =
     data?.owner && Object.keys(data.owner).length > 0
       ? `${data.owner.firstName} ${data.owner.lastName} | ${data.owner.phoneNumber}`
@@ -19,6 +20,7 @@ const RecipientInfo = ({data}) => {
       <Text style={styles.title}>Người nhận</Text>
       <Text style={styles.info}>{recipientLabel}</Text>
       <Text style={styles.info}>{deliveryLabel}</Text>
+      <Text style={styles.info}>{data?.shippingAddress}</Text>
     </View>
   );
 };

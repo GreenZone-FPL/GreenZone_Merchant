@@ -30,25 +30,8 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
 
   const handleSelectShipper = shipper => {
     onSelect(shipper);
-    onClose();
+    // onClose();
   };
-
-  //   const handleSelectShipper = shipper => {
-  //     showAlert({
-  //       notification: 'Xác nhận',
-  //       message: `Chọn shipper ${shipper.name}`,
-  //       onPress: () => handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
-  //     });
-  //     onSelect(shipper);
-  //     onClose();
-  //   };
-
-  //   const showAlert = ({notification, message, onPress}) => {
-  //     Alert.alert(notification, message, [
-  //       {text: 'Huỷ', style: 'cancel'},
-  //       {text: 'Xác Nhận', onPress},
-  //     ]);
-  //   };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -109,6 +92,7 @@ const styles = StyleSheet.create({
   shipperName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
+    fontWeight: '500',
   },
   closeButton: {
     marginTop: GLOBAL_KEYS.GAP_DEFAULT,

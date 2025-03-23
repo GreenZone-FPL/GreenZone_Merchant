@@ -1,10 +1,7 @@
 import React, {useState} from 'react';
-import {Alert, Pressable, StyleSheet, View} from 'react-native';
+import {Alert, Pressable, StyleSheet, View, Text} from 'react-native';
 import {DualTextRow, NormalText} from '../../../components';
-import {
-  getEmployeesAllAvailable,
-  updateOrderStatus,
-} from '../../../axios/index';
+import {updateOrderStatus} from '../../../axios/index';
 import {
   DeliveryMethod,
   GLOBAL_KEYS,
@@ -13,14 +10,15 @@ import {
   colors,
 } from '../../../constants';
 import {TextFormatter} from '../../../utils';
-import OrderId from './OrderId';
 import ShipperSelectModal from './ShipperSelectModal';
+import {Icon} from 'react-native-paper';
 
 const PaymentDetails = ({
   data,
   setIsModalOrderDetail,
   fetchOrders,
   setIdOrder,
+  fetchOrderDetail,
 }) => {
   const [selectedShipper, setSelectedShipper] = useState(null);
   const [shipperModalVisible, setShipperModalVisible] = useState(false);
@@ -81,7 +79,7 @@ const PaymentDetails = ({
 
   const showAlert = ({notification, message, onPress}) => {
     Alert.alert(notification, message, [
-      {text: 'Huỷ', style: 'cancel'},
+      {text: 'Huỷ Đơn', style: 'cancel'},
       {text: 'Xác Nhận', onPress},
     ]);
   };
@@ -90,11 +88,12 @@ const PaymentDetails = ({
     try {
       await updateStatus(newStatus);
       await fetchOrders();
-      await setIdOrder(null);
+      // await setIdOrder(null);
+      await fetchOrderDetail();
     } catch (error) {
       console.log('Cập nhật trạng thái đơn hàng thất bại:', error);
     } finally {
-      setIsModalOrderDetail(false);
+      // setIsModalOrderDetail(false);
     }
   };
 
@@ -102,11 +101,12 @@ const PaymentDetails = ({
     try {
       await updateStatus(status, 'delivery', shipperId);
       await fetchOrders();
-      await setIdOrder(null);
+      // await setIdOrder(null);
+      await fetchOrderDetail();
     } catch (error) {
       console.log('Lỗi cập nhật trạng thái đơn hàng:', error);
     } finally {
-      setIsModalOrderDetail(false);
+      // setIsModalOrderDetail(false);
     }
   };
 
@@ -115,6 +115,19 @@ const PaymentDetails = ({
       case OrderStatus.PENDING_CONFIRMATION.value:
         return (
           <>
+            <Pressable
+              style={styles.button1}
+              onPress={() =>
+                showAlert({
+                  notification: 'Huỷ đơn hàng',
+                  message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
+                  onPress: () =>
+                    handleStatusUpdate(OrderStatus.CANCELLED.value),
+                })
+              }>
+              <NormalText text="Huỷ Đơn" style={styles.buttonTextWhite} />
+            </Pressable>
+
             <Pressable
               style={styles.button}
               onPress={() =>
@@ -126,18 +139,6 @@ const PaymentDetails = ({
                 })
               }>
               <NormalText text="Xác nhận" style={styles.buttonText} />
-            </Pressable>
-            <Pressable
-              style={styles.button1}
-              onPress={() =>
-                showAlert({
-                  notification: 'Huỷ đơn hàng',
-                  message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
-                  onPress: () =>
-                    handleStatusUpdate(OrderStatus.CANCELLED.value),
-                })
-              }>
-              <NormalText text="Huỷ" style={styles.buttonTextWhite} />
             </Pressable>
           </>
         );
@@ -155,11 +156,18 @@ const PaymentDetails = ({
                   visible={shipperModalVisible}
                   onClose={() => setShipperModalVisible(false)}
                   onSelect={shipper => {
-                    setSelectedShipper(shipper);
-                    handleStatusUpdateWithShipper(
-                      OrderStatus.READY_FOR_PICKUP.value,
-                      shipper._id,
-                    );
+                    showAlert({
+                      notification: 'Xác nhận shipper',
+                      message: `Bạn có chắc chắn chọn shipper ${shipper.firstName} ${shipper.lastName}?`,
+                      onPress: () => {
+                        setSelectedShipper(shipper);
+                        handleStatusUpdateWithShipper(
+                          OrderStatus.READY_FOR_PICKUP.value,
+                          shipper._id,
+                        );
+                        setShipperModalVisible(false);
+                      },
+                    });
                   }}
                 />
               </>
@@ -254,7 +262,13 @@ const PaymentDetails = ({
         leftText="CHI TIẾT THANH TOÁN"
         leftTextStyle={styles.dualTextLeftHeader}
       />
-      <OrderId data={data?._id} />
+      <View style={styles.oderIdContainer}>
+        <NormalText text="Mã đơn hàng: " />
+        <Pressable style={styles.pressable} onPress={() => {}}>
+          <Text style={styles.orderIdText}>{data?._id}</Text>
+          <Icon source="content-copy" color={colors.teal900} size={18} />
+        </Pressable>
+      </View>
       {[
         {
           leftText: `Tạm tính (${(data?.orderItems || []).reduce(
@@ -354,7 +368,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   button1: {
-    backgroundColor: colors.red900,
+    backgroundColor: colors.gray400,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     alignItems: 'center',
@@ -368,6 +382,19 @@ const styles = StyleSheet.create({
   },
   buttonTextWhite: {
     color: colors.white,
+  },
+  oderIdContainer: {
+    flexDirection: 'row',
+    marginBottom: 6,
+    justifyContent: 'space-between',
+    flex: 1,
+  },
+  pressable: {flexDirection: 'row', alignItems: 'center'},
+  orderIdText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.black,
+    fontWeight: 'bold',
+    marginRight: 8,
   },
 });
 

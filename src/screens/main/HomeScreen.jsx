@@ -20,10 +20,11 @@ import {colors, GLOBAL_KEYS} from '../../constants';
 import CartOrder from '../home-component/CartOrder';
 import ModalToping from '../home-component/ModalToping';
 import {AppAsyncStorage, TextFormatter} from '../../utils';
+import {Icon} from 'react-native-paper';
 
 const {width} = Dimensions.get('window');
 
-const HomeScreen = () => {
+const HomeScreen = ({navigation}) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState();
   const [selectedToppings, setSelectedToppings] = useState([]);
@@ -158,6 +159,26 @@ const HomeScreen = () => {
             style={
               styles.titleText
             }>{`${merchant?.specificAddress}, ${merchant?.ward}, ${merchant?.district}, ${merchant?.province}`}</Text>
+          <Pressable
+            onPress={async () => {
+              console.log('acb');
+              await AppAsyncStorage.clearAll();
+              navigation.navigate('LoginScreen');
+            }}
+            style={styles.logoutButton}>
+            <Text
+              style={{
+                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                fontWeight: '500',
+              }}>
+              Đăng xuất
+            </Text>
+            <Icon
+              source="logout"
+              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+              color={colors.primary}
+            />
+          </Pressable>
         </View>
         <CustomSearchBar
           placeholder="Tìm kiếm sản phẩm..."
@@ -305,7 +326,7 @@ const styles = StyleSheet.create({
   buttonSelected: {
     backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.primary
+    borderColor: colors.primary,
   },
   textDefault: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -380,6 +401,16 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    position: 'absolute',
+    end: 20,
+    top: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    padding: 6,
   },
 });
 export default HomeScreen;

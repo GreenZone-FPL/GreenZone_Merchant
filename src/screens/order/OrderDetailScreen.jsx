@@ -112,6 +112,7 @@ const OrderDetailScreen = ({
               setIsModalOrderDetail={setIsModalOrderDetail}
               fetchOrders={fetchOrders}
               setIdOrder={setIdOrder}
+              fetchOrderDetail={fetchOrderDetail}
             />
           </ScrollView>
         </View>

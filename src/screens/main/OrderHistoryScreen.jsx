@@ -16,10 +16,9 @@ import {
   NormalText,
 } from '../../components';
 import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
-import MerchantSocketService from '../../sevices/merchantSocketService';
 import {TextFormatter} from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
-
+import {useAppContext} from '../../context/appContext';
 const width = Dimensions.get('window').width;
 
 const OrderHistoryScreen = () => {
@@ -35,6 +34,12 @@ const OrderHistoryScreen = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOrderDetail, setIsModalOrderDetail] = useState(false);
   const [idOrder, setIdOrder] = useState(null);
+  const {orderNew, setOrderNew} = useAppContext();
+
+  useEffect(() => {
+    const {status, setter} = orderStatusConfig[tabIndex];
+    fetchOrdersByStatus(status, setter);
+  }, [orderNew]);
 
   // Sử dụng useMemo để khởi tạo mảng cấu hình một lần khi component mount
   const orderStatusConfig = useMemo(
@@ -105,19 +110,6 @@ const OrderHistoryScreen = () => {
   }, [tabIndex, orderStatusConfig, fetchOrdersByStatus]);
 
   // Cập nhật đơn hàng nếu có đơn hàng mới từ socket
-  useEffect(() => {
-    const handleNewOrder = data => {
-      if (data._id) {
-        const {status, setter} = orderStatusConfig[tabIndex];
-        fetchOrdersByStatus(status, setter);
-      }
-    };
-
-    MerchantSocketService.on('order.new', handleNewOrder);
-    return () => {
-      MerchantSocketService.off('order.new', handleNewOrder);
-    };
-  }, [orderStatusConfig, tabIndex, fetchOrdersByStatus]);
 
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
