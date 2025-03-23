@@ -74,6 +74,7 @@ const OrderDetailScreen = ({
   const [orderDetail, setOrderDetail] = useState(null);
   const [status, setStatus] = useState(null);
 
+  console.log('OrderDetailScreen')
   useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -170,7 +171,7 @@ const OrderDetailScreen = ({
             <PaymentDetails
               data={orderDetail}
               setIsModalOrderDetail={setIsModalOrderDetail}
-              fetchOrders={fetchOrders}
+              fetchOrders={fetchOrderDetail}
               setIdOrder={setIdOrder}
               scrollViewRef={scrollViewRef}
             />
@@ -333,7 +334,7 @@ const PaymentDetails = ({
   const handleStatusUpdate = async newStatus => {
     try {
       await updateStatus(newStatus);
-      await fetchOrders();
+      await fetchOrderDetail();
       setIdOrder(null);
     } catch (error) {
       console.log(`Cập nhật trạng thái đơn hàng thất bại:`, error);
@@ -365,7 +366,7 @@ const PaymentDetails = ({
       console.log('Status gửi lên:', status);
       console.log('Shipper ID gửi lên:', shipperId);
       await updateOrderStatus(data?._id, status, 'delivery', shipperId);
-      await fetchOrders();
+      await fetchOrderDetail();
       console.log(`Cập nhật trạng thái thành công:`, status);
     } catch (error) {
       console.log(`Lỗi cập nhật trạng thái đơn hàng:`, error);

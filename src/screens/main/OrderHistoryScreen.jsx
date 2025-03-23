@@ -52,15 +52,6 @@ const OrderHistoryScreen = () => {
     ],
     [],
   );
-
-  // Hàm sắp xếp đơn hàng theo thời gian
-  const sortOrdersByDate = orders => {
-    return orders.sort(
-      (a, b) =>
-        new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
-    );
-  };
-
   // Lấy danh sách đơn hàng theo trạng thái
   const fetchOrdersByStatus = async (status, setOrder) => {
     setLoading(true);
@@ -78,11 +69,23 @@ const OrderHistoryScreen = () => {
     }
   };
 
-  // Fetch đơn hàng cho tab hiện tại khi tabIndex thay đổi
-  useEffect(() => {
-    const { status, setter } = orderStatusConfig[tabIndex];
-    fetchOrdersByStatus(status, setter);
-  }, [tabIndex, orderStatusConfig]);
+    // Fetch đơn hàng cho tab hiện tại khi tabIndex thay đổi
+    useEffect(() => {
+      const { status, setter } = orderStatusConfig[tabIndex];
+      fetchOrdersByStatus(status, setter);
+    }, [tabIndex, orderStatusConfig]);
+
+  // Hàm sắp xếp đơn hàng theo thời gian
+  const sortOrdersByDate = orders => {
+    return orders.sort(
+      (a, b) =>
+        new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
+    );
+  };
+
+
+
+
 
   // Cập nhật lại đơn hàng nếu có đơn hàng mới
   useEffect(() => {
@@ -93,9 +96,9 @@ const OrderHistoryScreen = () => {
       }
     };
 
-    MerchantSocketService.on('order.new', handleNewOrder);
+    // MerchantSocketService.on('order.new', handleNewOrder);
     return () => {
-      MerchantSocketService.off('order.new', handleNewOrder);
+      // MerchantSocketService.off('order.new', handleNewOrder);
     };
   }, []);
 
@@ -172,10 +175,10 @@ const OrderHistoryScreen = () => {
         isModalOrderDetail={isModalOrderDetail}
         idOrder={idOrder}
         setIdOrder={setIdOrder}
-        fetchOrders={() => {
-          const { status, setter } = orderStatusConfig[tabIndex];
-          fetchOrdersByStatus(status, setter);
-        }}
+        // fetchOrders={async() => {
+        //   const { status, setter } = orderStatusConfig[tabIndex];
+        //   await fetchOrdersByStatus(status, setter);
+        // }}
       />
 
     </View>
@@ -209,17 +212,17 @@ const OrderListView = memo(({ orders, handleRepeatOrder }) => {
 
 const Item = memo(({ item, handleRepeatOrder }) => {
 
-  const { shippingAddress } = item;
-  const {
-    consigneeName = "Chưa có tên",
-    consigneePhone = "Chưa có số điện thoại",
-    specificAddress = "Chưa có địa chỉ",
-    ward = "Chưa có phường",
-    district = "Chưa có quận",
-    province = "Chưa có tỉnh"
-  } = shippingAddress;
+  // const { shippingAddress } = item;
+  // const {
+  //   consigneeName = "Chưa có tên",
+  //   consigneePhone = "Chưa có số điện thoại",
+  //   specificAddress = "Chưa có địa chỉ",
+  //   ward = "Chưa có phường",
+  //   district = "Chưa có quận",
+  //   province = "Chưa có tỉnh"
+  // } = shippingAddress;
 
-  const formattedAddress = `${specificAddress}, ${ward}, ${district}, ${province}`;
+  // const formattedAddress = `${specificAddress}, ${ward}, ${district}, ${province}`;
 
   const getOrderItemsText = () => {
     const items = item?.orderItems || [];
@@ -253,8 +256,8 @@ const Item = memo(({ item, handleRepeatOrder }) => {
         {
           item.deliveryMethod === 'delivery' ?
             <Column >
-              <NormalText text={`${consigneeName} || ${consigneePhone}`} style={styles.recipientText} />
-              <NormalText text={formattedAddress} style={{ textAlign: 'center' }} />
+              <NormalText text={`${item.consigneeName} || ${item.consigneePhone}`} style={styles.recipientText} />
+              <NormalText text={item.shippingAddress} style={{ textAlign: 'center' }} />
             </Column>
             :
             <NormalText text='Khách vãng lai' style={{ textAlign: 'center' }} />

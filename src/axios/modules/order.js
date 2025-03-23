@@ -31,11 +31,13 @@ export const createPickUpOrder = async order => {
 
 export const getOrders = async status => {
   try {
+
     const response = await axiosInstance.get(`/v1/order/store/all`, {
       params: {
         status: status,
       },
     });
+    console.log('getOrders')
     return response.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
