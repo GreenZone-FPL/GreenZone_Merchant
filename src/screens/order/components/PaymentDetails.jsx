@@ -79,7 +79,7 @@ const PaymentDetails = ({
 
   const showAlert = ({notification, message, onPress}) => {
     Alert.alert(notification, message, [
-      {text: 'Huỷ Đơn', style: 'cancel'},
+      {text: 'Đóng', style: 'cancel'},
       {text: 'Xác Nhận', onPress},
     ]);
   };
@@ -259,7 +259,7 @@ const PaymentDetails = ({
   return (
     <View style={styles.container}>
       <DualTextRow
-        leftText="CHI TIẾT THANH TOÁN"
+        leftText="Chi tiết thanh toán"
         leftTextStyle={styles.dualTextLeftHeader}
       />
       <View style={styles.oderIdContainer}>
@@ -296,7 +296,7 @@ const PaymentDetails = ({
           rightTextStyle: {
             color: colors.primary,
             fontWeight: '700',
-            fontSize: 18,
+            fontSize: 20,
           },
           leftTextStyle: {color: colors.primary, fontWeight: '700'},
         },
@@ -345,8 +345,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dualTextLeftHeader: {
-    color: colors.primary,
+    color: colors.black2,
     fontWeight: 'bold',
+    fontSize: 20
   },
   buttonContainer: {
     flexDirection: 'row',

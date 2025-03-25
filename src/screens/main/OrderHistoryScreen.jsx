@@ -87,12 +87,7 @@ const OrderHistoryScreen = () => {
     );
   }, []);
 
-
-
-
-
-
-
+  
   // Hàm fetch đơn hàng theo trạng thái, dùng useCallback để ổn định tham chiếu
   const fetchOrdersByStatus = useCallback(
     async (status, setOrder) => {

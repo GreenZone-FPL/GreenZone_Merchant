@@ -10,9 +10,9 @@ import {
   Image,
 } from 'react-native';
 
-import { colors, GLOBAL_KEYS } from '../../constants';
-import { AppAsyncStorage, TextFormatter } from '../../utils';
-import { Row, Column, TitleText } from '../../components';
+import { colors, GLOBAL_KEYS } from '../../../constants';
+import { AppAsyncStorage, TextFormatter } from '../../../utils';
+import { Row, Column, TitleText } from '../../../components';
 import { Icon } from 'react-native-paper';
 
 const { width } = Dimensions.get('window').width;
@@ -258,7 +258,7 @@ const ModalToping = ({
                   }}
                   contentContainerStyle={{ flexGrow: 1, gap: GLOBAL_KEYS.GAP_DEFAULT }}
                   showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }} 
+                  style={{ flex: 1 }}
                 />
               </Column>
             }

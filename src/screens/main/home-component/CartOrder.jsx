@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -9,22 +9,22 @@ import {
   Dimensions,
 } from 'react-native';
 
-import {colors, GLOBAL_KEYS} from '../../constants';
+import { colors, GLOBAL_KEYS } from '../../../constants';
 import {
   Camera,
   useCameraDevice,
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera';
-import {Icon} from 'react-native-paper';
-import {TextFormatter} from '../../utils';
-import {CustomFlatInput, Ani_ModalLoading} from '../../components';
+import { Icon } from 'react-native-paper';
+import { TextFormatter } from '../../../utils';
+import { CustomFlatInput, Ani_ModalLoading } from '../../../components';
 import ModalCheckout from './ModalCheckout';
-import {findCustomerByCode, findCustomerByPhone} from '../../axios/index';
+import { findCustomerByCode, findCustomerByPhone } from '../../../axios/index';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const CartOrder = ({cart, setCart}) => {
+const CartOrder = ({ cart, setCart }) => {
   const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
@@ -34,7 +34,7 @@ const CartOrder = ({cart, setCart}) => {
   const [loading, setLoading] = useState(false);
 
   // Lấy quyền camera
-  const {hasPermission, requestPermission} = useCameraPermission();
+  const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice(cameraPosition); // Chọn camera trước hoặc sau
 
   // Kiểm tra quyền truy cập camera
@@ -72,7 +72,7 @@ const CartOrder = ({cart, setCart}) => {
         setPhoneNumber('');
         setScannedCode('');
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchCustomerByPhone = async phoneNumber => {
@@ -88,7 +88,7 @@ const CartOrder = ({cart, setCart}) => {
         setPhoneNumber('');
         setScannedCode('');
       }
-    } catch (error) {}
+    } catch (error) { }
   };
 
   // gọi api lấy thông tin user qua code hoặc phone
@@ -139,7 +139,7 @@ const CartOrder = ({cart, setCart}) => {
 
       // Nếu không còn sản phẩm nào, xóa luôn giỏ hàng
       return updatedOrderItems.length > 0
-        ? {...prevCart, orderItems: updatedOrderItems}
+        ? { ...prevCart, orderItems: updatedOrderItems }
         : null; // Hoặc {} nếu muốn giữ trạng thái object
     });
   };
@@ -211,12 +211,12 @@ const CartOrder = ({cart, setCart}) => {
       {isScanning ? (
         device ? (
           <View>
-            <Camera
+            {/* <Camera
               style={{width: '100%', height: 200, borderRadius: 10}}
               device={device}
               isActive={isScanning}
               codeScanner={codeScanner}
-            />
+            /> */}
             <View style={styles.cameraControls}>
               <TouchableOpacity
                 style={styles.switchCameraButton}
@@ -275,8 +275,8 @@ const CartOrder = ({cart, setCart}) => {
               {cart === null
                 ? 'Vui lòng chọn sản phẩm trước'
                 : customer?.customer
-                ? `${customer.customer.firstName} ${customer.customer.lastName}`
-                : ' Vãng lai'}
+                  ? `${customer.customer.firstName} ${customer.customer.lastName}`
+                  : ' Vãng lai'}
             </Text>
             <Text
               style={{
@@ -286,8 +286,8 @@ const CartOrder = ({cart, setCart}) => {
               {cart === null
                 ? 'Vui lòng chọn sản phẩm trước'
                 : customer?.customer
-                ? customer?.customer?.phoneNumber
-                : ''}
+                  ? customer?.customer?.phoneNumber
+                  : ''}
             </Text>
           </View>
         </View>
@@ -308,11 +308,11 @@ const CartOrder = ({cart, setCart}) => {
             data={cart.orderItems}
             keyExtractor={item => item._id}
             showsVerticalScrollIndicator={false}
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <View style={styles.cartItem}>
                 <Image
                   style={styles.cartItemImage}
-                  source={{uri: item.product.image}}
+                  source={{ uri: item.product.image }}
                 />
                 <View
                   style={{
@@ -329,7 +329,7 @@ const CartOrder = ({cart, setCart}) => {
                       }}>
                       {item.size.size}
                     </Text>
-                    <Text style={{color: colors.gray850}}>
+                    <Text style={{ color: colors.gray850 }}>
                       {item.topping &&
                         item.topping.length > 0 &&
                         item.topping.map((topping, index) => (
@@ -340,7 +340,7 @@ const CartOrder = ({cart, setCart}) => {
                               fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                             }}>
                             <Text
-                              style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
+                              style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT }}>
                               x1{' '}
                             </Text>
                             {topping.name}
@@ -359,7 +359,7 @@ const CartOrder = ({cart, setCart}) => {
                       flexDirection: 'row',
                       gap: GLOBAL_KEYS.GAP_DEFAULT,
                       alignItems: 'center',
-  
+
                     }}>
                     <View style={styles.itemQuantity}>
                       <TouchableOpacity
@@ -389,7 +389,7 @@ const CartOrder = ({cart, setCart}) => {
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity
-                      style={{alignItems: 'center', justifyContent: 'center'}}
+                      style={{ alignItems: 'center', justifyContent: 'center' }}
                       onPress={() => removeFromCart(item._id)}>
                       {/* <Icon
                         source={'delete'}
@@ -427,7 +427,7 @@ const CartOrder = ({cart, setCart}) => {
                 height: '80%',
                 resizeMode: 'contain',
               }}
-              source={require('../../assets/images/empty_box.png')}
+              source={require('../../../assets/images/empty_box.png')}
             />
             <Text style={styles.emptyCart}>Giỏ hàng trống</Text>
           </View>
@@ -442,7 +442,7 @@ const CartOrder = ({cart, setCart}) => {
             padding: GLOBAL_KEYS.PADDING_DEFAULT,
             backgroundColor: colors.white,
           }}>
-          <View style={{flexDirection: 'column', flex: 1}}>
+          <View style={{ flexDirection: 'column', flex: 1 }}>
             <Text
               style={{
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE - 4,

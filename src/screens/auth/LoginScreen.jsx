@@ -27,7 +27,7 @@ const isTablet = width >= 768;
 
 const LoginScreen = props => {
   const { navigation } = props;
-  const [phoneNumber, setPhoneNumber] = useState('0811111111');
+  const [phoneNumber, setPhoneNumber] = useState('0711111111');
   const [password, setPassword] = useState('123456');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,9 +52,7 @@ const LoginScreen = props => {
         setOrderNew(newOrder);
       });
 
-      if (response) {
-        authDispatch({ type: AuthActionTypes.LOGIN })
-      }
+      authDispatch({type: AuthActionTypes.LOGIN})
 
       // navigation.navigate('MainNavigation');
 

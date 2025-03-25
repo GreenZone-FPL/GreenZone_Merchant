@@ -16,13 +16,13 @@ import {
   getMerchant,
   getProductsById,
 } from '../../axios/index';
-import { CustomSearchBar, NormalLoading } from '../../components';
+import { CustomSearchBar, NormalLoading, NormalText } from '../../components';
 import { colors, GLOBAL_KEYS } from '../../constants';
 import { useAppContext } from '../../context/appContext';
 import { AuthActionTypes } from '../../reducers/authReducer';
 import { AppAsyncStorage, TextFormatter } from '../../utils';
-import CartOrder from '../home-component/CartOrder';
-import ModalToping from '../home-component/ModalToping';
+import CartOrder from './home-component/CartOrder';
+import ModalToping from './home-component/ModalToping';
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
@@ -44,11 +44,12 @@ const HomeScreen = ({ navigation }) => {
   const flatListRef = useRef(null);
   const { authDispatch, authState } = useAppContext()
 
-  console.log('authState', authState)
+
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
-    setLoading(true);
+
     try {
+      setLoading(true);
       const response = await getAllCategories();
       const categoriesData = [
         {
@@ -68,8 +69,9 @@ const HomeScreen = ({ navigation }) => {
 
   // Gọi danh sách sản phẩm từ API
   const fetchProducts = async () => {
-    setLoading(true);
+
     try {
+      setLoading(true);
       const response = await getAllProducts();
       setProducts(response);
     } catch (error) {
@@ -116,13 +118,12 @@ const HomeScreen = ({ navigation }) => {
   // Gọi API để lấy sản phẩm theo id khi thêm sản phẩm
   const handleAddProduct = async id => {
     try {
+
       const response = await getProductsById(id);
       setSelectedProduct(response);
       setOpenMenu(true);
     } catch (error) {
       console.log(error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -183,27 +184,32 @@ const HomeScreen = ({ navigation }) => {
 
           }
 
-          <Pressable
-            onPress={async () => {
-              await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.accessToken);
-              await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.refreshToken);
+          {
 
-              authDispatch({type: AuthActionTypes.LOGOUT})
-            }}
-            style={styles.logoutButton}>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                fontWeight: '500',
-              }}>
-              Đăng xuất
-            </Text>
-            <Icon
-              source="logout"
-              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-              color={colors.primary}
-            />
-          </Pressable>
+            !authState?.needLogin &&
+            <Pressable
+              onPress={async () => {
+                await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.accessToken);
+                await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.refreshToken);
+
+                authDispatch({ type: AuthActionTypes.LOGOUT })
+
+                // navigation.navigate('LoginScreen')
+              }}
+              style={styles.logoutButton}>
+
+              <NormalText
+                text='Đăng xuất'
+                style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500' }} />
+
+              <Icon
+                source="logout"
+                size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                color={colors.primary}
+              />
+            </Pressable>
+          }
+
         </View>
         <CustomSearchBar
           placeholder="Tìm kiếm sản phẩm..."
@@ -284,7 +290,10 @@ const HomeScreen = ({ navigation }) => {
           contentContainerStyle={styles.flatListContainer}
         />
       </View>
+
       <CartOrder cart={cart} setCart={setCart} />
+
+
       <ModalToping
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}

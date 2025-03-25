@@ -2,39 +2,35 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import FlashMessage, { showMessage } from 'react-native-flash-message';
-import 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppContextProvider, useAppContext } from './src/context/appContext';
 import MainNavigation from './src/layouts/MainNavigation';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
 import { AppAsyncStorage } from './src/utils';
+import SplashScreen from './src/screens/auth/SplashScreen';
 
 const BaseStack = createNativeStackNavigator();
-
 
 function App() {
   return (
     <AppContextProvider>
       <SafeAreaProvider>
         <NavigationContainer>
-
           <AppNavigator />
-
         </NavigationContainer>
-
-        <FlashMessage position='top' />
+        <FlashMessage position="top" />
       </SafeAreaProvider>
     </AppContextProvider>
-
   );
 }
 
 const AppNavigator = () => {
+  const { orderNew, setOrderNew, authState } = useAppContext();
+  const [isTokenValid, setIsTokenValid] = useState(null); // Start with null to show SplashScreen
+  const [isLoading, setIsLoading] = useState(true); // Loading state for SplashScreen
 
-  const { orderNew, setOrderNew, authState } = useAppContext()
-
-
+  // Initialize the socket
   useEffect(() => {
     console.log('🛠 Initializing socket...');
     MerchantSocketService.initialize((newOrder) => {
@@ -42,11 +38,20 @@ const AppNavigator = () => {
       setOrderNew(newOrder);
     });
 
-    return (() => {
-      MerchantSocketService.disconnect()
-    })
-  }, []);
+    return () => {
+      MerchantSocketService.disconnect();
+    };
+  }, [setOrderNew]);
 
+  // Check token validity
+  useEffect(() => {
+    const checkToken = async () => {
+      const tokenIsValid = await AppAsyncStorage.isTokenValid();
+      setIsTokenValid(tokenIsValid); // Update token validity state
+      setIsLoading(false); // Once token check is done, set loading to false
+    };
+    checkToken();
+  }, []);
 
   useEffect(() => {
     console.log('orderNew:', orderNew);
@@ -63,27 +68,13 @@ const AppNavigator = () => {
     }
   }, [orderNew]);
 
+  // Show splash screen while loading or checking token
+  if (isLoading) {
+    return <SplashScreen />;
+  }
 
-  return (
-
-    <BaseStack.Navigator
-      screenOptions={{ headerShown: false }}
-    >
-      {
-        authState.needAuthen ?
-          <BaseStack.Screen name={'LoginScreen'} component={LoginScreen} />
-
-          :
-          <>
-            <BaseStack.Screen name={'MainNavigation'} component={MainNavigation} />
-          </>
-
-
-      }
-
-
-    </BaseStack.Navigator>
-  )
-}
+  // After the token check, show the appropriate screen
+  return authState.needAuthen ? <LoginScreen /> : <MainNavigation />;
+};
 
 export default App;

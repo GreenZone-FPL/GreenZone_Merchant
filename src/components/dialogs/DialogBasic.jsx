@@ -12,8 +12,8 @@ import {
 import { Icon } from 'react-native-paper';
 import { GLOBAL_KEYS, colors } from '../../constants';
 import { OverlayStatusBar } from '../status-bars/OverlayStatusBar';
-import {Column} from '../containers/Column'
-import {Row} from '../containers/Row'
+import { Column } from '../containers/Column'
+import { Row } from '../containers/Row'
 
 const DialogBasicPropTypes = {
   isVisible: PropTypes.bool.isRequired,

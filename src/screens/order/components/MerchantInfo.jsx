@@ -1,11 +1,13 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {colors, GLOBAL_KEYS} from '../../../constants';
+import { TitleText } from '../../../components';
 
 const MerchantInfo = ({data}) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Cửa hàng</Text>
+
+      <TitleText text='Cửa hàng' style={{color: colors.black2}}/>
       <Text style={styles.name}>{data?.name}</Text>
       <Text style={styles.address}>
         {`${data?.specificAddress}, ${data?.ward}, ${data?.district}, ${data?.province}`}
@@ -21,11 +23,12 @@ const styles = StyleSheet.create({
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
     marginBottom: GLOBAL_KEYS.GAP_SMALL,
+    gap: 8
   },
   title: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: colors.orange700,
   },
   name: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,

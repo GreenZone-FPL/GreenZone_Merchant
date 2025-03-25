@@ -7,10 +7,10 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import { colors, GLOBAL_KEYS } from '../../constants';
-import { createPickUpOrder } from '../../axios/index';
-import { Ani_ModalLoading } from '../../components';
-import NomalLoading from '../../components/animations/NormalLoading';
+import { colors, GLOBAL_KEYS } from '../../../constants';
+import { createPickUpOrder } from '../../../axios/index';
+import { Ani_ModalLoading } from '../../../components';
+import NomalLoading from '../../../components/animations/NormalLoading';
 
 const { width, height } = Dimensions.get('window');
 
