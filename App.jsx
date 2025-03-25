@@ -22,21 +22,17 @@ function App() {
     <AppContextProvider>
       <SafeAreaProvider>
         <NavigationContainer>
-
-        <AppNavigator />
-
+          <AppNavigator />
         </NavigationContainer>
-        {/* <Toast config={customToastConfig} /> */}
         <FlashMessage position='top' />
       </SafeAreaProvider>
     </AppContextProvider>
-
   );
 }
 
 const AppNavigator = () => {
-  const [name, setName] = useState('LoginScreen');
-  const { orderNew, setOrderNew } = useAppContext()
+  const [isTokenValid, setIsTokenValid] = useState(false);
+  const { orderNew, setOrderNew } = useAppContext();
 
   // Khởi tạo socket khi có storeId
   useEffect(() => {
@@ -45,11 +41,9 @@ const AppNavigator = () => {
       console.log('📥 Data received in AppNavigator:', data);
       setOrderNew(data);
     });
-  }, []);
-  
+  }, [setOrderNew]);
 
   useEffect(() => {
-    console.log('orderNew:', orderNew);
     if (orderNew) {
       showMessage({
         message: 'Đơn hàng mới', 
@@ -63,28 +57,23 @@ const AppNavigator = () => {
     }
   }, [orderNew]);
 
-
   useEffect(() => {
     const checkToken = async () => {
-      if (await AppAsyncStorage.isTokenValid()) {
-        setName('MainNavigation');
-      }
+      const tokenIsValid = await AppAsyncStorage.isTokenValid();
+      setIsTokenValid(tokenIsValid);
     };
     checkToken();
   }, []);
-  return (
 
+  return (
     <BaseStack.Navigator
       screenOptions={{ headerShown: false }}
-      initialRouteName={name}>
-      <BaseStack.Screen name={'LoginScreen'} component={LoginScreen} />
-      <BaseStack.Screen
-        name={'MainNavigation'}
-        component={MainNavigation}
-      />
+>
+          <BaseStack.Screen name="MainNavigation" component={MainNavigation} />
+      <BaseStack.Screen name="LoginScreen" component={LoginScreen} />
+    
     </BaseStack.Navigator>
-
-  )
-}
+  );
+};
 
 export default App;

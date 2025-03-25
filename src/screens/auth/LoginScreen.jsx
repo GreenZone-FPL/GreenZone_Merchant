@@ -146,22 +146,7 @@ const LoginScreen = props => {
               setIsPasswordVisible={setIsPasswordVisible}
               secureTextEntry={!isPasswordVisible}
             />
-            <Row style={{justifyContent: 'space-between', width: '100%'}}>
-              <Row>
-                <Switch
-                  value={checked}
-                  color={colors.primary}
-                  onValueChange={() => setChecked(value => !value)}
-                />
-                <NormalText text="Ghi nhớ tôi" />
-              </Row>
-              <Pressable>
-                <NormalText
-                  text="Quên mật khẩu?"
-                  style={{color: colors.primary, fontWeight: '500'}}
-                />
-              </Pressable>
-            </Row>
+           
             <PrimaryButton
               title="Đăng nhập"
               onPress={() => loginHandel()}
