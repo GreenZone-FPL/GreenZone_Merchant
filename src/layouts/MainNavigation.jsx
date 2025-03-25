@@ -18,7 +18,7 @@ const MainNavigation = () => {
         tabBarInactiveTintColor: colors.gray700,
         tabBarStyle: {
           backgroundColor: colors.fbBg,
-          height: 70, // Tăng chiều cao của BottomTab (mặc định khoảng 50)
+          height: 70, 
         },
         tabBarLabelStyle: {
           fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,

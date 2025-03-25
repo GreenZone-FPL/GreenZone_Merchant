@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import {colors, GLOBAL_KEYS} from '../../constants';
-import {createPickUpOrder} from '../../axios/index';
-import {Ani_ModalLoading} from '../../components';
-import NomalLoading from '../../components/animations/NomalLoading';
+import { colors, GLOBAL_KEYS } from '../../constants';
+import { createPickUpOrder } from '../../axios/index';
+import { Ani_ModalLoading } from '../../components';
+import NomalLoading from '../../components/animations/NormalLoading';
 
-const {width, height} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const ModalCheckout = ({
   data,
@@ -29,7 +29,7 @@ const ModalCheckout = ({
   const createOrder = async () => {
     setLoading(true);
     try {
-      const response = await createPickUpOrder({...data, paymentMethod: 'cod'});
+      const response = await createPickUpOrder({ ...data, paymentMethod: 'cod' });
       if (response.status === 201) {
         setMessage('Tạo đơn thành công');
         setTimeout(() => {

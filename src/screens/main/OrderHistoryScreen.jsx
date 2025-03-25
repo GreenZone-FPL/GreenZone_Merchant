@@ -76,6 +76,9 @@ const OrderHistoryScreen = () => {
     [],
   );
 
+
+
+
   // Hàm sắp xếp đơn hàng theo thời gian, sử dụng useCallback để tránh tạo lại khi render lại
   const sortOrdersByDate = useCallback(orders => {
     return orders.sort(
@@ -84,6 +87,12 @@ const OrderHistoryScreen = () => {
     );
   }, []);
 
+
+
+
+
+
+
   // Hàm fetch đơn hàng theo trạng thái, dùng useCallback để ổn định tham chiếu
   const fetchOrdersByStatus = useCallback(
     async (status, setOrder) => {
@@ -91,7 +100,7 @@ const OrderHistoryScreen = () => {
       try {
         const responseOrder = await getOrders(status);
         if (responseOrder) {
-          const sortedOrders = sortOrdersByDate(responseOrder.data);
+          const sortedOrders = responseOrder
           setOrder(sortedOrders);
         }
       } catch (error) {

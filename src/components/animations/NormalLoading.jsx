@@ -2,7 +2,7 @@ import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import LottieView from 'lottie-react-native';
 
-const NomalLoading = ({visible}) => {
+export const NormalLoading = ({visible}) => {
   if (!visible) return null;
 
   return (
@@ -29,4 +29,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NomalLoading;
+
