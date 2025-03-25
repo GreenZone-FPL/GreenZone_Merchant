@@ -5,6 +5,10 @@ export class AppAsyncStorage {
   static STORAGE_KEYS = {
     accessToken: 'accessToken',
     refreshToken: 'refreshToken',
+    userAccount: 'userAccount',
+    merchant: 'merchant',
+    storeId: 'storeId'
+
   };
 
   static async readData(key, defaultValue = null) {
@@ -44,7 +48,7 @@ export class AppAsyncStorage {
   }
 
   static async isTokenValid() {
-    const accessToken = await AppAsyncStorage.readData('accessToken');
+    const accessToken = await AppAsyncStorage.readData(AppAsyncStorage.STORAGE_KEYS.accessToken);
 
     if (!accessToken) {
       return false;

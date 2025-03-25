@@ -12,7 +12,7 @@ class MerchantSocketService {
         const token = await AppAsyncStorage.readData(
           AppAsyncStorage.STORAGE_KEYS.accessToken,
         );
-        const storeId = await AppAsyncStorage.readData('storeId');
+        const storeId = await AppAsyncStorage.readData(AppAsyncStorage.STORAGE_KEYS.storeId);
 
         console.log('Token:', token);
         console.log('storeId:', storeId);

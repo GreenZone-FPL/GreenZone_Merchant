@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -9,22 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Icon } from 'react-native-paper';
 import {
   getAllCategories,
   getAllProducts,
-  getProductsById,
   getMerchant,
+  getProductsById,
 } from '../../axios/index';
-import {Ani_ModalLoading, ButtonGroup, CustomSearchBar} from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
-import CartOrder from '../home-component/CartOrder';
-import ModalToping from '../home-component/ModalToping';
-import {AppAsyncStorage, TextFormatter} from '../../utils';
-import {Icon} from 'react-native-paper';
+import { CustomSearchBar, NormalLoading, NormalText } from '../../components';
+import { colors, GLOBAL_KEYS } from '../../constants';
+import { useAppContext } from '../../context/appContext';
+import { AuthActionTypes } from '../../reducers/authReducer';
+import { AppAsyncStorage, TextFormatter } from '../../utils';
+import CartOrder from './home-component/CartOrder';
+import ModalToping from './home-component/ModalToping';
+const { width } = Dimensions.get('window');
 
-const {width} = Dimensions.get('window');
-
-const HomeScreen = ({navigation}) => {
+const HomeScreen = ({ navigation }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState();
   const [selectedToppings, setSelectedToppings] = useState([]);
@@ -41,11 +42,14 @@ const HomeScreen = ({navigation}) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [merchant, setMerchant] = useState(null);
   const flatListRef = useRef(null);
+  const { authDispatch, authState } = useAppContext()
+
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
-    setLoading(true);
+
     try {
+      setLoading(true);
       const response = await getAllCategories();
       const categoriesData = [
         {
@@ -53,7 +57,7 @@ const HomeScreen = ({navigation}) => {
           name: 'Tất cả',
           icon: 'https://greenzone.motcaiweb.io.vn/uploads/1cbc176f-2f59-4828-bcf7-5454044e3f26.png',
         },
-        ...response.data.docs,
+        ...response.docs,
       ];
       setCategories(categoriesData);
     } catch (error) {
@@ -65,10 +69,11 @@ const HomeScreen = ({navigation}) => {
 
   // Gọi danh sách sản phẩm từ API
   const fetchProducts = async () => {
-    setLoading(true);
+
     try {
+      setLoading(true);
       const response = await getAllProducts();
-      setProducts(response.data);
+      setProducts(response);
     } catch (error) {
       console.log(error);
     } finally {
@@ -113,8 +118,9 @@ const HomeScreen = ({navigation}) => {
   // Gọi API để lấy sản phẩm theo id khi thêm sản phẩm
   const handleAddProduct = async id => {
     try {
+
       const response = await getProductsById(id);
-      setSelectedProduct(response.data);
+      setSelectedProduct(response);
       setOpenMenu(true);
     } catch (error) {
       console.log(error);
@@ -125,13 +131,16 @@ const HomeScreen = ({navigation}) => {
   useEffect(() => {
     const loadMerchant = async () => {
       try {
-        const storeId = await AppAsyncStorage.readData('storeId');
+        const storeId = await AppAsyncStorage.readData(AppAsyncStorage.STORAGE_KEYS.storeId);
         if (storeId) {
           const response = await getMerchant(storeId);
-          setMerchant(response.data);
+          console.log('response', response)
+          setMerchant(response);
         }
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -141,44 +150,66 @@ const HomeScreen = ({navigation}) => {
   // cuon flatlist
   const scrollToEnd = () => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({animated: true});
+      flatListRef.current.scrollToEnd({ animated: true });
     }
   };
   const scrollToStart = () => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({index: 0, animated: true});
+      flatListRef.current.scrollToIndex({ index: 0, animated: true });
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <NormalLoading visible={loading} />
+      </View>
+    )
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <View style={{gap: GLOBAL_KEYS.GAP_SMALL}}>
-          <Text style={styles.headerText}>{merchant?.name}</Text>
-          <Text
-            style={
-              styles.titleText
-            }>{`${merchant?.specificAddress}, ${merchant?.ward}, ${merchant?.district}, ${merchant?.province}`}</Text>
-          <Pressable
-            onPress={async () => {
-              console.log('acb');
-              await AppAsyncStorage.clearAll();
-              navigation.navigate('LoginScreen');
-            }}
-            style={styles.logoutButton}>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                fontWeight: '500',
-              }}>
-              Đăng xuất
-            </Text>
-            <Icon
-              source="logout"
-              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-              color={colors.primary}
-            />
-          </Pressable>
+        <View style={{ gap: GLOBAL_KEYS.GAP_SMALL }}>
+          {
+            merchant &&
+            <>
+              <Text style={styles.headerText}>{merchant?.name}</Text>
+              <Text
+                style={
+                  styles.titleText
+                }>{`${merchant.specificAddress}, ${merchant.ward}, ${merchant.district}, ${merchant.province}`}
+              </Text>
+            </>
+
+          }
+
+          {
+
+            !authState?.needLogin &&
+            <Pressable
+              onPress={async () => {
+                await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.accessToken);
+                await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.refreshToken);
+
+                authDispatch({ type: AuthActionTypes.LOGOUT })
+
+                // navigation.navigate('LoginScreen')
+              }}
+              style={styles.logoutButton}>
+
+              <NormalText
+                text='Đăng xuất'
+                style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500' }} />
+
+              <Icon
+                source="logout"
+                size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                color={colors.primary}
+              />
+            </Pressable>
+          }
+
         </View>
         <CustomSearchBar
           placeholder="Tìm kiếm sản phẩm..."
@@ -197,7 +228,7 @@ const HomeScreen = ({navigation}) => {
             horizontal={true}
             data={categories.length > 0 && categories}
             keyExtractor={item => item._id.toString()}
-            renderItem={({item, index}) => (
+            renderItem={({ item, index }) => (
               <View>
                 <Pressable
                   style={[
@@ -213,8 +244,8 @@ const HomeScreen = ({navigation}) => {
                     }
                   }}>
                   <Image
-                    style={{width: 24, height: 24}}
-                    source={{uri: item.icon}}
+                    style={{ width: 24, height: 24 }}
+                    source={{ uri: item.icon }}
                   />
                   <Text
                     style={[
@@ -226,8 +257,8 @@ const HomeScreen = ({navigation}) => {
                 </Pressable>
               </View>
             )}
-            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
-            style={{width: '100%'}}
+            contentContainerStyle={{ gap: GLOBAL_KEYS.GAP_DEFAULT }}
+            style={{ width: '100%' }}
             showsHorizontalScrollIndicator={false}
           />
         </View>
@@ -240,11 +271,11 @@ const HomeScreen = ({navigation}) => {
           maxToRenderPerBatch={10}
           removeClippedSubviews={false}
           showsVerticalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.productCard}
               onPress={() => handleAddProduct(item._id)}>
-              <Image source={{uri: item.image}} style={styles.productImage} />
+              <Image source={{ uri: item.image }} style={styles.productImage} />
               <View style={styles.productDetails}>
                 <Text style={styles.productPrice}>
                   {TextFormatter.formatCurrency(item.sellingPrice)}
@@ -252,22 +283,17 @@ const HomeScreen = ({navigation}) => {
                 <Text numberOfLines={2} style={styles.productName}>
                   {item.name}
                 </Text>
-                {/* <TouchableOpacity
-                  style={styles.addButton}
-                  onPress={() => handleAddProduct(item._id)}>
-                  <Icon
-                    source={'plus'}
-                    size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity> */}
+
               </View>
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.flatListContainer}
         />
       </View>
+
       <CartOrder cart={cart} setCart={setCart} />
+
+
       <ModalToping
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
@@ -280,7 +306,7 @@ const HomeScreen = ({navigation}) => {
         selectedToppings={selectedToppings}
         setSelectedToppings={setSelectedToppings}
       />
-      <Ani_ModalLoading loading={loading} />
+
     </View>
   );
 };

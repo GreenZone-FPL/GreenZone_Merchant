@@ -5,11 +5,7 @@ import {GLOBAL_KEYS, colors} from '../../../constants';
 
 const ShipperInfo = ({shipper}) => {
   if (!shipper || Object.keys(shipper).length === 0) {
-    return (
-      <View style={styles.container}>
-        <NormalText text="Chưa chọn Shipper" style={{fontWeight: '500'}} />
-      </View>
-    );
+    return null
   }
   return (
     <View style={styles.container}>

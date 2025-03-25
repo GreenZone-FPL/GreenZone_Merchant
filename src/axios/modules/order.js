@@ -44,19 +44,7 @@ export const getOrders = async status => {
     throw error;
   }
 };
-// export const getOrders = async status => {
-//   try {
-//     const url = status
-//       ? `/v1/order/store/all?status=${status}`
-//       : '/v1/order/store/all';
 
-//     const response = await axiosInstance.get(url);
-//     return response.data;
-//   } catch (error) {
-//     console.log('error', error);
-//     throw error;
-//   }
-// };
 
 export const getOrderDetail = async orderId => {
   try {
@@ -94,20 +82,4 @@ export const updateOrderStatus = async (
   }
 };
 
-// export const updateStatusOrder = async (orderId, status, shipper) => {
-//   try {
-//     const response = await axiosInstance.patch(`/v1/order/${orderId}/status`, {
-//       status,
-//       shipper,
-//     });
 
-//     console.log('Cập nhật trạng thái đơn hàng thành công:', response.data);
-//     return response.data;
-//   } catch (error) {
-//     console.(
-//       'Lỗi khi cập nhật trạng thái đơn hàng:',
-//       error.response ? error.response.data : error.message,
-//     );
-//     throw error;
-//   }
-// };

@@ -10,9 +10,9 @@ import {
   Image,
 } from 'react-native';
 
-import { colors, GLOBAL_KEYS } from '../../constants';
-import { AppAsyncStorage, TextFormatter } from '../../utils';
-import { Row, Column, TitleText } from '../../components';
+import { colors, GLOBAL_KEYS } from '../../../constants';
+import { AppAsyncStorage, TextFormatter } from '../../../utils';
+import { Row, Column, TitleText } from '../../../components';
 import { Icon } from 'react-native-paper';
 
 const { width } = Dimensions.get('window').width;
@@ -221,7 +221,7 @@ const ModalToping = ({
               <TitleText text='Size' style={{ color: colors.orange700 }} />
 
               <Column style={{ gap: 16, }}>
-                {selectedProduct?.variant?.map(item => (
+                {selectedProduct?.variant?.filter(item => item != null).map(item => (
                   <TouchableOpacity
                     key={item?._id}
                     style={[styles.sizeOption, selectedSize?._id === item._id && styles.selectedSize]}
@@ -244,7 +244,7 @@ const ModalToping = ({
                 <TitleText text='Topping' style={{ color: colors.orange700 }} />
 
                 <FlatList
-                  data={selectedProduct?.topping}
+                  data={selectedProduct?.topping.filter(item => item != null)}
                   keyExtractor={item => item?._id}
                   renderItem={({ item }) => {
                     const isSelected = selectedToppings.some(t => t?._id === item?._id);
@@ -258,7 +258,7 @@ const ModalToping = ({
                   }}
                   contentContainerStyle={{ flexGrow: 1, gap: GLOBAL_KEYS.GAP_DEFAULT }}
                   showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }} 
+                  style={{ flex: 1 }}
                 />
               </Column>
             }

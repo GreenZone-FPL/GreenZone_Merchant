@@ -1,90 +1,80 @@
-import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
+import FlashMessage, { showMessage } from 'react-native-flash-message';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AppContextProvider, useAppContext } from './src/context/appContext';
 import MainNavigation from './src/layouts/MainNavigation';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
-import Toast, { BaseToast } from 'react-native-toast-message';
-import { Dimensions, Platform } from 'react-native';
-import { colors } from './src/constants';
 import { AppAsyncStorage } from './src/utils';
-import { AppContextProvider } from './src/context/appContext';
-import FlashMessage, { showMessage } from 'react-native-flash-message';
-import { useAppContext } from './src/context/appContext';
+import SplashScreen from './src/screens/auth/SplashScreen';
 
 const BaseStack = createNativeStackNavigator();
 
-// Hàm chính của ứng dụng
 function App() {
   return (
     <AppContextProvider>
       <SafeAreaProvider>
         <NavigationContainer>
-
-        <AppNavigator />
-
+          <AppNavigator />
         </NavigationContainer>
-        {/* <Toast config={customToastConfig} /> */}
-        <FlashMessage position='top' />
+        <FlashMessage position="top" />
       </SafeAreaProvider>
     </AppContextProvider>
-
   );
 }
 
 const AppNavigator = () => {
-  const [name, setName] = useState('LoginScreen');
-  const { orderNew, setOrderNew } = useAppContext()
+  const { orderNew, setOrderNew, authState } = useAppContext();
+  const [isTokenValid, setIsTokenValid] = useState(null); // Start with null to show SplashScreen
+  const [isLoading, setIsLoading] = useState(true); // Loading state for SplashScreen
 
-  // Khởi tạo socket khi có storeId
+  // Initialize the socket
   useEffect(() => {
     console.log('🛠 Initializing socket...');
-    MerchantSocketService.initialize((data) => {
-      console.log('📥 Data received in AppNavigator:', data);
-      setOrderNew(data);
+    MerchantSocketService.initialize((newOrder) => {
+      console.log('📥 Data received in AppNavigator:', newOrder);
+      setOrderNew(newOrder);
     });
+
+    return () => {
+      MerchantSocketService.disconnect();
+    };
+  }, [setOrderNew]);
+
+  // Check token validity
+  useEffect(() => {
+    const checkToken = async () => {
+      const tokenIsValid = await AppAsyncStorage.isTokenValid();
+      setIsTokenValid(tokenIsValid); // Update token validity state
+      setIsLoading(false); // Once token check is done, set loading to false
+    };
+    checkToken();
   }, []);
-  
 
   useEffect(() => {
     console.log('orderNew:', orderNew);
     if (orderNew) {
       showMessage({
-        message: 'Đơn hàng mới', 
-        description: orderNew.message, 
+        message: 'Đơn hàng mới',
+        description: orderNew.message,
         type: 'success',
         icon: 'success',
         duration: 10000,
         titleStyle: { fontSize: 18, fontWeight: 'bold' },
-        textStyle: { fontSize: 16, color: 'white' }, 
+        textStyle: { fontSize: 16, color: 'white' },
       });
     }
   }, [orderNew]);
 
+  // Show splash screen while loading or checking token
+  if (isLoading) {
+    return <SplashScreen />;
+  }
 
-  useEffect(() => {
-    const checkToken = async () => {
-      if (await AppAsyncStorage.isTokenValid()) {
-        setName('MainNavigation');
-      }
-    };
-    checkToken();
-  }, []);
-  return (
-
-    <BaseStack.Navigator
-      screenOptions={{ headerShown: false }}
-      initialRouteName={name}>
-      <BaseStack.Screen name={'LoginScreen'} component={LoginScreen} />
-      <BaseStack.Screen
-        name={'MainNavigation'}
-        component={MainNavigation}
-      />
-    </BaseStack.Navigator>
-
-  )
-}
+  // After the token check, show the appropriate screen
+  return authState.needAuthen ? <LoginScreen /> : <MainNavigation />;
+};
 
 export default App;
