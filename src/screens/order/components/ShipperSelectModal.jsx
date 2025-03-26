@@ -22,7 +22,7 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
   const fetchShippers = async () => {
     try {
       const response = await getEmployeesAllAvailable();
-      setShippers(response.data);
+      setShippers(response);
     } catch (error) {
       console.log('Lỗi khi lấy danh sách shipper:', error);
     }
@@ -39,7 +39,7 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Chọn Shipper</Text>
           <ScrollView contentContainerStyle={styles.shipperList}>
-            {shippers.map(shipper => (
+            {shippers?.map(shipper => (
               <Pressable
                 key={shipper._id}
                 onPress={() => handleSelectShipper(shipper)}

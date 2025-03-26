@@ -1,13 +1,13 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
-import FlashMessage, { showMessage } from 'react-native-flash-message';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AppContextProvider, useAppContext } from './src/context/appContext';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import React, {useEffect, useState} from 'react';
+import FlashMessage, {showMessage} from 'react-native-flash-message';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {AppContextProvider, useAppContext} from './src/context/appContext';
 import MainNavigation from './src/layouts/MainNavigation';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
-import { AppAsyncStorage } from './src/utils';
+import {AppAsyncStorage} from './src/utils';
 import SplashScreen from './src/screens/auth/SplashScreen';
 
 const BaseStack = createNativeStackNavigator();
@@ -26,14 +26,14 @@ function App() {
 }
 
 const AppNavigator = () => {
-  const { orderNew, setOrderNew, authState } = useAppContext();
+  const {orderNew, setOrderNew, authState} = useAppContext();
   const [isTokenValid, setIsTokenValid] = useState(null); // Start with null to show SplashScreen
   const [isLoading, setIsLoading] = useState(true); // Loading state for SplashScreen
 
   // Initialize the socket
   useEffect(() => {
     console.log('🛠 Initializing socket...');
-    MerchantSocketService.initialize((newOrder) => {
+    MerchantSocketService.initialize(newOrder => {
       console.log('📥 Data received in AppNavigator:', newOrder);
       setOrderNew(newOrder);
     });
@@ -61,9 +61,9 @@ const AppNavigator = () => {
         description: orderNew.message,
         type: 'success',
         icon: 'success',
-        duration: 10000,
-        titleStyle: { fontSize: 18, fontWeight: 'bold' },
-        textStyle: { fontSize: 16, color: 'white' },
+        duration: 1000,
+        titleStyle: {fontSize: 18, fontWeight: 'bold'},
+        textStyle: {fontSize: 16, color: 'white'},
       });
     }
   }, [orderNew]);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,9 @@ import {
   StyleSheet,
   Modal,
 } from 'react-native';
-import { colors, GLOBAL_KEYS } from '../../../constants';
-import { createPickUpOrder } from '../../../axios/index';
-import { Ani_ModalLoading } from '../../../components';
-import NomalLoading from '../../../components/animations/NormalLoading';
-
-const { width, height } = Dimensions.get('window');
+import {colors, GLOBAL_KEYS} from '../../../constants';
+import {createPickUpOrder} from '../../../axios/index';
+import {NormalLoading} from '../../../components';
 
 const ModalCheckout = ({
   data,
@@ -29,15 +26,13 @@ const ModalCheckout = ({
   const createOrder = async () => {
     setLoading(true);
     try {
-      const response = await createPickUpOrder({ ...data, paymentMethod: 'cod' });
-      if (response.status === 201) {
+      const response = await createPickUpOrder({...data, paymentMethod: 'cod'});
+      if (response) {
         setMessage('Tạo đơn thành công');
-        setTimeout(() => {
-          setIsCheckout(false);
-          setCart(null);
-          setPhoneNumber('');
-          setScannedCode('');
-        }, 1000);
+        setIsCheckout(false);
+        setCart(null);
+        setPhoneNumber('');
+        setScannedCode('');
       }
     } catch (error) {
       console.log('Lỗi tạo đơn hàng:', error);
@@ -69,7 +64,7 @@ const ModalCheckout = ({
           </View>
         </View>
       </View>
-      <NomalLoading visible={loading} />
+      <NormalLoading visible={loading} />
     </Modal>
   );
 };

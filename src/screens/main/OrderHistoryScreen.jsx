@@ -76,9 +76,6 @@ const OrderHistoryScreen = () => {
     [],
   );
 
-
-
-
   // Hàm sắp xếp đơn hàng theo thời gian, sử dụng useCallback để tránh tạo lại khi render lại
   const sortOrdersByDate = useCallback(orders => {
     return orders.sort(
@@ -87,7 +84,6 @@ const OrderHistoryScreen = () => {
     );
   }, []);
 
-  
   // Hàm fetch đơn hàng theo trạng thái, dùng useCallback để ổn định tham chiếu
   const fetchOrdersByStatus = useCallback(
     async (status, setOrder) => {
@@ -95,7 +91,7 @@ const OrderHistoryScreen = () => {
       try {
         const responseOrder = await getOrders(status);
         if (responseOrder) {
-          const sortedOrders = responseOrder
+          const sortedOrders = responseOrder;
           setOrder(sortedOrders);
         }
       } catch (error) {
@@ -251,14 +247,14 @@ const Item = ({item, handleRepeatOrder}) => {
       </Column>
 
       <Column style={{flex: 1, alignItems: 'center'}}>
-        {item?.deliveryMethod === 'delivery' ? (
+        {item?.owner?.phoneNumber ? (
           <Column>
             <NormalText
-              text={`${item?.consigneeName} || ${item?.consigneePhone}`}
+              text={`${item?.owner?.firstName} ${item?.owner?.lastName} - ${item?.owner?.phoneNumber}`}
               style={styles.recipientText}
             />
             <NormalText
-              text={item?.shippingAddress}
+              text={item?.shippingAddress || ''}
               style={{textAlign: 'center'}}
             />
           </Column>
@@ -286,18 +282,32 @@ const Item = ({item, handleRepeatOrder}) => {
         />
         <NormalText
           style={{
-            color: getPaymentStatus(item.status, item.paymentMethod).color,
+            color: getPaymentStatus(
+              item.status,
+              item.paymentMethod,
+              item.deliveryMethod,
+            ).color,
             textAlign: 'center',
           }}
-          text={getPaymentStatus(item.status, item.paymentMethod).text}
+          text={
+            getPaymentStatus(
+              item.status,
+              item.paymentMethod,
+              item.deliveryMethod,
+            ).text
+          }
         />
       </Column>
     </TouchableOpacity>
   );
 };
 
-const getPaymentStatus = (status, paymentMethod) => {
-  if (status === 'completed') {
+const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
+  if (
+    status === 'completed' ||
+    (deliveryMethod === 'pickup' &&
+      (status == 'processing' || status == 'readyForPickup'))
+  ) {
     return {text: 'Đã thanh toán', color: colors.primary};
   }
   if (paymentMethod === 'cod') {

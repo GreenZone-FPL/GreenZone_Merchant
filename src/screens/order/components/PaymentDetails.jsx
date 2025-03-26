@@ -22,15 +22,19 @@ const PaymentDetails = ({
 }) => {
   const [selectedShipper, setSelectedShipper] = useState(null);
   const [shipperModalVisible, setShipperModalVisible] = useState(false);
-  const getPaymentStatus = (status, paymentMethod) => {
-    if (status === 'completed') {
+  const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
+    if (
+      status === 'completed' ||
+      (deliveryMethod === 'pickup' &&
+        (status == 'processing' || status == 'readyForPickup'))
+    ) {
       return {text: 'Đã thanh toán', color: colors.primary};
     }
     if (paymentMethod === 'cod') {
-      return {text: 'Chưa thanh toán', color: colors.orange700};
+      return {text: 'Chưa thanh toán', color: 'red'};
     }
     if (status === 'awaitingPayment') {
-      return {text: 'Chờ thanh toán', color: colors.pink500};
+      return {text: 'Chờ thanh toán', color: 'orange'};
     }
     return {text: 'Đã thanh toán', color: colors.primary};
   };
@@ -41,7 +45,11 @@ const PaymentDetails = ({
       ? data?.voucher
       : null;
   const discountAmount = calculateVoucher(totalPrice, voucher);
-  const paymentStatus = getPaymentStatus(data?.status, data?.paymentMethod);
+  const paymentStatus = getPaymentStatus(
+    data?.status,
+    data?.paymentMethod,
+    data?.deliveryMethod,
+  );
 
   function calculateTotalPrice(items) {
     if (!Array.isArray(items)) return 0;
@@ -347,7 +355,7 @@ const styles = StyleSheet.create({
   dualTextLeftHeader: {
     color: colors.black2,
     fontWeight: 'bold',
-    fontSize: 20
+    fontSize: 20,
   },
   buttonContainer: {
     flexDirection: 'row',

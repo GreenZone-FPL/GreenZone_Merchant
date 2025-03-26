@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Dimensions,
   FlatList,
@@ -9,23 +9,23 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Icon } from 'react-native-paper';
+import {Icon} from 'react-native-paper';
 import {
   getAllCategories,
   getAllProducts,
   getMerchant,
   getProductsById,
 } from '../../axios/index';
-import { CustomSearchBar, NormalLoading, NormalText } from '../../components';
-import { colors, GLOBAL_KEYS } from '../../constants';
-import { useAppContext } from '../../context/appContext';
-import { AuthActionTypes } from '../../reducers/authReducer';
-import { AppAsyncStorage, TextFormatter } from '../../utils';
+import {CustomSearchBar, NormalLoading, NormalText} from '../../components';
+import {colors, GLOBAL_KEYS} from '../../constants';
+import {useAppContext} from '../../context/appContext';
+import {AuthActionTypes} from '../../reducers/authReducer';
+import {AppAsyncStorage, TextFormatter} from '../../utils';
 import CartOrder from './home-component/CartOrder';
 import ModalToping from './home-component/ModalToping';
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({navigation}) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState();
   const [selectedToppings, setSelectedToppings] = useState([]);
@@ -42,12 +42,10 @@ const HomeScreen = ({ navigation }) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [merchant, setMerchant] = useState(null);
   const flatListRef = useRef(null);
-  const { authDispatch, authState } = useAppContext()
-
+  const {authDispatch, authState} = useAppContext();
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
-
     try {
       setLoading(true);
       const response = await getAllCategories();
@@ -69,7 +67,6 @@ const HomeScreen = ({ navigation }) => {
 
   // Gọi danh sách sản phẩm từ API
   const fetchProducts = async () => {
-
     try {
       setLoading(true);
       const response = await getAllProducts();
@@ -118,7 +115,6 @@ const HomeScreen = ({ navigation }) => {
   // Gọi API để lấy sản phẩm theo id khi thêm sản phẩm
   const handleAddProduct = async id => {
     try {
-
       const response = await getProductsById(id);
       setSelectedProduct(response);
       setOpenMenu(true);
@@ -131,10 +127,12 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const loadMerchant = async () => {
       try {
-        const storeId = await AppAsyncStorage.readData(AppAsyncStorage.STORAGE_KEYS.storeId);
+        const storeId = await AppAsyncStorage.readData(
+          AppAsyncStorage.STORAGE_KEYS.storeId,
+        );
         if (storeId) {
           const response = await getMerchant(storeId);
-          console.log('response', response)
+          // console.log('response', response);
           setMerchant(response);
         }
       } catch (error) {
@@ -150,12 +148,12 @@ const HomeScreen = ({ navigation }) => {
   // cuon flatlist
   const scrollToEnd = () => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({ animated: true });
+      flatListRef.current.scrollToEnd({animated: true});
     }
   };
   const scrollToStart = () => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index: 0, animated: true });
+      flatListRef.current.scrollToIndex({index: 0, animated: true});
     }
   };
 
@@ -164,43 +162,44 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.container}>
         <NormalLoading visible={loading} />
       </View>
-    )
+    );
   }
 
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <View style={{ gap: GLOBAL_KEYS.GAP_SMALL }}>
-          {
-            merchant &&
+        <View style={{gap: GLOBAL_KEYS.GAP_SMALL}}>
+          {merchant && (
             <>
               <Text style={styles.headerText}>{merchant?.name}</Text>
-              <Text
-                style={
-                  styles.titleText
-                }>{`${merchant.specificAddress}, ${merchant.ward}, ${merchant.district}, ${merchant.province}`}
+              <Text style={styles.titleText}>
+                {`${merchant.specificAddress}, ${merchant.ward}, ${merchant.district}, ${merchant.province}`}
               </Text>
             </>
+          )}
 
-          }
-
-          {
-
-            !authState?.needLogin &&
+          {!authState?.needLogin && (
             <Pressable
               onPress={async () => {
-                await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.accessToken);
-                await AppAsyncStorage.removeData(AppAsyncStorage.STORAGE_KEYS.refreshToken);
+                await AppAsyncStorage.removeData(
+                  AppAsyncStorage.STORAGE_KEYS.accessToken,
+                );
+                await AppAsyncStorage.removeData(
+                  AppAsyncStorage.STORAGE_KEYS.refreshToken,
+                );
 
-                authDispatch({ type: AuthActionTypes.LOGOUT })
+                authDispatch({type: AuthActionTypes.LOGOUT});
 
                 // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>
-
               <NormalText
-                text='Đăng xuất'
-                style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT, fontWeight: '500' }} />
+                text="Đăng xuất"
+                style={{
+                  fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                  fontWeight: '500',
+                }}
+              />
 
               <Icon
                 source="logout"
@@ -208,8 +207,7 @@ const HomeScreen = ({ navigation }) => {
                 color={colors.primary}
               />
             </Pressable>
-          }
-
+          )}
         </View>
         <CustomSearchBar
           placeholder="Tìm kiếm sản phẩm..."
@@ -228,7 +226,7 @@ const HomeScreen = ({ navigation }) => {
             horizontal={true}
             data={categories.length > 0 && categories}
             keyExtractor={item => item._id.toString()}
-            renderItem={({ item, index }) => (
+            renderItem={({item, index}) => (
               <View>
                 <Pressable
                   style={[
@@ -244,8 +242,8 @@ const HomeScreen = ({ navigation }) => {
                     }
                   }}>
                   <Image
-                    style={{ width: 24, height: 24 }}
-                    source={{ uri: item.icon }}
+                    style={{width: 24, height: 24}}
+                    source={{uri: item.icon}}
                   />
                   <Text
                     style={[
@@ -257,8 +255,8 @@ const HomeScreen = ({ navigation }) => {
                 </Pressable>
               </View>
             )}
-            contentContainerStyle={{ gap: GLOBAL_KEYS.GAP_DEFAULT }}
-            style={{ width: '100%' }}
+            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
+            style={{width: '100%'}}
             showsHorizontalScrollIndicator={false}
           />
         </View>
@@ -271,11 +269,11 @@ const HomeScreen = ({ navigation }) => {
           maxToRenderPerBatch={10}
           removeClippedSubviews={false}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
+          renderItem={({item}) => (
             <TouchableOpacity
               style={styles.productCard}
               onPress={() => handleAddProduct(item._id)}>
-              <Image source={{ uri: item.image }} style={styles.productImage} />
+              <Image source={{uri: item.image}} style={styles.productImage} />
               <View style={styles.productDetails}>
                 <Text style={styles.productPrice}>
                   {TextFormatter.formatCurrency(item.sellingPrice)}
@@ -283,7 +281,6 @@ const HomeScreen = ({ navigation }) => {
                 <Text numberOfLines={2} style={styles.productName}>
                   {item.name}
                 </Text>
-
               </View>
             </TouchableOpacity>
           )}
@@ -292,7 +289,6 @@ const HomeScreen = ({ navigation }) => {
       </View>
 
       <CartOrder cart={cart} setCart={setCart} />
-
 
       <ModalToping
         openMenu={openMenu}
@@ -306,7 +302,6 @@ const HomeScreen = ({ navigation }) => {
         selectedToppings={selectedToppings}
         setSelectedToppings={setSelectedToppings}
       />
-
     </View>
   );
 };

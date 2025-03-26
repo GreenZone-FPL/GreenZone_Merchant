@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Modal,
   TouchableOpacity,
@@ -7,10 +7,10 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
-import { IconButton } from 'react-native-paper';
-import { getOrderDetail } from '../../axios/index';
-import { NormalLoading, OverlayStatusBar, TitleText } from '../../components';
-import { GLOBAL_KEYS, OrderStatus, colors } from '../../constants';
+import {IconButton} from 'react-native-paper';
+import {getOrderDetail} from '../../axios/index';
+import {NormalLoading, OverlayStatusBar, TitleText} from '../../components';
+import {GLOBAL_KEYS, OrderStatus, colors} from '../../constants';
 import MerchantInfo from './components/MerchantInfo';
 import RecipientInfo from './components/RecipientInfo';
 import ProductsInfo from './components/ProductsInfo';
@@ -30,7 +30,7 @@ const OrderDetailScreen = ({
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
+      scrollViewRef.current?.scrollToEnd({animated: true});
     }, 1000);
   }, []);
 
@@ -45,6 +45,7 @@ const OrderDetailScreen = ({
       setLoading(false);
     }
   };
+  console.log('order', JSON.stringify(orderDetail, null, 2));
 
   useEffect(() => {
     if (idOrder == null) return;
@@ -53,7 +54,7 @@ const OrderDetailScreen = ({
 
   useEffect(() => {
     if (status !== null) {
-      fetchOrderDetail()
+      fetchOrderDetail();
     }
   }, [status]);
 
@@ -62,13 +63,12 @@ const OrderDetailScreen = ({
     return statusEntry ? statusEntry.label : 'Trạng thái không xác định';
   };
 
-
   if (loading) {
     return (
       <View style={styles.body}>
         <NormalLoading visible={loading} />
       </View>
-    )
+    );
   }
   return (
     <Modal visible={isModalOrderDetail} transparent animationType="slide">
@@ -95,18 +95,12 @@ const OrderDetailScreen = ({
             />
           </View>
           <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
-
-
-
-            {
-              orderDetail &&
+            {orderDetail && (
               <>
-                {
-                  orderDetail.shippingAddress &&
+                {orderDetail.shippingAddress &&
                   Object.keys(orderDetail.shippingAddress).length > 0 && (
                     <ShipperInfo shipper={orderDetail.shipper} />
-                  )
-                }
+                  )}
 
                 <View style={styles.statusRow}>
                   <Text style={styles.statusLabel}>Trạng thái đơn hàng:</Text>
@@ -134,9 +128,7 @@ const OrderDetailScreen = ({
                   fetchOrderDetail={fetchOrderDetail}
                 />
               </>
-
-            }
-
+            )}
           </ScrollView>
         </View>
         <TouchableOpacity
