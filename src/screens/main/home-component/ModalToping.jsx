@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Pressable,
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../../constants';
@@ -184,7 +185,9 @@ const ModalToping = ({
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
-      <View style={styles.modalContainer}>
+      <Pressable
+        onPress={() => setOpenMenu(false)}
+        style={styles.modalContainer}>
         <Column style={styles.modalContent}>
           <Row style={styles.headerContainer}>
             <Row style={{gap: 16}}>
@@ -313,7 +316,7 @@ const ModalToping = ({
             </TouchableOpacity>
           </Row>
         </Column>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
