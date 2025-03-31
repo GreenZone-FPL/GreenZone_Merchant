@@ -189,134 +189,139 @@ const ModalToping = ({
       <Pressable
         onPress={() => setOpenMenu(false)}
         style={styles.modalContainer}>
-        <Column style={styles.modalContent}>
-          <Row style={styles.headerContainer}>
-            <Row style={{gap: 16}}>
-              <Image
-                style={{width: 100, height: 100, borderRadius: 80}}
-                source={{uri: selectedProduct?.image}}
-              />
-              <TitleText
-                text={selectedProduct?.name}
-                style={{color: colors.black2}}
-              />
+        <View>
+          <Column style={styles.modalContent}>
+            <Row style={styles.headerContainer}>
+              <Row style={{gap: 16}}>
+                <Image
+                  style={{width: 100, height: 100, borderRadius: 80}}
+                  source={{uri: selectedProduct?.image}}
+                />
+                <TitleText
+                  text={selectedProduct?.name}
+                  style={{color: colors.black2}}
+                />
+              </Row>
+
+              <TouchableOpacity
+                style={{
+                  borderRadius: 20,
+                  backgroundColor: colors.green100,
+                  padding: 10,
+                }}
+                onPress={() => {
+                  setSelectedToppings([]);
+                  setSelectedSize(null);
+                  setSelectedProduct(null);
+                  setOpenMenu(false);
+                }}>
+                <Icon source="close" color={colors.primary} size={24} />
+              </TouchableOpacity>
             </Row>
 
-            <TouchableOpacity
-              style={{
-                borderRadius: 20,
-                backgroundColor: colors.green100,
-                padding: 10,
-              }}
-              onPress={() => {
-                setSelectedToppings([]);
-                setSelectedSize(null);
-                setSelectedProduct(null);
-                setOpenMenu(false);
-              }}>
-              <Icon source="close" color={colors.primary} size={24} />
-            </TouchableOpacity>
-          </Row>
-
-          <Row style={{gap: 30, flex: 1}}>
-            <Column
-              style={{
-                backgroundColor: colors.white,
-                height: '100%',
-                paddingHorizontal: 24,
-                paddingVertical: 16,
-                borderRadius: 6,
-                width: '30%',
-              }}>
-              <TitleText text="Size" style={{color: colors.orange700}} />
-
-              <Column style={{gap: 16}}>
-                {selectedProduct?.variant
-                  ?.filter(item => item != null)
-                  .map(item => (
-                    <TouchableOpacity
-                      key={item?._id}
-                      style={[
-                        styles.sizeOption,
-                        selectedSize?._id === item._id && styles.selectedSize,
-                      ]}
-                      onPress={() => setSelectedSize(item)}>
-                      <Text
-                        style={[
-                          styles.sizeText,
-                          selectedSize?._id === item?._id &&
-                            styles.selectedSizeText,
-                        ]}>
-                        {item?.size} - {item?.sellingPrice} VNĐ
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-              </Column>
-            </Column>
-
-            {selectedProduct?.topping?.length > 0 && (
+            <Row style={{gap: 30, flex: 1}}>
               <Column
                 style={{
-                  flex: 1,
                   backgroundColor: colors.white,
+                  height: '100%',
                   paddingHorizontal: 24,
                   paddingVertical: 16,
                   borderRadius: 6,
+                  width: '30%',
                 }}>
-                <TitleText text="Topping" style={{color: colors.orange700}} />
+                <TitleText text="Size" style={{color: colors.orange700}} />
 
-                <FlatList
-                  data={selectedProduct?.topping.filter(item => item != null)}
-                  keyExtractor={item => item?._id}
-                  renderItem={({item}) => {
-                    const isSelected = selectedToppings.some(
-                      t => t?._id === item?._id,
-                    );
-                    return (
+                <Column style={{gap: 16}}>
+                  {selectedProduct?.variant
+                    ?.filter(item => item != null)
+                    .map(item => (
                       <TouchableOpacity
                         key={item?._id}
                         style={[
-                          styles.toppingOption,
-                          isSelected && styles.selectedTopping,
+                          styles.sizeOption,
+                          selectedSize?._id === item._id && styles.selectedSize,
                         ]}
-                        onPress={() => toggleTopping(item)}>
+                        onPress={() => setSelectedSize(item)}>
                         <Text
                           style={[
                             styles.sizeText,
-                            isSelected && styles.selectedToppingText,
+                            selectedSize?._id === item?._id &&
+                              styles.selectedSizeText,
                           ]}>
-                          {item?.name} (+ {item?.extraPrice})
+                          {item?.size} - {item?.sellingPrice} VNĐ
                         </Text>
                       </TouchableOpacity>
-                    );
-                  }}
-                  contentContainerStyle={{
-                    flexGrow: 1,
-                    gap: GLOBAL_KEYS.GAP_DEFAULT,
-                  }}
-                  showsVerticalScrollIndicator={false}
-                  style={{flex: 1}}
-                />
+                    ))}
+                </Column>
               </Column>
-            )}
-          </Row>
 
-          <Row
-            style={{
-              backgroundColor: colors.white,
-              width: '100%',
-              justifyContent: 'flex-end',
-              paddingHorizontal: 24,
-              paddingVertical: 16,
-              borderRadius: 6,
-            }}>
-            <TouchableOpacity
-              style={[styles.confirmButton, {backgroundColor: colors.primary}]}
-              onPress={confirmAddToCart}>
-              <Text style={styles.confirmButtonText}>Xác nhận</Text>
-            </TouchableOpacity>
-          </Row>
-        </Column>
+              {selectedProduct?.topping?.length > 0 && (
+                <Column
+                  style={{
+                    flex: 1,
+                    backgroundColor: colors.white,
+                    paddingHorizontal: 24,
+                    paddingVertical: 16,
+                    borderRadius: 6,
+                  }}>
+                  <TitleText text="Topping" style={{color: colors.orange700}} />
+
+                  <FlatList
+                    data={selectedProduct?.topping.filter(item => item != null)}
+                    keyExtractor={item => item?._id}
+                    renderItem={({item}) => {
+                      const isSelected = selectedToppings.some(
+                        t => t?._id === item?._id,
+                      );
+                      return (
+                        <TouchableOpacity
+                          key={item?._id}
+                          style={[
+                            styles.toppingOption,
+                            isSelected && styles.selectedTopping,
+                          ]}
+                          onPress={() => toggleTopping(item)}>
+                          <Text
+                            style={[
+                              styles.sizeText,
+                              isSelected && styles.selectedToppingText,
+                            ]}>
+                            {item?.name} (+ {item?.extraPrice})
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    }}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                      gap: GLOBAL_KEYS.GAP_DEFAULT,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    style={{flex: 1}}
+                  />
+                </Column>
+              )}
+            </Row>
+
+            <Row
+              style={{
+                backgroundColor: colors.white,
+                width: '100%',
+                justifyContent: 'flex-end',
+                paddingHorizontal: 24,
+                paddingVertical: 16,
+                borderRadius: 6,
+              }}>
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  {backgroundColor: colors.primary},
+                ]}
+                onPress={confirmAddToCart}>
+                <Text style={styles.confirmButtonText}>Xác nhận</Text>
+              </TouchableOpacity>
+            </Row>
+          </Column>
+        </View>
       </Pressable>
     </Modal>
   );
