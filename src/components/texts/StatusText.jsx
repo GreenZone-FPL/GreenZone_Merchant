@@ -10,6 +10,7 @@ export const StatusText = ({status}) => {
       case OrderStatus.PENDING_CONFIRMATION.value:
         return {color: colors.orange700, backgroundColor: colors.milk200};
       case OrderStatus.COMPLETED.value:
+      case OrderStatus.SHIPPING_ORDER.value:
         return {color: colors.primary, backgroundColor: colors.green100};
       case OrderStatus.CANCELLED.value:
       case OrderStatus.FAILED_DELIVERY.value:
