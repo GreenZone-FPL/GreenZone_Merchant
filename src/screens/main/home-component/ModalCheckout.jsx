@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import {colors, GLOBAL_KEYS} from '../../../constants';
 import {createPickUpOrder} from '../../../axios/index';
-import {NormalLoading} from '../../../components';
+import {NormalLoading, OverlayStatusBar} from '../../../components';
 
 const ModalCheckout = ({
   data,
@@ -43,6 +43,7 @@ const ModalCheckout = ({
 
   return (
     <Modal visible={isCheckout} transparent animationType="slide">
+      <OverlayStatusBar />
       <View style={styles.container}>
         <View style={styles.modalContent}>
           <View style={styles.textContainer}>

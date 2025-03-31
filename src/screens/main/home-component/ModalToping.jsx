@@ -13,7 +13,7 @@ import {
 
 import {colors, GLOBAL_KEYS} from '../../../constants';
 import {AppAsyncStorage, TextFormatter} from '../../../utils';
-import {Row, Column, TitleText} from '../../../components';
+import {Row, Column, TitleText, OverlayStatusBar} from '../../../components';
 import {Icon} from 'react-native-paper';
 
 const {width} = Dimensions.get('window').width;
@@ -185,6 +185,7 @@ const ModalToping = ({
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
+      <OverlayStatusBar />
       <Pressable
         onPress={() => setOpenMenu(false)}
         style={styles.modalContainer}>

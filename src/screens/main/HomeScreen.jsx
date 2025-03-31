@@ -193,17 +193,9 @@ const HomeScreen = ({navigation}) => {
                 // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>
-              <NormalText
-                text="Đăng xuất"
-                style={{
-                  fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                  fontWeight: '500',
-                }}
-              />
-
               <Icon
                 source="logout"
-                size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+                size={GLOBAL_KEYS.ICON_SIZE_LARGE}
                 color={colors.primary}
               />
             </Pressable>
