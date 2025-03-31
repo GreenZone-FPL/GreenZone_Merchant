@@ -14,6 +14,7 @@ import {Icon} from 'react-native-paper';
 import {getStatisticByYear} from '../../axios';
 import {TextFormatter} from '../../utils';
 import YearPicker from '../../constants/yearPicker/YearPicker';
+import {useAppContext} from '../../context/appContext';
 
 const StatisticsScreen = ({navigation}) => {
   const [statistics, setStatistics] = useState([]);
@@ -23,6 +24,7 @@ const StatisticsScreen = ({navigation}) => {
   const [year, setYear] = useState(2025);
   const [modalVisible, setModalVisible] = useState(false);
   const [isTotalOrders, setIsTotalOrders] = useState(false);
+  const {orderNew, setOrderNew} = useAppContext();
 
   useEffect(() => {
     const getStatistics = async year => {
@@ -41,7 +43,7 @@ const StatisticsScreen = ({navigation}) => {
     };
 
     getStatistics(year);
-  }, [year]);
+  }, [year, orderNew]);
 
   const handleSelectYear = year => {
     setYear(year);

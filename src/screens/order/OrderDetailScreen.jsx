@@ -9,13 +9,20 @@ import {
 } from 'react-native';
 import {IconButton} from 'react-native-paper';
 import {getOrderDetail} from '../../axios/index';
-import {NormalLoading, OverlayStatusBar, TitleText} from '../../components';
+import {
+  NormalLoading,
+  OverlayStatusBar,
+  TitleText,
+  Row,
+  StatusText,
+} from '../../components';
 import {GLOBAL_KEYS, OrderStatus, colors} from '../../constants';
 import MerchantInfo from './components/MerchantInfo';
 import RecipientInfo from './components/RecipientInfo';
 import ProductsInfo from './components/ProductsInfo';
 import PaymentDetails from './components/PaymentDetails';
 import ShipperInfo from './components/ShipperInfo';
+import PaymentDetailsView from './components/PaymentDetailsView';
 
 const OrderDetailScreen = ({
   idOrder,
@@ -102,24 +109,44 @@ const OrderDetailScreen = ({
                     <ShipperInfo shipper={orderDetail.shipper} />
                   )}
 
-                <View style={styles.statusRow}>
-                  <Text style={styles.statusLabel}>Trạng thái đơn hàng:</Text>
+                <Row
+                  style={{
+                    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
+                    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+                    marginBottom: GLOBAL_KEYS.GAP_SMALL,
+                    justifyContent: 'space-between',
+                    flex: 1,
+                    backgroundColor: colors.white,
+                  }}>
                   <Text
-                    style={[
-                      styles.statusText,
-                      {
-                        color:
-                          orderDetail?.status === 'cancelled'
-                            ? colors.black
-                            : colors.green500,
-                      },
-                    ]}>
-                    {getOrderStatusLabel(orderDetail?.status)}
+                    style={{
+                      fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                      color: colors.black,
+                      flex: 1,
+                      fontWeight: '500',
+                    }}>
+                    {orderDetail?.deliveryMethod === 'pickup'
+                      ? 'Tự đến lấy hàng'
+                      : 'Giao hàng tận nơi'}
                   </Text>
-                </View>
+
+                  <StatusText status={orderDetail.status} />
+                </Row>
+
                 <MerchantInfo data={orderDetail.store} />
                 <RecipientInfo data={orderDetail} />
                 <ProductsInfo orderItems={orderDetail.orderItems} />
+                <PaymentDetailsView
+                  detail={orderDetail}
+                  _id={orderDetail._id}
+                  shippingFee={orderDetail.shippingFee}
+                  voucher={orderDetail.voucher}
+                  paymentMethod={orderDetail.paymentMethod}
+                  orderItems={orderDetail.orderItems}
+                  totalPrice={orderDetail.totalPrice}
+                  status={orderDetail.status}
+                  createdAt={orderDetail.createdAt}
+                />
                 <PaymentDetails
                   data={orderDetail}
                   setIsModalOrderDetail={setIsModalOrderDetail}

@@ -1,14 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { GLOBAL_KEYS, colors } from '../../constants';
-import { TextFormatter } from '../../utils';
-import { Row } from '../containers/Row';
-import { Column } from '../containers/Column';
-import { NormalText } from '../texts/NormalText';
-import { color } from '@rneui/base';
-
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Icon} from 'react-native-paper';
+import {GLOBAL_KEYS, colors} from '../../constants';
+import {TextFormatter} from '../../utils';
+import {Column} from '../containers/Column';
+import {NormalText} from '../texts/NormalText';
 
 const HorizontalProductItemPropTypes = {
   item: PropTypes.object.isRequired,
@@ -23,7 +20,6 @@ const HorizontalProductItemPropTypes = {
   priceStyle: PropTypes.object,
   oldPriceStyle: PropTypes.object,
 };
-
 
 export const HorizontalProductItem = ({
   item,
@@ -43,7 +39,7 @@ export const HorizontalProductItem = ({
     <View style={styles.imageWrapper}>
       <Image
         style={[styles.itemImage, imageStyle]}
-        source={{ uri: item.image }}
+        source={{uri: item.image}}
       />
       <View style={styles.quantityBadge}>
         <Text style={styles.quantityText}>x{item.quantity}</Text>
@@ -54,7 +50,11 @@ export const HorizontalProductItem = ({
       <Text style={[styles.productName, titleStyle]}>{item.productName}</Text>
       {item.variantName && !item.isVariantDefault && (
         <Text
-          style={[styles.normalText, { color: colors.pink500, fontWeight: '500' }, optionStyle]}>
+          style={[
+            styles.normalText,
+            {color: colors.pink500, fontWeight: '500'},
+            optionStyle,
+          ]}>
           {item.variantName}
         </Text>
       )}
@@ -64,7 +64,7 @@ export const HorizontalProductItem = ({
           return (
             <Text
               key={topping._id}
-              style={[styles.normalText, { color: colors.gray850 }, optionStyle]}>
+              style={[styles.normalText, {color: colors.gray850}, optionStyle]}>
               x{topping.quantity} {topping.name}
             </Text>
           );
@@ -73,7 +73,7 @@ export const HorizontalProductItem = ({
       })}
 
       {item.note && (
-        <Text style={[styles.normalText, { color: colors.orange700 }, noteStyle]}>
+        <Text style={[styles.normalText, {color: colors.orange700}, noteStyle]}>
           Note: {item.note}
         </Text>
       )}
@@ -81,12 +81,18 @@ export const HorizontalProductItem = ({
 
     <Column style={styles.priceContainer}>
       <Text style={[styles.productPrice, priceStyle]}>
-        {TextFormatter.formatCurrency(item.price * item.quantity)}
+        {TextFormatter.formatCurrency(
+          item.price * item.quantity +
+            (item.toppingItems?.reduce(
+              (sum, t) => sum + t.price * t.quantity,
+              0,
+            ) || 0),
+        )}
       </Text>
 
       {enableDelete && (
         <Pressable onPress={confirmDelete}>
-          <NormalText text="Xóa" style={{ color: colors.orange700 }} />
+          <NormalText text="Xóa" style={{color: colors.orange700}} />
         </Pressable>
       )}
 
@@ -104,9 +110,7 @@ export const HorizontalProductItem = ({
   </View>
 );
 
-HorizontalProductItem.propTypes = HorizontalProductItemPropTypes
-
-
+HorizontalProductItem.propTypes = HorizontalProductItemPropTypes;
 
 const styles = StyleSheet.create({
   itemProduct: {
@@ -130,7 +134,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
-
   },
   productInfo: {
     flexDirection: 'column',
@@ -140,12 +143,11 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
-
   },
   productPrice: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
-    fontWeight: '500'
+    fontWeight: '500',
   },
 
   imageWrapper: {
@@ -172,11 +174,11 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'column',
     justifyContent: 'space-around',
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
   },
   lineThroughText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray700,
     textDecorationLine: 'line-through',
   },
-})
+});

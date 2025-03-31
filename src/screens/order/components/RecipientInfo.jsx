@@ -17,7 +17,7 @@ const RecipientInfo = ({data}) => {
 
   return (
     <View style={styles.container}>
-      <TitleText text="Người nhận" style={{color: colors.black2}} />
+      <TitleText text="Người nhận" style={{color: colors.primary}} />
 
       <Text style={styles.info}>{recipientLabel}</Text>
       <Text style={styles.info}>{deliveryLabel}</Text>

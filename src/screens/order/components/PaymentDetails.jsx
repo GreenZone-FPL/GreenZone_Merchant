@@ -22,6 +22,7 @@ const PaymentDetails = ({
 }) => {
   const [selectedShipper, setSelectedShipper] = useState(null);
   const [shipperModalVisible, setShipperModalVisible] = useState(false);
+
   const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
     if (
       status === 'completed' ||
@@ -266,7 +267,7 @@ const PaymentDetails = ({
 
   return (
     <View style={styles.container}>
-      <DualTextRow
+      {/* <DualTextRow
         leftText="Chi tiết thanh toán"
         leftTextStyle={styles.dualTextLeftHeader}
       />
@@ -335,7 +336,7 @@ const PaymentDetails = ({
         },
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
-      ))}
+      ))} */}
       {data?.status !== OrderStatus.CANCELLED.value &&
         data?.status !== OrderStatus.FAILED_DELIVERY.value && (
           <View style={styles.buttonContainer}>

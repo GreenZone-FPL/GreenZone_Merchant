@@ -189,7 +189,7 @@ const ModalToping = ({
       <Pressable
         onPress={() => setOpenMenu(false)}
         style={styles.modalContainer}>
-        <View>
+        <Pressable onPress={() => {}} style={{flex: 1}}>
           <Column style={styles.modalContent}>
             <Row style={styles.headerContainer}>
               <Row style={{gap: 16}}>
@@ -321,7 +321,7 @@ const ModalToping = ({
               </TouchableOpacity>
             </Row>
           </Column>
-        </View>
+        </Pressable>
       </Pressable>
     </Modal>
   );
