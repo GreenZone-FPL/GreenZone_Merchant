@@ -101,12 +101,19 @@ const HomeScreen = ({navigation}) => {
 
   // Cập nhật sản phẩm hiển thị khi tìm kiếm thay đổi
   useEffect(() => {
-    if (searchTerm.trim() === '') {
+    const removeAccents = str => {
+      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Removes accents
+    };
+    const normalizedSearchTerm = removeAccents(searchTerm.trim().toLowerCase());
+
+    if (normalizedSearchTerm === '') {
       setFilteredProducts(productsByCate);
     } else {
       setFilteredProducts(
         productsByCate.filter(product =>
-          product.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+          removeAccents(product.name?.toLowerCase()).includes(
+            normalizedSearchTerm,
+          ),
         ),
       );
     }

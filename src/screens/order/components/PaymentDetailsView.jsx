@@ -4,7 +4,6 @@ import {StatusText} from '../../../components';
 import {DualTextRow, Row} from '../../../components';
 import {GLOBAL_KEYS, colors} from '../../../constants';
 import OrderId from './OrderId';
-import {TextFormatter} from '../../../utils';
 
 const PaymentDetailsView = ({
   detail,
@@ -83,19 +82,20 @@ const PaymentDetailsView = ({
     if (!Array.isArray(orderItems)) return 0;
 
     return orderItems.reduce((total, item) => {
-      const productTotal = item.price * item.quantity;
+      const productAndToppingTotal =
+        item.price +
+          item.toppingItems?.reduce((sum, topping) => {
+            if (topping?.price && topping?.quantity) {
+              return sum + topping.price * topping.quantity;
+            }
+            return sum;
+          }, 0) || 0;
 
-      const toppingTotal =
-        item.toppingItems?.reduce((sum, topping) => {
-          if (topping?.price && topping?.quantity) {
-            return sum + topping.price * topping.quantity;
-          }
-          return sum;
-        }, 0) || 0;
-
-      return total + productTotal + toppingTotal;
+      const totalItemPrice = productAndToppingTotal * item.quantity;
+      return total + totalItemPrice;
     }, 0);
   };
+
   return (
     <View
       style={{
@@ -131,15 +131,12 @@ const PaymentDetailsView = ({
         <StatusText status={status} />
       </Row>
 
-      {/* <DualTextRow
+      <DualTextRow
         leftText={`Tạm tính (${orderItems.length} sản phẩm)`}
-        // rightText={`${subTotal.toLocaleString()}đ`}
-
-        rightText={
-          calculateTotalOrderPrice(detail.orderItems).toLocaleString('vi-VN') ||
-          0
-        }
-      /> */}
+        rightText={`${(
+          calculateTotalOrderPrice(detail.orderItems) || 0
+        ).toLocaleString('vi-VN')}đ`}
+      />
 
       <DualTextRow
         leftText="Phí giao hàng"
@@ -151,7 +148,11 @@ const PaymentDetailsView = ({
       />
 
       <DualTextRow
-        leftText="Giảm giá"
+        leftText={
+          detail?.voucher?.name
+            ? `Giảm Giá (${detail.voucher.name})`
+            : `Giảm Giá`
+        }
         rightText={`-${(discount || 0).toLocaleString('vi-VN')}đ`}
         rightTextStyle={{color: colors.primary}}
       />
@@ -224,7 +225,7 @@ const PaymentDetailsView = ({
             flexDirection: 'row',
             alignItems: 'center',
           }}>
-          {getPaymentIcon(paymentMethod)}
+          <View>{getPaymentIcon(paymentMethod)}</View>
           <Text
             style={{
               fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,

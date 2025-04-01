@@ -34,81 +34,89 @@ export const HorizontalProductItem = ({
   priceStyle,
   confirmDelete,
   oldPriceStyle,
-}) => (
-  <View style={[styles.itemProduct, containerStyle]}>
-    <View style={styles.imageWrapper}>
-      <Image
-        style={[styles.itemImage, imageStyle]}
-        source={{uri: item.image}}
-      />
-      <View style={styles.quantityBadge}>
-        <Text style={styles.quantityText}>x{item.quantity}</Text>
+}) => {
+  const priceProduct = item.price || 0;
+  const priceTopping =
+    item?.toppingItems?.reduce(
+      (sum, topping) => sum + topping.price * topping.quantity,
+      0,
+    ) || 0;
+  const totalPrice = (priceProduct + priceTopping) * item.quantity || 0;
+  return (
+    <View style={[styles.itemProduct, containerStyle]}>
+      <View style={styles.imageWrapper}>
+        <Image
+          style={[styles.itemImage, imageStyle]}
+          source={{uri: item.image}}
+        />
+        <View style={styles.quantityBadge}>
+          <Text style={styles.quantityText}>x{item.quantity}</Text>
+        </View>
       </View>
-    </View>
 
-    <Column style={styles.productInfo}>
-      <Text style={[styles.productName, titleStyle]}>{item.productName}</Text>
-      {item.variantName && !item.isVariantDefault && (
-        <Text
-          style={[
-            styles.normalText,
-            {color: colors.pink500, fontWeight: '500'},
-            optionStyle,
-          ]}>
-          {item.variantName}
-        </Text>
-      )}
-
-      {item.toppingItems?.map(topping => {
-        if (topping.quantity > 0) {
-          return (
-            <Text
-              key={topping._id}
-              style={[styles.normalText, {color: colors.gray850}, optionStyle]}>
-              x{topping.quantity} {topping.name}
-            </Text>
-          );
-        }
-        return null;
-      })}
-
-      {item.note && (
-        <Text style={[styles.normalText, {color: colors.orange700}, noteStyle]}>
-          Note: {item.note}
-        </Text>
-      )}
-    </Column>
-
-    <Column style={styles.priceContainer}>
-      {/* <Text style={[styles.productPrice, priceStyle]}>
-        {TextFormatter.formatCurrency(
-          item.price * item.quantity +
-            (item.toppingItems?.reduce(
-              (sum, t) => sum + t.price * t.quantity,
-              0,
-            ) || 0),
+      <Column style={styles.productInfo}>
+        <Text style={[styles.productName, titleStyle]}>{item.productName}</Text>
+        {item.variantName && !item.isVariantDefault && (
+          <Text
+            style={[
+              styles.normalText,
+              {color: colors.pink500, fontWeight: '500'},
+              optionStyle,
+            ]}>
+            {item.variantName}
+          </Text>
         )}
-      </Text> */}
 
-      {enableDelete && (
-        <Pressable onPress={confirmDelete}>
-          <NormalText text="Xóa" style={{color: colors.orange700}} />
-        </Pressable>
-      )}
+        {item.toppingItems?.map(topping => {
+          if (topping.quantity > 0) {
+            return (
+              <Text
+                key={topping._id}
+                style={[
+                  styles.normalText,
+                  {color: colors.gray850},
+                  optionStyle,
+                ]}>
+                x{topping.quantity} {topping.name}
+              </Text>
+            );
+          }
+          return null;
+        })}
 
-      {/* <Text style={[styles.lineThroughText, oldPriceStyle]}>{TextFormatter.formatCurrency(item.price)}</Text> */}
-      {enableAction && (
-        <Pressable onPress={onAction}>
-          <Icon
-            source="square-edit-outline"
-            size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-            color={colors.primary}
-          />
-        </Pressable>
-      )}
-    </Column>
-  </View>
-);
+        {item.note && (
+          <Text
+            style={[styles.normalText, {color: colors.orange700}, noteStyle]}>
+            Note: {item.note}
+          </Text>
+        )}
+      </Column>
+
+      <Column style={styles.priceContainer}>
+        <Text style={[styles.productPrice, priceStyle]}>
+          {TextFormatter.formatCurrency(totalPrice)}
+        </Text>
+
+        {enableDelete && (
+          <Pressable onPress={confirmDelete}>
+            <NormalText text="Xóa" style={{color: colors.orange700}} />
+          </Pressable>
+        )}
+
+        {/* <Text style={[styles.lineThroughText, oldPriceStyle]}>{TextFormatter.formatCurrency(item.price)}</Text> */}
+        {enableAction && (
+          <Pressable onPress={onAction}>
+            <Icon
+              source="square-edit-outline"
+              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+              color={colors.primary}
+            />
+          </Pressable>
+        )}
+      </Column>
+    </View>
+  );
+};
 
 HorizontalProductItem.propTypes = HorizontalProductItemPropTypes;
 

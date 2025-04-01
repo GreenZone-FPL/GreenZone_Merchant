@@ -1,32 +1,32 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   Dimensions,
   Image,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
-  Text
+  Text,
 } from 'react-native';
 
 import {
   Column,
   FlatInput,
   LightStatusBar,
-  PrimaryButton
+  PrimaryButton,
 } from '../../components';
 
-import { login } from '../../axios/index';
-import { NormalLoading } from '../../components';
-import { colors, GLOBAL_KEYS } from '../../constants';
-import { useAppContext } from '../../context/appContext';
+import {login} from '../../axios/index';
+import {NormalLoading} from '../../components';
+import {colors, GLOBAL_KEYS} from '../../constants';
+import {useAppContext} from '../../context/appContext';
 import MerchantSocketService from '../../sevices/merchantSocketService';
-import { Toaster } from '../../utils';
-import { AuthActionTypes } from '../../reducers/authReducer';
-const { width } = Dimensions.get('window');
+import {Toaster} from '../../utils';
+import {AuthActionTypes} from '../../reducers/authReducer';
+const {width} = Dimensions.get('window');
 const isTablet = width >= 768;
 
 const LoginScreen = props => {
-  const { navigation } = props;
+  const {navigation} = props;
   const [phoneNumber, setPhoneNumber] = useState('0711111111');
   const [password, setPassword] = useState('123456');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -34,7 +34,7 @@ const LoginScreen = props => {
 
   const [phoneNumberError, setPhoneNumberError] = useState(false);
   const [phoneNumberMessage, setPhoneNumberMessage] = useState('');
-  const { orderNew, setOrderNew, authDispatch } = useAppContext()
+  const {orderNew, setOrderNew, authDispatch} = useAppContext();
 
   const loginHandle = async () => {
     if (phoneNumber.trim().length !== 10 || !/^[0-9]+$/.test(phoneNumber)) {
@@ -45,17 +45,16 @@ const LoginScreen = props => {
     setLoading(true);
 
     try {
-      const response = await login({ phoneNumber, password });
+      const response = await login({phoneNumber, password});
 
       console.log(' Đăng nhập thành công, khởi tạo socket...');
-      await MerchantSocketService.initialize((newOrder) => {
+      await MerchantSocketService.initialize(newOrder => {
         setOrderNew(newOrder);
       });
 
-      authDispatch({type: AuthActionTypes.LOGIN})
+      authDispatch({type: AuthActionTypes.LOGIN});
 
       // navigation.navigate('MainNavigation');
-
     } catch (error) {
       Toaster.show('Đăng nhập thất bại');
     } finally {
@@ -80,11 +79,12 @@ const LoginScreen = props => {
               value={phoneNumber}
               label="Số điện thoại"
               placeholder="Nhập số điện thoại của bạn..."
-              style={{ width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL }}
+              style={{width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL}}
               setValue={text => {
+                const cleanedText = text.replace(/\D/g, '').slice(0, 10);
                 setPhoneNumberError(false);
                 setPhoneNumberMessage('');
-                setPhoneNumber(text);
+                setPhoneNumber(cleanedText);
               }}
               error={phoneNumberError}
               invalidMessage={phoneNumberMessage}
@@ -92,7 +92,7 @@ const LoginScreen = props => {
             <FlatInput
               value={password}
               label="Mật khẩu"
-              style={{ width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL }}
+              style={{width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL}}
               placeholder="Nhập mật khẩu"
               setValue={setPassword}
               isPasswordVisible={isPasswordVisible}
@@ -103,7 +103,7 @@ const LoginScreen = props => {
             <PrimaryButton
               title="Đăng nhập"
               onPress={loginHandle}
-              style={{ width: '100%' }}
+              style={{width: '100%'}}
             />
           </Column>
         </Column>
