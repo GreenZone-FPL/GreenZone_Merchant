@@ -4,6 +4,7 @@ import {StatusText} from '../../../components';
 import {DualTextRow, Row} from '../../../components';
 import {GLOBAL_KEYS, colors} from '../../../constants';
 import OrderId from './OrderId';
+import {TextFormatter} from '../../../utils';
 
 const PaymentDetailsView = ({
   detail,
@@ -16,6 +17,7 @@ const PaymentDetailsView = ({
   status,
   createdAt,
 }) => {
+  console.log('detail', JSON.stringify(detail, null, 2));
   // Tính tổng tiền sản phẩm (chưa bao gồm phí giao hàng và giảm giá)
   const subTotal = orderItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -77,6 +79,23 @@ const PaymentDetailsView = ({
 
   const paymentStatus = getPaymentStatus();
 
+  const calculateTotalOrderPrice = orderItems => {
+    if (!Array.isArray(orderItems)) return 0;
+
+    return orderItems.reduce((total, item) => {
+      const productTotal = item.price * item.quantity;
+
+      const toppingTotal =
+        item.toppingItems?.reduce((sum, topping) => {
+          if (topping?.price && topping?.quantity) {
+            return sum + topping.price * topping.quantity;
+          }
+          return sum;
+        }, 0) || 0;
+
+      return total + productTotal + toppingTotal;
+    }, 0);
+  };
   return (
     <View
       style={{
@@ -112,14 +131,23 @@ const PaymentDetailsView = ({
         <StatusText status={status} />
       </Row>
 
-      <DualTextRow
+      {/* <DualTextRow
         leftText={`Tạm tính (${orderItems.length} sản phẩm)`}
-        rightText={`${subTotal.toLocaleString()}đ`}
-      />
+        // rightText={`${subTotal.toLocaleString()}đ`}
+
+        rightText={
+          calculateTotalOrderPrice(detail.orderItems).toLocaleString('vi-VN') ||
+          0
+        }
+      /> */}
 
       <DualTextRow
         leftText="Phí giao hàng"
-        rightText={`${shippingFee.toLocaleString()}đ`}
+        rightText={`${
+          detail.deliveryMethod === 'delivery'
+            ? shippingFee.toLocaleString('vi-VN')
+            : 0
+        }đ`}
       />
 
       <DualTextRow

@@ -80,7 +80,7 @@ export const HorizontalProductItem = ({
     </Column>
 
     <Column style={styles.priceContainer}>
-      <Text style={[styles.productPrice, priceStyle]}>
+      {/* <Text style={[styles.productPrice, priceStyle]}>
         {TextFormatter.formatCurrency(
           item.price * item.quantity +
             (item.toppingItems?.reduce(
@@ -88,7 +88,7 @@ export const HorizontalProductItem = ({
               0,
             ) || 0),
         )}
-      </Text>
+      </Text> */}
 
       {enableDelete && (
         <Pressable onPress={confirmDelete}>

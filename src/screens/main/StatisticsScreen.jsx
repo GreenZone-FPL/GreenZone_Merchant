@@ -6,7 +6,7 @@ import {
   Pressable,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {BarChart} from 'react-native-charts-wrapper';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {Column, Row} from '../../components';
@@ -21,35 +21,44 @@ const StatisticsScreen = ({navigation}) => {
   const [totalOrders, setTotalOrders] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState([]);
   const [months, setMonths] = useState([]);
-  const [year, setYear] = useState(2025);
+  const [year, setYear] = useState(new Date().getFullYear());
   const [modalVisible, setModalVisible] = useState(false);
   const [isTotalOrders, setIsTotalOrders] = useState(false);
-  const {orderNew, setOrderNew} = useAppContext();
+  const {orderNew} = useAppContext();
+  const currentMonth = new Date().getMonth();
+
+  // Hàm lấy dữ liệu thống kê (dùng useCallback để tránh render lại không cần thiết)
+  const getStatistics = useCallback(async selectedYear => {
+    try {
+      const response = await getStatisticByYear(selectedYear);
+      if (response && response.monthlyData) {
+        console.log('Dữ liệu thống kê:', JSON.stringify(response, null, 2));
+        setStatistics(response);
+        setTotalRevenue(
+          response.monthlyData.map(item => item.totalRevenue || 0),
+        );
+        setTotalOrders(response.monthlyData.map(item => item.totalOrders || 0));
+        setMonths(response.monthlyData.map(item => `Tháng ${item.month}`));
+      } else {
+        console.warn('Dữ liệu rỗng hoặc không hợp lệ.');
+        setTotalRevenue(Array(12).fill(0));
+        setTotalOrders(Array(12).fill(0));
+        setMonths(Array(12).fill('-'));
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy dữ liệu thống kê:', error);
+    }
+  }, []);
 
   useEffect(() => {
-    const getStatistics = async year => {
-      try {
-        const response = await getStatisticByYear(year);
-        if (response) {
-          console.log('Dữ liệu thống kê:', JSON.stringify(response, null, 2));
-          setStatistics(response);
-          setTotalRevenue(response.monthlyData.map(item => item.totalRevenue));
-          setTotalOrders(response.monthlyData.map(item => item.totalOrders));
-          setMonths(response.monthlyData.map(item => `Tháng ${item.month}`));
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy dữ liệu thống kê:', error);
-      }
-    };
-
     getStatistics(year);
-  }, [year, orderNew]);
+  }, [year, orderNew, getStatistics]);
 
-  const handleSelectYear = year => {
-    setYear(year);
+  const handleSelectYear = selectedYear => {
+    setYear(selectedYear);
   };
 
-  const currentMonth = new Date().getMonth();
+  // Dữ liệu cho biểu đồ cột
   const data = {
     dataSets: [
       {
@@ -70,8 +79,12 @@ const StatisticsScreen = ({navigation}) => {
     config: {barWidth: 0.6},
   };
 
-  data.dataSets[0].config.colors[currentMonth] = processColor(colors.primary);
+  // Đổi màu cột tháng hiện tại
+  if (data.dataSets[0].values[currentMonth] !== undefined) {
+    data.dataSets[0].config.colors[currentMonth] = processColor(colors.primary);
+  }
 
+  // Cấu hình trục X
   const xAxis = {
     valueFormatter: months,
     granularityEnabled: true,
@@ -82,23 +95,29 @@ const StatisticsScreen = ({navigation}) => {
     textSize: 14,
   };
 
-  // Lấy doanh thu tháng hiện tại và tháng trước
-  const totalRevenueCurrentMonth = data.dataSets[0].values[currentMonth];
-  const totalRevenuePreviousMonth =
-    currentMonth > 0 ? data.dataSets[0].values[currentMonth - 1] : 0;
+  // Lấy doanh thu hoặc số đơn hàng của tháng hiện tại và tháng trước
+  const currentValue = isTotalOrders
+    ? totalOrders[currentMonth] || 0
+    : totalRevenue[currentMonth] || 0;
 
-  // Tính tỷ lệ thay đổi giữa tháng hiện tại và tháng trước
-  const revenueChange = totalRevenuePreviousMonth
-    ? ((totalRevenueCurrentMonth - totalRevenuePreviousMonth) /
-        totalRevenuePreviousMonth) *
-      100
+  const previousValue =
+    currentMonth > 0
+      ? isTotalOrders
+        ? totalOrders[currentMonth - 1] || 0
+        : totalRevenue[currentMonth - 1] || 0
+      : 0;
+
+  // Tính toán tỷ lệ thay đổi
+  const valueChange = previousValue
+    ? ((currentValue - previousValue) / previousValue) * 100
     : 0;
-  const isIncrease = revenueChange > 0;
+  const isIncrease = valueChange > 0;
 
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.container}>
+      {/* Chọn năm */}
       <Pressable
         style={styles.buttonPressable}
         onPress={() => setModalVisible(true)}>
@@ -106,6 +125,7 @@ const StatisticsScreen = ({navigation}) => {
         <Icon source={'arrow-down-drop-circle-outline'} size={20} />
       </Pressable>
 
+      {/* Biểu đồ cột */}
       <BarChart
         style={styles.chart}
         data={data}
@@ -124,49 +144,49 @@ const StatisticsScreen = ({navigation}) => {
         legend={{enabled: false}}
       />
 
+      {/* Thông tin tổng quan */}
       <Column style={styles.card}>
         <Text style={styles.cardTitle}>
           {isTotalOrders ? 'Tổng Số Đơn Cả Năm' : 'Tổng Doanh Thu Cả Năm'}
         </Text>
         <Text style={styles.cardValue}>
           {isTotalOrders
-            ? `${totalRevenueCurrentMonth} Đơn`
-            : TextFormatter.formatCurrency(totalRevenueCurrentMonth || 0)}
+            ? `${totalOrders.reduce((sum, value) => sum + value, 0)} Đơn`
+            : TextFormatter.formatCurrency(
+                totalRevenue.reduce((sum, value) => sum + value, 0) || 0,
+              )}
         </Text>
-
         <Text style={styles.cardTitle}>
-          {isTotalOrders
-            ? 'Tổng Số Đơn Trong Tháng'
-            : 'Doanh Thu Tháng Hiện Tại'}
+          {isTotalOrders ? 'Số Đơn Tháng Hiện Tại' : 'Doanh Thu Tháng Hiện Tại'}
         </Text>
         <Text style={styles.cardValue}>
           {isTotalOrders
-            ? `${totalRevenueCurrentMonth} Đơn`
-            : TextFormatter.formatCurrency(totalRevenueCurrentMonth || 0)}
+            ? `${currentValue} Đơn`
+            : TextFormatter.formatCurrency(currentValue)}
         </Text>
-
-        <Text style={styles.cardTitle}>
-          {currentMonth > 0
-            ? 'So với tháng trước'
-            : 'Tháng trước không có dữ liệu'}
-        </Text>
-
-        {currentMonth > 0 ? (
-          <Row style={{gap: 8}}>
-            <Icon
-              source={isIncrease ? 'chevron-up-circle' : 'chevron-down-circle'}
-              size={20}
-              color={isIncrease ? colors.primary : colors.red900}
-            />
-            <Text
-              style={[styles.cardValue, !isIncrease && {color: colors.red900}]}>
-              {revenueChange.toFixed(2)}%
-            </Text>
-          </Row>
-        ) : (
-          <Text style={styles.cardValue}>-</Text>
-        )}
-
+        {/* Only render the "So với tháng trước" section if current month has valid data */}
+        {currentValue > 0 && currentMonth > 0 ? (
+          <>
+            <Text style={styles.cardTitle}>So với tháng trước</Text>
+            <Row style={{gap: 8}}>
+              <Icon
+                source={
+                  isIncrease ? 'chevron-up-circle' : 'chevron-down-circle'
+                }
+                size={20}
+                color={isIncrease ? colors.primary : colors.red900}
+              />
+              <Text
+                style={[
+                  styles.cardValue,
+                  !isIncrease && {color: colors.red900},
+                ]}>
+                {valueChange.toFixed(2)}%
+              </Text>
+            </Row>
+          </>
+        ) : null}
+        {/* Don't render anything if current month's data is invalid */}
         <Pressable
           style={styles.buttonPressable2}
           onPress={() => setIsTotalOrders(!isTotalOrders)}>

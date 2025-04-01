@@ -76,32 +76,20 @@ const OrderHistoryScreen = () => {
     [],
   );
 
-  // Hàm sắp xếp đơn hàng theo thời gian, sử dụng useCallback để tránh tạo lại khi render lại
-  const sortOrdersByDate = useCallback(orders => {
-    return orders.sort(
-      (a, b) =>
-        new Date(b.fulfillmentDateTime) - new Date(a.fulfillmentDateTime),
-    );
-  }, []);
-
   // Hàm fetch đơn hàng theo trạng thái, dùng useCallback để ổn định tham chiếu
-  const fetchOrdersByStatus = useCallback(
-    async (status, setOrder) => {
-      setLoading(true);
-      try {
-        const responseOrder = await getOrders(status);
-        if (responseOrder) {
-          const sortedOrders = responseOrder;
-          setOrder(sortedOrders);
-        }
-      } catch (error) {
-        console.log('Lỗi khi lấy danh sách đơn hàng:', error);
-      } finally {
-        setLoading(false);
+  const fetchOrdersByStatus = useCallback(async (status, setOrder) => {
+    setLoading(true);
+    try {
+      const responseOrder = await getOrders(status);
+      if (responseOrder) {
+        setOrder(responseOrder);
       }
-    },
-    [sortOrdersByDate],
-  );
+    } catch (error) {
+      console.log('Lỗi khi lấy danh sách đơn hàng:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Fetch đơn hàng khi tabIndex thay đổi
   useEffect(() => {
