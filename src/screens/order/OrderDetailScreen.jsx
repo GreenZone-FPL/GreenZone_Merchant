@@ -52,7 +52,7 @@ const OrderDetailScreen = ({
       setLoading(false);
     }
   };
-  console.log('order', JSON.stringify(orderDetail, null, 2));
+  // console.log('order', JSON.stringify(orderDetail, null, 2));
 
   useEffect(() => {
     if (idOrder == null) return;

@@ -6,8 +6,14 @@ import {
   Dimensions,
   StyleSheet,
   Modal,
+  Pressable,
 } from 'react-native';
-import {colors, GLOBAL_KEYS} from '../../../constants';
+import {
+  colors,
+  GLOBAL_KEYS,
+  OrderStatus,
+  PaymentMethod,
+} from '../../../constants';
 import {createPickUpOrder} from '../../../axios/index';
 import {NormalLoading, OverlayStatusBar} from '../../../components';
 
@@ -18,6 +24,9 @@ const ModalCheckout = ({
   setCart,
   setPhoneNumber,
   setScannedCode,
+  setIsSelectedPaymentMethod,
+  setIsPayment,
+  setOrderResponse,
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -26,16 +35,34 @@ const ModalCheckout = ({
   const createOrder = async () => {
     setLoading(true);
     try {
-      const response = await createPickUpOrder({...data, paymentMethod: 'cod'});
+      let response;
+
+      if (data.paymentMethod === PaymentMethod.ONLINE.value) {
+        response = await createPickUpOrder({
+          ...data,
+          status: OrderStatus.AWAITING_PAYMENT.value,
+        });
+      } else {
+        response = await createPickUpOrder({...data});
+      }
+
+      // Kiểm tra response có tồn tại không trước khi truy cập vào nó
       if (response) {
+        console.log('API trả về:', JSON.stringify(response, null, 2));
+        setOrderResponse(response.data);
         setMessage('Tạo đơn thành công');
-        setIsCheckout(false);
         setCart(null);
         setPhoneNumber('');
         setScannedCode('');
+        setIsCheckout(false);
+        if (response.data.paymentMethod === PaymentMethod.ONLINE.value) {
+          setIsPayment(true);
+        }
+      } else {
+        throw new Error('API không trả về dữ liệu hợp lệ.');
       }
     } catch (error) {
-      console.log('Lỗi tạo đơn hàng:', error);
+      console.error('Lỗi tạo đơn hàng:', error);
     } finally {
       setLoading(false);
     }
@@ -44,8 +71,8 @@ const ModalCheckout = ({
   return (
     <Modal visible={isCheckout} transparent animationType="slide">
       <OverlayStatusBar />
-      <View style={styles.container}>
-        <View style={styles.modalContent}>
+      <Pressable onPress={() => setIsCheckout(false)} style={styles.container}>
+        <Pressable onPress={() => {}} style={styles.modalContent}>
           <View style={styles.textContainer}>
             <Text style={styles.headerText}>Xác nhận</Text>
             <Text style={styles.subText}>Bạn xác nhận tạo đơn hàng</Text>
@@ -54,8 +81,11 @@ const ModalCheckout = ({
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => setIsCheckout(false)}>
-              <Text style={styles.buttonText}>Đóng</Text>
+              onPress={() => {
+                setIsCheckout(false);
+                setIsSelectedPaymentMethod(true);
+              }}>
+              <Text style={styles.buttonText}>Quay lại</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.paymentButton}
@@ -63,8 +93,8 @@ const ModalCheckout = ({
               <Text style={styles.buttonText}>Đồng ý</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+        </Pressable>
+      </Pressable>
       <NormalLoading visible={loading} />
     </Modal>
   );

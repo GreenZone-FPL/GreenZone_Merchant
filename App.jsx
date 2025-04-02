@@ -32,9 +32,9 @@ const AppNavigator = () => {
 
   // Initialize the socket
   useEffect(() => {
-    console.log('🛠 Initializing socket...');
+    console.log('Initializing socket...');
     MerchantSocketService.initialize(newOrder => {
-      console.log('📥 Data received in AppNavigator:', newOrder);
+      // console.log('Data received in AppNavigator:', newOrder);
       setOrderNew(newOrder);
     });
 
@@ -54,7 +54,7 @@ const AppNavigator = () => {
   }, []);
 
   useEffect(() => {
-    console.log('orderNew:', orderNew);
+    // console.log('orderNew:', orderNew);
     if (orderNew) {
       showMessage({
         message: 'Đơn hàng mới',

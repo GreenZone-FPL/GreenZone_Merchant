@@ -16,7 +16,7 @@ const PaymentDetailsView = ({
   status,
   createdAt,
 }) => {
-  console.log('detail', JSON.stringify(detail, null, 2));
+  // console.log('detail', JSON.stringify(detail, null, 2));
   // Tính tổng tiền sản phẩm (chưa bao gồm phí giao hàng và giảm giá)
   const subTotal = orderItems.reduce(
     (sum, item) => sum + item.price * item.quantity,

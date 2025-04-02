@@ -1,5 +1,5 @@
 import axiosInstance from '../axiosInstance';
-import {OrderStatus} from '../../constants';
+
 export const createPickUpOrder = async order => {
   try {
     const request = {
@@ -31,20 +31,18 @@ export const createPickUpOrder = async order => {
 
 export const getOrders = async status => {
   try {
-
     const response = await axiosInstance.get(`/v1/order/store/all`, {
       params: {
         status: status,
       },
     });
-    console.log('getOrders')
+    console.log('getOrders');
     return response.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
     throw error;
   }
 };
-
 
 export const getOrderDetail = async orderId => {
   try {
@@ -81,5 +79,3 @@ export const updateOrderStatus = async (
     throw error;
   }
 };
-
-

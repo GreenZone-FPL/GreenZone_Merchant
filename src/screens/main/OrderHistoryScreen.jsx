@@ -304,7 +304,9 @@ const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
   if (status === 'awaitingPayment') {
     return {text: 'Chờ thanh toán', color: 'orange'};
   }
-  return {text: 'Đã thanh toán', color: colors.primary};
+  if (status === 'cancelled') {
+    return {text: 'Chưa thanh toán', color: 'red'};
+  }
 };
 
 const ItemOrderType = ({item}) => {

@@ -4,13 +4,12 @@ import {
   ScrollView,
   processColor,
   Pressable,
-  View,
 } from 'react-native';
 import React, {useEffect, useState, useCallback} from 'react';
 import {BarChart} from 'react-native-charts-wrapper';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {Column, Row} from '../../components';
-import {Icon} from 'react-native-paper';
+import {Icon, Button} from 'react-native-paper';
 import {getStatisticByYear} from '../../axios';
 import {TextFormatter} from '../../utils';
 import YearPicker from '../../constants/yearPicker/YearPicker';
@@ -27,12 +26,14 @@ const StatisticsScreen = ({navigation}) => {
   const {orderNew} = useAppContext();
   const currentMonth = new Date().getMonth();
 
+  const [showModal, setShowModal] = useState(false);
+
   // Hàm lấy dữ liệu thống kê (dùng useCallback để tránh render lại không cần thiết)
   const getStatistics = useCallback(async selectedYear => {
     try {
       const response = await getStatisticByYear(selectedYear);
       if (response && response.monthlyData) {
-        console.log('Dữ liệu thống kê:', JSON.stringify(response, null, 2));
+        // console.log('Dữ liệu thống kê:', JSON.stringify(response, null, 2));
         setStatistics(response);
         setTotalRevenue(
           response.monthlyData.map(item => item.totalRevenue || 0),
@@ -124,7 +125,6 @@ const StatisticsScreen = ({navigation}) => {
         <Text style={styles.title}>Biểu Đồ Doanh Số Cả Năm {year}</Text>
         <Icon source={'arrow-down-drop-circle-outline'} size={20} />
       </Pressable>
-
       {/* Biểu đồ cột */}
       <BarChart
         style={styles.chart}
@@ -143,7 +143,6 @@ const StatisticsScreen = ({navigation}) => {
         drawRoundedBar
         legend={{enabled: false}}
       />
-
       {/* Thông tin tổng quan */}
       <Column style={styles.card}>
         <Text style={styles.cardTitle}>
@@ -195,7 +194,6 @@ const StatisticsScreen = ({navigation}) => {
           </Text>
         </Pressable>
       </Column>
-
       <YearPicker
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}

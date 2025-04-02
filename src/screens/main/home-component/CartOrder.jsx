@@ -20,7 +20,10 @@ import {Icon, IconButton} from 'react-native-paper';
 import {TextFormatter} from '../../../utils';
 import {CustomFlatInput} from '../../../components';
 import ModalCheckout from './ModalCheckout';
+import ModalSelectedPaymentMethod from './ModalSelectedPaymentMethod';
+import ModalPayment from '../../order/ModalPayment';
 import {findCustomerByCode, findCustomerByPhone} from '../../../axios/index';
+import {Car} from 'iconsax-react-native';
 
 const {width} = Dimensions.get('window');
 
@@ -32,7 +35,9 @@ const CartOrder = ({cart, setCart}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
   const [label, setLabel] = useState('Nhập số điện thoại');
-  const [isEditable, setIsEditable] = useState(true);
+  const [isSelectedPaymentMethod, setIsSelectedPaymentMethod] = useState(false);
+  const [isPayment, setIsPayment] = useState(false);
+  const [orderResponse, setOrderResponse] = useState(null);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -56,7 +61,7 @@ const CartOrder = ({cart, setCart}) => {
           setScannedCode(scannedText);
           setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
           setIsScanning(false); // Đóng camera sau khi quét
-          console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+          // console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
         }
       } catch (error) {
         console.log(error);
@@ -125,7 +130,7 @@ const CartOrder = ({cart, setCart}) => {
       if (!prevOrder) {
         return null;
       }
-      console.log(customer);
+      // console.log(customer);
       if (customer) {
         return {
           ...prevOrder,
@@ -190,11 +195,11 @@ const CartOrder = ({cart, setCart}) => {
   // Lọc lại cart để gửi oder
   const filterCart = cart => {
     if (cart === null) return;
-    const orderItems = cart.orderItems.map(item => ({
+    const orderItems = cart?.orderItems?.map(item => ({
       variant: item.variant,
       quantity: item.quantity,
       price: item.price,
-      toppingItems: item.toppingItems.map(toppingItem => ({
+      toppingItems: item?.toppingItems?.map(toppingItem => ({
         topping: toppingItem.topping,
         quantity: toppingItem.quantity,
         price: toppingItem.price,
@@ -227,7 +232,7 @@ const CartOrder = ({cart, setCart}) => {
     }
   }, [cart]);
 
-  console.log('cart', JSON.stringify(filterCart(cart), null, 2));
+  // console.log('cart', JSON.stringify(filterCart(cart), null, 2));
 
   return (
     <View style={styles.rightSection}>
@@ -296,7 +301,7 @@ const CartOrder = ({cart, setCart}) => {
                 top: '30%',
               }}
               onPress={() => {
-                console.log('cameraCart', cart);
+                // console.log('cameraCart', cart);
                 if (cart === null) setLabel('Chọn sản phẩm trước');
                 else {
                   setIsScanning(true);
@@ -348,7 +353,7 @@ const CartOrder = ({cart, setCart}) => {
           backgroundColor: colors.fbBg,
           marginVertical: GLOBAL_KEYS.PADDING_DEFAULT,
         }}>
-        {cart && cart.orderItems.length > 0 ? (
+        {cart && cart.orderItems?.length > 0 ? (
           <FlatList
             initialNumToRender={5}
             maxToRenderPerBatch={10}
@@ -429,7 +434,9 @@ const CartOrder = ({cart, setCart}) => {
                       <TouchableOpacity
                         style={styles.buttonQuantity}
                         onPress={() => {
-                          updateItemQuantity(item._id, item.quantity + 1);
+                          if (item.quantity < 99) {
+                            updateItemQuantity(item._id, item.quantity + 1);
+                          }
                         }}>
                         <Icon source={'plus'} color={colors.white} size={20} />
                       </TouchableOpacity>
@@ -479,7 +486,7 @@ const CartOrder = ({cart, setCart}) => {
           </View>
         )}
       </View>
-      {cart && cart.orderItems.length > 0 && (
+      {cart && cart.orderItems?.length > 0 && (
         <View
           style={{
             flexDirection: 'row',
@@ -512,7 +519,7 @@ const CartOrder = ({cart, setCart}) => {
           <TouchableOpacity
             onPress={() => {
               if (cart == null) return;
-              setIsCheckout(true);
+              setIsSelectedPaymentMethod(true);
             }}>
             <Text
               style={{
@@ -540,9 +547,29 @@ const CartOrder = ({cart, setCart}) => {
           setPhoneNumber={setPhoneNumber}
           customer={customer}
           setScannedCode={setScannedCode}
+          setIsSelectedPaymentMethod={setIsSelectedPaymentMethod}
+          setIsPayment={setIsPayment}
+          setOrderResponse={setOrderResponse}
         />
       )}
-      {/* <Ani_ModalLoading loading={loading} /> */}
+      {isSelectedPaymentMethod && (
+        <ModalSelectedPaymentMethod
+          cart={cart}
+          setCart={setCart}
+          isSelectedPaymentMethod={isSelectedPaymentMethod}
+          setIsSelectedPaymentMethod={setIsSelectedPaymentMethod}
+          setIsCheckout={setIsCheckout}
+        />
+      )}
+
+      {isPayment && (
+        <ModalPayment
+          isPayment={isPayment}
+          setIsPayment={setIsPayment}
+          setOrderResponse={setOrderResponse}
+          orderResponse={orderResponse}
+        />
+      )}
     </View>
   );
 };
