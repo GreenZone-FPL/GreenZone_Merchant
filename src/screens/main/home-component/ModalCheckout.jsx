@@ -9,8 +9,8 @@ import {
 } from 'react-native';
 import { colors, GLOBAL_KEYS } from '../../../constants';
 import { createPickUpOrder } from '../../../axios/index';
-import { Ani_ModalLoading } from '../../../components';
-import NomalLoading from '../../../components/animations/NormalLoading';
+import { Ani_ModalLoading, NormalLoading } from '../../../components';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -69,7 +69,7 @@ const ModalCheckout = ({
           </View>
         </View>
       </View>
-      <NomalLoading visible={loading} />
+      <NormalLoading visible={loading} />
     </Modal>
   );
 };
