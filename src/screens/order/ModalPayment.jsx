@@ -45,7 +45,7 @@ const ModalPayment = ({
     const returnUrl = 'https://greenzone.motcaiweb.io.vn/v1/category/all';
     const cancelUrl = 'https://greenzone.motcaiweb.io.vn/v1/product/all';
 
-    const expiredAt = Math.floor(Date.now() / 1000) + 100;
+    const expiredAt = Math.floor(Date.now() / 1000) + 120;
 
     // Tạo chuỗi signature theo định dạng của PayOS
     const params = `amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`;
@@ -135,6 +135,8 @@ const ModalPayment = ({
       <LightStatusBar />
       <View style={styles.container}>
         <View style={{flex: 1}}>
+          <LightStatusBar />
+
           {loading ? (
             <View style={{flex: 1}}>
               <ActivityIndicator
