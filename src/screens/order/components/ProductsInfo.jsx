@@ -3,11 +3,10 @@ import {View, FlatList, StyleSheet} from 'react-native';
 import {HorizontalProductItem, TitleText} from '../../../components';
 import {GLOBAL_KEYS, colors} from '../../../constants';
 
-
 const ProductsInfo = ({orderItems}) => {
   return (
     <View style={[styles.container, {borderBottomWidth: 0}]}>
-      <TitleText text='Sản phẩm' style={{color: colors.black2}}/>
+      <TitleText text="Sản phẩm" style={{color: colors.primary}} />
       <FlatList
         data={orderItems}
         keyExtractor={item => item.product._id}
@@ -41,7 +40,7 @@ const styles = StyleSheet.create({
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     marginHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
     marginBottom: GLOBAL_KEYS.GAP_SMALL,
-    gap: 12
+    gap: 12,
   },
   flatListContent: {
     gap: GLOBAL_KEYS.GAP_SMALL,

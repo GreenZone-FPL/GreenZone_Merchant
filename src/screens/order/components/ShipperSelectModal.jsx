@@ -21,16 +21,21 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
 
   const fetchShippers = async () => {
     try {
-      const response = await getEmployeesAllAvailable();
-      setShippers(response.data);
+      const data = await getEmployeesAllAvailable();
+      if (Array.isArray(data)) {
+        setShippers(data);
+      } else {
+        console.error('Dữ liệu API không hợp lệ:', data);
+        setShippers([]);
+      }
     } catch (error) {
-      console.log('Lỗi khi lấy danh sách shipper:', error);
+      console.error('Lỗi khi lấy danh sách shipper:', error);
+      setShippers([]);
     }
   };
 
   const handleSelectShipper = shipper => {
     onSelect(shipper);
-    // onClose();
   };
 
   return (
@@ -39,17 +44,20 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Chọn Shipper</Text>
           <ScrollView contentContainerStyle={styles.shipperList}>
-            {shippers.map(shipper => (
-              <Pressable
-                key={shipper._id}
-                onPress={() => handleSelectShipper(shipper)}
-                style={styles.shipperItem}>
-                <Text
-                  style={
-                    styles.shipperName
-                  }>{`${shipper.firstName} ${shipper.lastName}`}</Text>
-              </Pressable>
-            ))}
+            {shippers?.length > 0 ? (
+              shippers.map(shipper => (
+                <Pressable
+                  key={shipper._id}
+                  onPress={() => handleSelectShipper(shipper)}
+                  style={styles.shipperItem}>
+                  <Text style={styles.shipperName}>
+                    {`${shipper.firstName} ${shipper.lastName}`}
+                  </Text>
+                </Pressable>
+              ))
+            ) : (
+              <Text style={styles.noShipperText}>Không có shipper nào.</Text>
+            )}
           </ScrollView>
           <Pressable onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>Đóng</Text>
@@ -93,6 +101,11 @@ const styles = StyleSheet.create({
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
     fontWeight: '500',
+  },
+  noShipperText: {
+    textAlign: 'center',
+    marginTop: 10,
+    color: colors.gray500,
   },
   closeButton: {
     marginTop: GLOBAL_KEYS.GAP_DEFAULT,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -9,32 +9,38 @@ import {
   Dimensions,
 } from 'react-native';
 
-import { colors, GLOBAL_KEYS } from '../../../constants';
+import {colors, GLOBAL_KEYS} from '../../../constants';
 import {
-  Camera,
   useCameraDevice,
   useCameraPermission,
   useCodeScanner,
+  Camera,
 } from 'react-native-vision-camera';
-import { Icon } from 'react-native-paper';
-import { TextFormatter } from '../../../utils';
-import { CustomFlatInput, Ani_ModalLoading } from '../../../components';
+import {Icon, IconButton} from 'react-native-paper';
+import {TextFormatter} from '../../../utils';
+import {CustomFlatInput} from '../../../components';
 import ModalCheckout from './ModalCheckout';
-import { findCustomerByCode, findCustomerByPhone } from '../../../axios/index';
+import ModalSelectedPaymentMethod from './ModalSelectedPaymentMethod';
+import ModalPayment from '../../order/ModalPayment';
+import {findCustomerByCode, findCustomerByPhone} from '../../../axios/index';
+import {Car} from 'iconsax-react-native';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-const CartOrder = ({ cart, setCart }) => {
+const CartOrder = ({cart, setCart}) => {
   const [scannedCode, setScannedCode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [cameraPosition, setCameraPosition] = useState('back');
   const [isCheckout, setIsCheckout] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [label, setLabel] = useState('Nhập số điện thoại');
+  const [isSelectedPaymentMethod, setIsSelectedPaymentMethod] = useState(false);
+  const [isPayment, setIsPayment] = useState(false);
+  const [orderResponse, setOrderResponse] = useState(null);
 
   // Lấy quyền camera
-  const { hasPermission, requestPermission } = useCameraPermission();
+  const {hasPermission, requestPermission} = useCameraPermission();
   const device = useCameraDevice(cameraPosition); // Chọn camera trước hoặc sau
 
   // Kiểm tra quyền truy cập camera
@@ -49,46 +55,46 @@ const CartOrder = ({ cart, setCart }) => {
   const codeScanner = useCodeScanner({
     codeTypes: ['qr', 'ean-13', 'upc-a', 'code-128', 'code-39'],
     onCodeScanned: codes => {
-      if (codes.length > 0) {
-        const scannedText = codes[0].value;
-        setScannedCode(scannedText);
-        setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
-        setIsScanning(false); // Đóng camera sau khi quét
-        console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+      try {
+        if (codes.length > 0) {
+          const scannedText = codes[0].value;
+          setScannedCode(scannedText);
+          setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
+          setIsScanning(false); // Đóng camera sau khi quét
+          // console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+        }
+      } catch (error) {
+        console.log(error);
       }
     },
   });
 
   // tìm kiếm khách hàng
   const fetchCustomerByCode = async code => {
-    setLoading(true);
     try {
       const response = await findCustomerByCode(code);
-      if (response.data != []) {
-        setLoading(false);
-        setCustomer(response.data);
+      if (response) {
+        setCustomer(response.customer);
       } else {
         setCustomer(null);
         setPhoneNumber('');
         setScannedCode('');
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const fetchCustomerByPhone = async phoneNumber => {
-    setLoading(true);
-
     try {
       const response = await findCustomerByPhone(phoneNumber);
-      if (response.data != []) {
-        setCustomer(response.data);
-        setLoading(false);
+      // console.log('phone', JSON.stringify(response.customer, null, 2));
+      if (response.customer) {
+        setCustomer(response.customer);
       } else {
         setCustomer(null);
         setPhoneNumber('');
         setScannedCode('');
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   // gọi api lấy thông tin user qua code hoặc phone
@@ -98,7 +104,7 @@ const CartOrder = ({ cart, setCart }) => {
         try {
           await fetchCustomerByPhone(phoneNumber);
         } catch (error) {
-          console.log(error);
+          console.log('error', error);
         }
       };
 
@@ -111,22 +117,38 @@ const CartOrder = ({ cart, setCart }) => {
     fetchCustomerByCode(scannedCode);
   }, [scannedCode]);
   // cập nhập thông tin khách hàng
+
   useEffect(() => {
-    if (customer?.customer?._id) {
-      updateCustomer(customer.customer._id);
+    if (customer?._id) {
+      updateCustomer(customer);
     }
+    // console.log('customer', JSON.stringify(customer, null, 2));
   }, [customer]);
 
-  const updateCustomer = newOwner => {
+  const updateCustomer = customer => {
     setCart(prevOrder => {
       if (!prevOrder) {
         return null;
       }
-
-      return {
-        ...prevOrder,
-        owner: newOwner,
-      };
+      // console.log(customer);
+      if (customer) {
+        return {
+          ...prevOrder,
+          owner: customer._id,
+          consigneeName: `${customer.firstName} ${customer.lastName}`,
+          consigneePhone: customer.phoneNumber,
+        };
+      } else {
+        setPhoneNumber('');
+        setCustomer('');
+        setScannedCode('');
+        return {
+          ...prevOrder,
+          owner: null,
+          consigneeName: null,
+          consigneePhone: null,
+        };
+      }
     });
   };
 
@@ -139,7 +161,7 @@ const CartOrder = ({ cart, setCart }) => {
 
       // Nếu không còn sản phẩm nào, xóa luôn giỏ hàng
       return updatedOrderItems.length > 0
-        ? { ...prevCart, orderItems: updatedOrderItems }
+        ? {...prevCart, orderItems: updatedOrderItems}
         : null; // Hoặc {} nếu muốn giữ trạng thái object
     });
   };
@@ -173,11 +195,11 @@ const CartOrder = ({ cart, setCart }) => {
   // Lọc lại cart để gửi oder
   const filterCart = cart => {
     if (cart === null) return;
-    const orderItems = cart.orderItems.map(item => ({
+    const orderItems = cart?.orderItems?.map(item => ({
       variant: item.variant,
       quantity: item.quantity,
       price: item.price,
-      toppingItems: item.toppingItems.map(toppingItem => ({
+      toppingItems: item?.toppingItems?.map(toppingItem => ({
         topping: toppingItem.topping,
         quantity: toppingItem.quantity,
         price: toppingItem.price,
@@ -195,6 +217,8 @@ const CartOrder = ({ cart, setCart }) => {
       owner: cart.owner,
       voucher: cart.voucher,
       orderItems: orderItems,
+      consigneeName: cart.consigneeName,
+      consigneePhone: cart.consigneePhone,
     };
   };
 
@@ -203,20 +227,24 @@ const CartOrder = ({ cart, setCart }) => {
     if (cart === null) {
       setPhoneNumber('');
       setCustomer(null);
+    } else {
+      setLabel('Nhập số điện thoại');
     }
   }, [cart]);
+
+  // console.log('cart', JSON.stringify(filterCart(cart), null, 2));
 
   return (
     <View style={styles.rightSection}>
       {isScanning ? (
         device ? (
           <View>
-            {/* <Camera
+            <Camera
               style={{width: '100%', height: 200, borderRadius: 10}}
               device={device}
               isActive={isScanning}
               codeScanner={codeScanner}
-            /> */}
+            />
             <View style={styles.cameraControls}>
               <TouchableOpacity
                 style={styles.switchCameraButton}
@@ -251,10 +279,20 @@ const CartOrder = ({ cart, setCart }) => {
           <Text style={styles.customerInfoTitle}>Thông tin khách hàng</Text>
           <View>
             <CustomFlatInput
-              label={'Nhập số điện thoại'}
+              label={label}
               placeholder="Số điện thoại"
               value={phoneNumber}
-              setValue={setPhoneNumber}
+              setValue={text => {
+                if (cart === null) {
+                  setPhoneNumber('');
+                  setLabel('Chọn sản phẩm trước');
+                  return;
+                }
+                const formatted = text.replace(/[^0-9]/g, '');
+                if (formatted.length <= 10) {
+                  setPhoneNumber(formatted);
+                }
+              }}
             />
             <TouchableOpacity
               style={{
@@ -262,7 +300,13 @@ const CartOrder = ({ cart, setCart }) => {
                 end: 10,
                 top: '30%',
               }}
-              onPress={() => setIsScanning(true)}>
+              onPress={() => {
+                // console.log('cameraCart', cart);
+                if (cart === null) setLabel('Chọn sản phẩm trước');
+                else {
+                  setIsScanning(true);
+                }
+              }}>
               <Icon source="barcode-scan" size={24} color={colors.primary} />
             </TouchableOpacity>
           </View>
@@ -271,24 +315,32 @@ const CartOrder = ({ cart, setCart }) => {
               style={{
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               }}>
-              Khách hàng:{''}
+              Khách hàng:{' '}
               {cart === null
-                ? 'Vui lòng chọn sản phẩm trước'
-                : customer?.customer
-                  ? `${customer.customer.firstName} ${customer.customer.lastName}`
-                  : ' Vãng lai'}
+                ? ''
+                : customer
+                ? `${customer?.firstName} ${customer?.lastName}`
+                : ' Vãng lai'}
             </Text>
             <Text
               style={{
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               }}>
               Số điện thoại:{' '}
-              {cart === null
-                ? 'Vui lòng chọn sản phẩm trước'
-                : customer?.customer
-                  ? customer?.customer?.phoneNumber
-                  : ''}
+              {cart === null ? '' : customer ? customer?.phoneNumber : ''}
             </Text>
+            {cart?.owner && (
+              <View style={{position: 'absolute', end: 0}}>
+                <IconButton
+                  icon="close"
+                  size={24}
+                  iconColor={colors.gray700}
+                  onPress={() => {
+                    updateCustomer(null);
+                  }}
+                />
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -301,18 +353,18 @@ const CartOrder = ({ cart, setCart }) => {
           backgroundColor: colors.fbBg,
           marginVertical: GLOBAL_KEYS.PADDING_DEFAULT,
         }}>
-        {cart && cart.orderItems.length > 0 ? (
+        {cart && cart.orderItems?.length > 0 ? (
           <FlatList
             initialNumToRender={5}
             maxToRenderPerBatch={10}
             data={cart.orderItems}
             keyExtractor={item => item._id}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <View style={styles.cartItem}>
                 <Image
                   style={styles.cartItemImage}
-                  source={{ uri: item.product.image }}
+                  source={{uri: item.product.image}}
                 />
                 <View
                   style={{
@@ -329,7 +381,7 @@ const CartOrder = ({ cart, setCart }) => {
                       }}>
                       {item.size.size}
                     </Text>
-                    <Text style={{ color: colors.gray850 }}>
+                    <Text style={{color: colors.gray850}}>
                       {item.topping &&
                         item.topping.length > 0 &&
                         item.topping.map((topping, index) => (
@@ -340,7 +392,7 @@ const CartOrder = ({ cart, setCart }) => {
                               fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                             }}>
                             <Text
-                              style={{ fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT }}>
+                              style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
                               x1{' '}
                             </Text>
                             {topping.name}
@@ -359,7 +411,6 @@ const CartOrder = ({ cart, setCart }) => {
                       flexDirection: 'row',
                       gap: GLOBAL_KEYS.GAP_DEFAULT,
                       alignItems: 'center',
-
                     }}>
                     <View style={styles.itemQuantity}>
                       <TouchableOpacity
@@ -383,13 +434,15 @@ const CartOrder = ({ cart, setCart }) => {
                       <TouchableOpacity
                         style={styles.buttonQuantity}
                         onPress={() => {
-                          updateItemQuantity(item._id, item.quantity + 1);
+                          if (item.quantity < 99) {
+                            updateItemQuantity(item._id, item.quantity + 1);
+                          }
                         }}>
                         <Icon source={'plus'} color={colors.white} size={20} />
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity
-                      style={{ alignItems: 'center', justifyContent: 'center' }}
+                      style={{alignItems: 'center', justifyContent: 'center'}}
                       onPress={() => removeFromCart(item._id)}>
                       {/* <Icon
                         source={'delete'}
@@ -433,7 +486,7 @@ const CartOrder = ({ cart, setCart }) => {
           </View>
         )}
       </View>
-      {cart && cart.orderItems.length > 0 && (
+      {cart && cart.orderItems?.length > 0 && (
         <View
           style={{
             flexDirection: 'row',
@@ -442,7 +495,7 @@ const CartOrder = ({ cart, setCart }) => {
             padding: GLOBAL_KEYS.PADDING_DEFAULT,
             backgroundColor: colors.white,
           }}>
-          <View style={{ flexDirection: 'column', flex: 1 }}>
+          <View style={{flexDirection: 'column', flex: 1}}>
             <Text
               style={{
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE - 4,
@@ -466,7 +519,7 @@ const CartOrder = ({ cart, setCart }) => {
           <TouchableOpacity
             onPress={() => {
               if (cart == null) return;
-              setIsCheckout(true);
+              setIsSelectedPaymentMethod(true);
             }}>
             <Text
               style={{
@@ -494,9 +547,29 @@ const CartOrder = ({ cart, setCart }) => {
           setPhoneNumber={setPhoneNumber}
           customer={customer}
           setScannedCode={setScannedCode}
+          setIsSelectedPaymentMethod={setIsSelectedPaymentMethod}
+          setIsPayment={setIsPayment}
+          setOrderResponse={setOrderResponse}
         />
       )}
-      {/* <Ani_ModalLoading loading={loading} /> */}
+      {isSelectedPaymentMethod && (
+        <ModalSelectedPaymentMethod
+          cart={cart}
+          setCart={setCart}
+          isSelectedPaymentMethod={isSelectedPaymentMethod}
+          setIsSelectedPaymentMethod={setIsSelectedPaymentMethod}
+          setIsCheckout={setIsCheckout}
+        />
+      )}
+
+      {isPayment && (
+        <ModalPayment
+          isPayment={isPayment}
+          setIsPayment={setIsPayment}
+          setOrderResponse={setOrderResponse}
+          orderResponse={orderResponse}
+        />
+      )}
     </View>
   );
 };
