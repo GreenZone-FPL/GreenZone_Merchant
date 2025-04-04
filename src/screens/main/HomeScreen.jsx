@@ -195,10 +195,10 @@ const HomeScreen = ({navigation}) => {
                 await AppAsyncStorage.removeData(
                   AppAsyncStorage.STORAGE_KEYS.refreshToken,
                 );
-
+                merchantSocketService.disconnect()
                 authDispatch({type: AuthActionTypes.LOGOUT});
 
-                merchantSocketService.disconnect()
+       
                 // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>
