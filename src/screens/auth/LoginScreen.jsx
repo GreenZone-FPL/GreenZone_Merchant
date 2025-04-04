@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   Dimensions,
   Image,
@@ -12,49 +12,56 @@ import {
   Column,
   FlatInput,
   LightStatusBar,
+  NormalInput,
   PrimaryButton,
 } from '../../components';
 
-import {login} from '../../axios/index';
-import {NormalLoading} from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
-import {useAppContext} from '../../context/appContext';
+import { login } from '../../axios/index';
+import { NormalLoading } from '../../components';
+import { colors, GLOBAL_KEYS } from '../../constants';
+import { useAppContext } from '../../context/appContext';
 import MerchantSocketService from '../../sevices/merchantSocketService';
-import {Toaster} from '../../utils';
-import {AuthActionTypes} from '../../reducers/authReducer';
-const {width} = Dimensions.get('window');
+import { Toaster } from '../../utils';
+import { AuthActionTypes } from '../../reducers/authReducer';
+const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
 
 const LoginScreen = props => {
-  const {navigation} = props;
+  const { navigation } = props;
   const [phoneNumber, setPhoneNumber] = useState('0711111111');
   const [password, setPassword] = useState('123456');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [phoneNumberError, setPhoneNumberError] = useState(false);
   const [phoneNumberMessage, setPhoneNumberMessage] = useState('');
-  const {orderNew, setOrderNew, authDispatch} = useAppContext();
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const { orderNew, setOrderNew, authDispatch } = useAppContext();
 
   const loginHandle = async () => {
+    let valid = true
     if (phoneNumber.trim().length !== 10 || !/^[0-9]+$/.test(phoneNumber)) {
-      setPhoneNumberError(true);
       setPhoneNumberMessage('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)');
-      return;
+      valid = false
+    } else if (password.length == 0) {
+      setPasswordMessage('Trường này không được để trống');
+      valid = false
+    } else if (password.length !== 6) {
+      setPasswordMessage('Mật khẩu phải có 6 ký tự');
+      valid = false
     }
     setLoading(true);
 
     try {
-      const response = await login({phoneNumber, password});
+      if (valid) {
+        const response = await login({ phoneNumber, password });
 
-      console.log(' Đăng nhập thành công, khởi tạo socket...');
-      await MerchantSocketService.initialize(newOrder => {
-        setOrderNew(newOrder);
-      });
+        console.log(' Đăng nhập thành công, khởi tạo socket...');
+        await MerchantSocketService.initialize(newOrder => {
+          setOrderNew(newOrder);
+        });
 
-      authDispatch({type: AuthActionTypes.LOGIN});
+        authDispatch({ type: AuthActionTypes.LOGIN });
+      }
 
-      // navigation.navigate('MainNavigation');
     } catch (error) {
       Toaster.show('Đăng nhập thất bại');
     } finally {
@@ -67,7 +74,7 @@ const LoginScreen = props => {
       <KeyboardAvoidingView behavior="padding" style={styles.keyboardAvoid}>
         <LightStatusBar />
         <Image
-          source={require('../../assets/images/logo2.png')}
+          source={require('../../assets/images/logo.png')}
           style={styles.imgBanner}
         />
         <Column style={styles.formContainer}>
@@ -75,34 +82,40 @@ const LoginScreen = props => {
             <Text style={styles.welcome}>Chào mừng bạn đến với</Text>
             <Text style={styles.title}>GREEN ZONE</Text>
 
-            <FlatInput
+            <NormalInput
+              required
               value={phoneNumber}
               label="Số điện thoại"
               placeholder="Nhập số điện thoại của bạn..."
-              style={{width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL}}
+              style={{ width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL }}
               setValue={text => {
                 const cleanedText = text.replace(/\D/g, '').slice(0, 10);
-                setPhoneNumberError(false);
                 setPhoneNumberMessage('');
                 setPhoneNumber(cleanedText);
               }}
-              error={phoneNumberError}
+
               invalidMessage={phoneNumberMessage}
             />
-            <FlatInput
+
+            <NormalInput
+              required
               value={password}
               label="Mật khẩu"
-              style={{width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL}}
+              style={{ width: '100%', marginVertical: GLOBAL_KEYS.PADDING_SMALL }}
               placeholder="Nhập mật khẩu"
-              setValue={setPassword}
+              setValue={(value) => {
+                setPassword(value)
+                setPasswordMessage('')
+              }}
               isPasswordVisible={isPasswordVisible}
               setIsPasswordVisible={setIsPasswordVisible}
               secureTextEntry={!isPasswordVisible}
+              invalidMessage={passwordMessage}
             />
             <PrimaryButton
               title="Đăng nhập"
               onPress={loginHandle}
-              style={{width: '100%'}}
+              style={{ width: '100%' }}
             />
           </Column>
         </Column>
@@ -118,9 +131,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+
   },
   keyboardAvoid: {
     flex: 1,
+    backgroundColor: colors.white,
   },
   imgBanner: {
     width: isTablet ? '20%' : '25%',
@@ -132,7 +147,7 @@ const styles = StyleSheet.create({
       : GLOBAL_KEYS.PADDING_SMALL,
   },
   formContainer: {
-    flex: 1,
+    // flex: 1,
     alignSelf: 'center',
     width: '90%',
     maxWidth: isTablet ? 600 : '100%',
