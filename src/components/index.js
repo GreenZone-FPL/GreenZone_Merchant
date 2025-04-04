@@ -1,9 +1,7 @@
-
 //animation
 export * from './animations/Ani_ModalLoading';
 export * from './animations/LoadingOverlay';
 export * from './animations/NormalLoading';
-
 
 // buttons
 export * from './buttons/PrimaryButton';
@@ -14,7 +12,6 @@ export * from './containers/Row';
 
 // dialogs
 export * from './dialogs/DialogBasic';
-
 
 // inputs
 export * from './inputs/CustomSearchBar';
@@ -35,3 +32,4 @@ export * from './tabviews/CustomTabView';
 export * from './texts/DualTextRow';
 export * from './texts/NormalText';
 export * from './texts/TitleText';
+export * from './texts/StatusText';

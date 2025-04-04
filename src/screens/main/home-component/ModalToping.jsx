@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Dimensions,
   Modal,
@@ -8,14 +8,15 @@ import {
   TouchableOpacity,
   View,
   Image,
+  Pressable,
 } from 'react-native';
 
-import { colors, GLOBAL_KEYS } from '../../../constants';
-import { AppAsyncStorage, TextFormatter } from '../../../utils';
-import { Row, Column, TitleText } from '../../../components';
-import { Icon } from 'react-native-paper';
+import {colors, GLOBAL_KEYS} from '../../../constants';
+import {AppAsyncStorage, TextFormatter} from '../../../utils';
+import {Row, Column, TitleText, OverlayStatusBar} from '../../../components';
+import {Icon} from 'react-native-paper';
 
-const { width } = Dimensions.get('window').width;
+const {width} = Dimensions.get('window').width;
 
 const ModalToping = ({
   openMenu,
@@ -39,7 +40,7 @@ const ModalToping = ({
         if (merchantData) {
           setMerchant(merchantData);
         }
-      } catch (error) { }
+      } catch (error) {}
     };
 
     loadMerchant();
@@ -131,6 +132,8 @@ const ModalToping = ({
           owner: null,
           voucher: null,
           orderItems: [newItem],
+          consigneeName: null,
+          consigneePhone: null,
         };
       } else {
         // Kiểm tra xem orderItem mới đã tồn tại trong giỏ hàng chưa (so sánh dựa vào variant và toppingItems)
@@ -138,7 +141,7 @@ const ModalToping = ({
           item =>
             item.variant === newItem.variant &&
             JSON.stringify(item.toppingItems) ===
-            JSON.stringify(newItem.toppingItems),
+              JSON.stringify(newItem.toppingItems),
         );
 
         if (existingItemIndex !== -1) {
@@ -182,103 +185,145 @@ const ModalToping = ({
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
-      <View style={styles.modalContainer}>
+      <OverlayStatusBar />
+      <Pressable
+        onPress={() => setOpenMenu(false)}
+        style={styles.modalContainer}>
+        <Pressable onPress={() => {}} style={{flex: 1}}>
+          <Column style={styles.modalContent}>
+            <Row style={styles.headerContainer}>
+              <Row style={{gap: 16}}>
+                <Image
+                  style={{width: 100, height: 100, borderRadius: 80}}
+                  source={{uri: selectedProduct?.image}}
+                />
+                <TitleText
+                  text={selectedProduct?.name}
+                  style={{color: colors.black2}}
+                />
+              </Row>
 
-        <Column style={styles.modalContent}>
-
-          <Row style={styles.headerContainer}>
-            <Row style={{ gap: 16 }}>
-
-              <Image
-                style={{ width: 100, height: 100, borderRadius: 80 }}
-                source={{ uri: selectedProduct?.image }}
-              />
-              <TitleText text={selectedProduct?.name} style={{ color: colors.black2 }} />
+              <TouchableOpacity
+                style={{
+                  borderRadius: 20,
+                  backgroundColor: colors.green100,
+                  padding: 10,
+                }}
+                onPress={() => {
+                  setSelectedToppings([]);
+                  setSelectedSize(null);
+                  setSelectedProduct(null);
+                  setOpenMenu(false);
+                }}>
+                <Icon source="close" color={colors.primary} size={24} />
+              </TouchableOpacity>
             </Row>
 
+            <Row style={{gap: 30, flex: 1}}>
+              <Column
+                style={{
+                  backgroundColor: colors.white,
+                  height: '100%',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  borderRadius: 6,
+                  width: '30%',
+                }}>
+                <TitleText text="Size" style={{color: colors.orange700}} />
 
-            <TouchableOpacity
-              style={{ borderRadius: 20, backgroundColor: colors.green100, padding: 10 }}
-              onPress={() => {
-                setSelectedToppings([]);
-                setSelectedSize(null);
-                setSelectedProduct(null);
-                setOpenMenu(false);
-              }}>
-              <Icon
-                source="close"
-                color={colors.primary}
-                size={24}
-              />
-            </TouchableOpacity>
-          </Row>
-
-
-
-          <Row style={{ gap: 30, flex: 1 }}>
-
-            <Column style={{ backgroundColor: colors.white, height: '100%', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6, width: '30%' }}>
-              <TitleText text='Size' style={{ color: colors.orange700 }} />
-
-              <Column style={{ gap: 16, }}>
-                {selectedProduct?.variant?.filter(item => item != null).map(item => (
-                  <TouchableOpacity
-                    key={item?._id}
-                    style={[styles.sizeOption, selectedSize?._id === item._id && styles.selectedSize]}
-                    onPress={() => setSelectedSize(item)}
-                  >
-                    <Text style={[styles.sizeText, selectedSize?._id === item?._id && styles.selectedSizeText]}>
-                      {item?.size} - {item?.sellingPrice} VNĐ
-                    </Text>
-                  </TouchableOpacity>
-
-                ))}
-              </Column>
-            </Column>
-
-
-            {
-              selectedProduct?.topping?.length > 0 &&
-
-              <Column style={{ flex: 1, backgroundColor: colors.white, paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6 }}>
-                <TitleText text='Topping' style={{ color: colors.orange700 }} />
-
-                <FlatList
-                  data={selectedProduct?.topping.filter(item => item != null)}
-                  keyExtractor={item => item?._id}
-                  renderItem={({ item }) => {
-                    const isSelected = selectedToppings.some(t => t?._id === item?._id);
-                    return (
-                      <TouchableOpacity key={item?._id} style={[styles.toppingOption, isSelected && styles.selectedTopping]} onPress={() => toggleTopping(item)}>
-                        <Text style={[styles.sizeText, isSelected && styles.selectedToppingText]}>
-                          {item?.name} (+ {item?.extraPrice})
+                <Column style={{gap: 16}}>
+                  {selectedProduct?.variant
+                    ?.filter(item => item != null)
+                    .map(item => (
+                      <TouchableOpacity
+                        key={item?._id}
+                        style={[
+                          styles.sizeOption,
+                          selectedSize?._id === item._id && styles.selectedSize,
+                        ]}
+                        onPress={() => setSelectedSize(item)}>
+                        <Text
+                          style={[
+                            styles.sizeText,
+                            selectedSize?._id === item?._id &&
+                              styles.selectedSizeText,
+                          ]}>
+                          {item?.size} - {item?.sellingPrice} VNĐ
                         </Text>
                       </TouchableOpacity>
-                    );
-                  }}
-                  contentContainerStyle={{ flexGrow: 1, gap: GLOBAL_KEYS.GAP_DEFAULT }}
-                  showsVerticalScrollIndicator={false}
-                  style={{ flex: 1 }}
-                />
+                    ))}
+                </Column>
               </Column>
-            }
 
+              {selectedProduct?.topping?.length > 0 && (
+                <Column
+                  style={{
+                    flex: 1,
+                    backgroundColor: colors.white,
+                    paddingHorizontal: 24,
+                    paddingVertical: 16,
+                    borderRadius: 6,
+                  }}>
+                  <TitleText text="Topping" style={{color: colors.orange700}} />
 
-          </Row>
+                  <FlatList
+                    data={selectedProduct?.topping.filter(item => item != null)}
+                    keyExtractor={item => item?._id}
+                    renderItem={({item}) => {
+                      const isSelected = selectedToppings.some(
+                        t => t?._id === item?._id,
+                      );
+                      return (
+                        <TouchableOpacity
+                          key={item?._id}
+                          style={[
+                            styles.toppingOption,
+                            isSelected && styles.selectedTopping,
+                          ]}
+                          onPress={() => toggleTopping(item)}>
+                          <Text
+                            style={[
+                              styles.sizeText,
+                              isSelected && styles.selectedToppingText,
+                            ]}>
+                            {item?.name} (+ {item?.extraPrice})
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    }}
+                    contentContainerStyle={{
+                      flexGrow: 1,
+                      gap: GLOBAL_KEYS.GAP_DEFAULT,
+                    }}
+                    showsVerticalScrollIndicator={false}
+                    style={{flex: 1}}
+                  />
+                </Column>
+              )}
+            </Row>
 
-          <Row style={{ backgroundColor: colors.white, width: '100%', justifyContent: 'flex-end', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6 }}>
-
-            <TouchableOpacity
-              style={[styles.confirmButton, { backgroundColor: colors.primary }]}
-              onPress={confirmAddToCart}>
-              <Text style={styles.confirmButtonText}>Xác nhận</Text>
-            </TouchableOpacity>
-
-          </Row>
-
-        </Column>
-      </View>
-    </Modal >
+            <Row
+              style={{
+                backgroundColor: colors.white,
+                width: '100%',
+                justifyContent: 'flex-end',
+                paddingHorizontal: 24,
+                paddingVertical: 16,
+                borderRadius: 6,
+              }}>
+              <TouchableOpacity
+                style={[
+                  styles.confirmButton,
+                  {backgroundColor: colors.primary},
+                ]}
+                onPress={confirmAddToCart}>
+                <Text style={styles.confirmButtonText}>Xác nhận</Text>
+              </TouchableOpacity>
+            </Row>
+          </Column>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
 };
 
@@ -288,7 +333,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.overlay,
-
   },
   modalContent: {
     flex: 1,
@@ -297,9 +341,17 @@ const styles = StyleSheet.create({
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     alignItems: 'center',
     gap: GLOBAL_KEYS.GAP_DEFAULT,
-    margin: 50
+    margin: 50,
   },
-  headerContainer: { justifyContent: 'space-between', backgroundColor: colors.white, width: '100%', paddingHorizontal: 24, paddingVertical: 16, borderRadius: 6, alignItems: 'flex-start' },
+  headerContainer: {
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    width: '100%',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 6,
+    alignItems: 'flex-start',
+  },
   sizeOption: {
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
@@ -316,7 +368,7 @@ const styles = StyleSheet.create({
     color: colors.black,
   },
   selectedSizeText: {
-    color: colors.black2
+    color: colors.black2,
   },
   toppingOption: {
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,

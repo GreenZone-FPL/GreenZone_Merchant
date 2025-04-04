@@ -11,7 +11,7 @@ import {getEmployeesAllAvailable} from '../../../axios/index';
 import {GLOBAL_KEYS, colors} from '../../../constants';
 
 const ShipperSelectModal = ({visible, onClose, onSelect}) => {
-  const [shippers, setShippers] = useState([]); // 🔹 Khởi tạo mảng rỗng để tránh lỗi undefined
+  const [shippers, setShippers] = useState([]);
 
   useEffect(() => {
     if (visible) {
@@ -19,20 +19,20 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
     }
   }, [visible]);
 
-const fetchShippers = async () => {
-  try {
-    const data = await getEmployeesAllAvailable();   
-    if (Array.isArray(data)) {
-      setShippers(data);
-    } else {
-      console.error('Dữ liệu API không hợp lệ:', data);
+  const fetchShippers = async () => {
+    try {
+      const data = await getEmployeesAllAvailable();
+      if (Array.isArray(data)) {
+        setShippers(data);
+      } else {
+        console.error('Dữ liệu API không hợp lệ:', data);
+        setShippers([]);
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách shipper:', error);
       setShippers([]);
     }
-  } catch (error) {
-    console.error('Lỗi khi lấy danh sách shipper:', error);
-    setShippers([]);
-  }
-};
+  };
 
   const handleSelectShipper = shipper => {
     onSelect(shipper);

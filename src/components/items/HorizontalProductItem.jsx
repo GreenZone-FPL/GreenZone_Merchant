@@ -1,14 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { GLOBAL_KEYS, colors } from '../../constants';
-import { TextFormatter } from '../../utils';
-import { Row } from '../containers/Row';
-import { Column } from '../containers/Column';
-import { NormalText } from '../texts/NormalText';
-import { color } from '@rneui/base';
-
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import {Icon} from 'react-native-paper';
+import {GLOBAL_KEYS, colors} from '../../constants';
+import {TextFormatter} from '../../utils';
+import {Column} from '../containers/Column';
+import {NormalText} from '../texts/NormalText';
 
 const HorizontalProductItemPropTypes = {
   item: PropTypes.object.isRequired,
@@ -24,7 +21,6 @@ const HorizontalProductItemPropTypes = {
   oldPriceStyle: PropTypes.object,
 };
 
-
 export const HorizontalProductItem = ({
   item,
   enableAction,
@@ -38,75 +34,91 @@ export const HorizontalProductItem = ({
   priceStyle,
   confirmDelete,
   oldPriceStyle,
-}) => (
-  <View style={[styles.itemProduct, containerStyle]}>
-    <View style={styles.imageWrapper}>
-      <Image
-        style={[styles.itemImage, imageStyle]}
-        source={{ uri: item.image }}
-      />
-      <View style={styles.quantityBadge}>
-        <Text style={styles.quantityText}>x{item.quantity}</Text>
+}) => {
+  const priceProduct = item.price || 0;
+  const priceTopping =
+    item?.toppingItems?.reduce(
+      (sum, topping) => sum + topping.price * topping.quantity,
+      0,
+    ) || 0;
+  const totalPrice = (priceProduct + priceTopping) * item.quantity || 0;
+  return (
+    <View style={[styles.itemProduct, containerStyle]}>
+      <View style={styles.imageWrapper}>
+        <Image
+          style={[styles.itemImage, imageStyle]}
+          source={{uri: item.image}}
+        />
+        <View style={styles.quantityBadge}>
+          <Text style={styles.quantityText}>x{item.quantity}</Text>
+        </View>
       </View>
+
+      <Column style={styles.productInfo}>
+        <Text style={[styles.productName, titleStyle]}>{item.productName}</Text>
+        {item.variantName && !item.isVariantDefault && (
+          <Text
+            style={[
+              styles.normalText,
+              {color: colors.pink500, fontWeight: '500'},
+              optionStyle,
+            ]}>
+            {item.variantName}
+          </Text>
+        )}
+
+        {item.toppingItems?.map(topping => {
+          if (topping.quantity > 0) {
+            return (
+              <Text
+                key={topping._id}
+                style={[
+                  styles.normalText,
+                  {color: colors.gray850},
+                  optionStyle,
+                ]}>
+                x{topping.quantity} {topping.name}
+              </Text>
+            );
+          }
+          return null;
+        })}
+
+        {item.note && (
+          <Text
+            style={[styles.normalText, {color: colors.orange700}, noteStyle]}>
+            Note: {item.note}
+          </Text>
+        )}
+      </Column>
+
+      <Column style={styles.priceContainer}>
+        <Text style={[styles.productPrice, priceStyle]}>
+          {TextFormatter.formatCurrency(totalPrice)}
+        </Text>
+
+        {enableDelete && (
+          <Pressable onPress={confirmDelete}>
+            <NormalText text="Xóa" style={{color: colors.orange700}} />
+          </Pressable>
+        )}
+
+        {/* <Text style={[styles.lineThroughText, oldPriceStyle]}>{TextFormatter.formatCurrency(item.price)}</Text> */}
+        {enableAction && (
+          <Pressable onPress={onAction}>
+            <Icon
+              source="square-edit-outline"
+              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
+              color={colors.primary}
+            />
+          </Pressable>
+        )}
+      </Column>
     </View>
+  );
+};
 
-    <Column style={styles.productInfo}>
-      <Text style={[styles.productName, titleStyle]}>{item.productName}</Text>
-      {item.variantName && !item.isVariantDefault && (
-        <Text
-          style={[styles.normalText, { color: colors.pink500, fontWeight: '500' }, optionStyle]}>
-          {item.variantName}
-        </Text>
-      )}
-
-      {item.toppingItems?.map(topping => {
-        if (topping.quantity > 0) {
-          return (
-            <Text
-              key={topping._id}
-              style={[styles.normalText, { color: colors.gray850 }, optionStyle]}>
-              x{topping.quantity} {topping.name}
-            </Text>
-          );
-        }
-        return null;
-      })}
-
-      {item.note && (
-        <Text style={[styles.normalText, { color: colors.orange700 }, noteStyle]}>
-          Note: {item.note}
-        </Text>
-      )}
-    </Column>
-
-    <Column style={styles.priceContainer}>
-      <Text style={[styles.productPrice, priceStyle]}>
-        {TextFormatter.formatCurrency(item.price * item.quantity)}
-      </Text>
-
-      {enableDelete && (
-        <Pressable onPress={confirmDelete}>
-          <NormalText text="Xóa" style={{ color: colors.orange700 }} />
-        </Pressable>
-      )}
-
-      {/* <Text style={[styles.lineThroughText, oldPriceStyle]}>{TextFormatter.formatCurrency(item.price)}</Text> */}
-      {enableAction && (
-        <Pressable onPress={onAction}>
-          <Icon
-            source="square-edit-outline"
-            size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-            color={colors.primary}
-          />
-        </Pressable>
-      )}
-    </Column>
-  </View>
-);
-
-HorizontalProductItem.propTypes = HorizontalProductItemPropTypes
-
-
+HorizontalProductItem.propTypes = HorizontalProductItemPropTypes;
 
 const styles = StyleSheet.create({
   itemProduct: {
@@ -130,7 +142,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
-
   },
   productInfo: {
     flexDirection: 'column',
@@ -140,12 +151,11 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
-
   },
   productPrice: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
-    fontWeight: '500'
+    fontWeight: '500',
   },
 
   imageWrapper: {
@@ -172,11 +182,11 @@ const styles = StyleSheet.create({
   priceContainer: {
     flexDirection: 'column',
     justifyContent: 'space-around',
-    alignItems: 'flex-end'
+    alignItems: 'flex-end',
   },
   lineThroughText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray700,
     textDecorationLine: 'line-through',
   },
-})
+});

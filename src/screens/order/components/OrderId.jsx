@@ -21,7 +21,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: 6,
     justifyContent: 'space-between',
-    width: 670,
   },
   pressable: {flexDirection: 'row', alignItems: 'center'},
   orderIdText: {
