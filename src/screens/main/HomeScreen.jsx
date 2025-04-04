@@ -23,6 +23,7 @@ import {AuthActionTypes} from '../../reducers/authReducer';
 import {AppAsyncStorage, TextFormatter} from '../../utils';
 import CartOrder from './home-component/CartOrder';
 import ModalToping from './home-component/ModalToping';
+import merchantSocketService from '../../sevices/merchantSocketService';
 const {width} = Dimensions.get('window');
 
 const HomeScreen = ({navigation}) => {
@@ -197,6 +198,7 @@ const HomeScreen = ({navigation}) => {
 
                 authDispatch({type: AuthActionTypes.LOGOUT});
 
+                merchantSocketService.disconnect()
                 // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>

@@ -10,24 +10,22 @@ import {
 
 import {
   Column,
-  FlatInput,
   LightStatusBar,
   NormalInput,
-  PrimaryButton,
+  PrimaryButton
 } from '../../components';
 
 import { login } from '../../axios/index';
 import { NormalLoading } from '../../components';
 import { colors, GLOBAL_KEYS } from '../../constants';
 import { useAppContext } from '../../context/appContext';
+import { AuthActionTypes } from '../../reducers/authReducer';
 import MerchantSocketService from '../../sevices/merchantSocketService';
 import { Toaster } from '../../utils';
-import { AuthActionTypes } from '../../reducers/authReducer';
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
 
 const LoginScreen = props => {
-  const { navigation } = props;
   const [phoneNumber, setPhoneNumber] = useState('0711111111');
   const [password, setPassword] = useState('123456');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -52,7 +50,7 @@ const LoginScreen = props => {
 
     try {
       if (valid) {
-        const response = await login({ phoneNumber, password });
+        await login( phoneNumber, password );
 
         console.log(' Đăng nhập thành công, khởi tạo socket...');
         await MerchantSocketService.initialize(newOrder => {
