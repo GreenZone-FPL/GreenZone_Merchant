@@ -9,13 +9,20 @@ import {
 } from 'react-native';
 import {IconButton} from 'react-native-paper';
 import {getOrderDetail} from '../../axios/index';
-import {OverlayStatusBar, TitleText} from '../../components';
+import {
+  NormalLoading,
+  OverlayStatusBar,
+  TitleText,
+  Row,
+  StatusText,
+} from '../../components';
 import {GLOBAL_KEYS, OrderStatus, colors} from '../../constants';
 import MerchantInfo from './components/MerchantInfo';
 import RecipientInfo from './components/RecipientInfo';
 import ProductsInfo from './components/ProductsInfo';
 import PaymentDetails from './components/PaymentDetails';
 import ShipperInfo from './components/ShipperInfo';
+import PaymentDetailsView from './components/PaymentDetailsView';
 
 const OrderDetailScreen = ({
   idOrder,
@@ -27,7 +34,7 @@ const OrderDetailScreen = ({
   const scrollViewRef = useRef(null);
   const [orderDetail, setOrderDetail] = useState(null);
   const [status, setStatus] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({animated: true});
@@ -37,12 +44,15 @@ const OrderDetailScreen = ({
   const fetchOrderDetail = async () => {
     try {
       const response = await getOrderDetail(idOrder);
-      setOrderDetail(response.data);
-      setStatus(response.data.status);
+      setOrderDetail(response);
+      setStatus(response.status);
     } catch (error) {
       console.log('Lỗi lấy chi tiết đơn hàng:', error);
+    } finally {
+      setLoading(false);
     }
   };
+  // console.log('order', JSON.stringify(orderDetail, null, 2));
 
   useEffect(() => {
     if (idOrder == null) return;
@@ -59,7 +69,14 @@ const OrderDetailScreen = ({
     const statusEntry = Object.values(OrderStatus).find(s => s.value === value);
     return statusEntry ? statusEntry.label : 'Trạng thái không xác định';
   };
-  console.log('\n dung co render lien tuc nhe');
+
+  if (loading) {
+    return (
+      <View style={styles.body}>
+        <NormalLoading visible={loading} />
+      </View>
+    );
+  }
   return (
     <Modal visible={isModalOrderDetail} transparent animationType="slide">
       <OverlayStatusBar />
@@ -69,51 +86,76 @@ const OrderDetailScreen = ({
           style={styles.viewClose}
         />
         <View style={styles.modalContainer}>
-          <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
-            <View style={styles.headerRow}>
-              <View style={styles.headerSpacer} />
-              <TitleText
-                text="Chi tiết đơn hàng"
-                style={styles.titleTextCenter}
-              />
-              <IconButton
-                icon="close"
-                size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
-                iconColor={colors.primary}
-                style={styles.closeButton}
-                onPress={() => setIsModalOrderDetail(false)}
-              />
-            </View>
-            <View style={styles.statusRow}>
-              <Text style={styles.statusLabel}>Trạng thái đơn hàng:</Text>
-              <Text
-                style={[
-                  styles.statusText,
-                  {
-                    color:
-                      orderDetail?.status === 'cancelled'
-                        ? colors.black
-                        : colors.green500,
-                  },
-                ]}>
-                {getOrderStatusLabel(orderDetail?.status)}
-              </Text>
-            </View>
-            {orderDetail &&
-              orderDetail.shippingAddress &&
-              Object.keys(orderDetail.shippingAddress).length > 0 && (
-                <ShipperInfo shipper={orderDetail.shipper} />
-              )}
-            <MerchantInfo data={orderDetail?.store} />
-            <RecipientInfo data={orderDetail} />
-            <ProductsInfo orderItems={orderDetail?.orderItems} />
-            <PaymentDetails
-              data={orderDetail}
-              setIsModalOrderDetail={setIsModalOrderDetail}
-              fetchOrders={fetchOrders}
-              setIdOrder={setIdOrder}
-              fetchOrderDetail={fetchOrderDetail}
+          <View style={styles.headerRow}>
+            <View style={styles.headerSpacer} />
+
+            <TitleText
+              text="Chi tiết đơn hàng"
+              style={styles.titleTextCenter}
             />
+            <IconButton
+              icon="close"
+              size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
+              iconColor={colors.primary}
+              style={styles.closeButton}
+              onPress={() => setIsModalOrderDetail(false)}
+            />
+          </View>
+          <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
+            {orderDetail && (
+              <>
+                {orderDetail.shippingAddress &&
+                  Object.keys(orderDetail.shippingAddress).length > 0 && (
+                    <ShipperInfo shipper={orderDetail.shipper} />
+                  )}
+
+                <Row
+                  style={{
+                    paddingVertical: GLOBAL_KEYS.PADDING_SMALL,
+                    paddingHorizontal: GLOBAL_KEYS.PADDING_DEFAULT,
+                    marginBottom: GLOBAL_KEYS.GAP_SMALL,
+                    justifyContent: 'space-between',
+                    flex: 1,
+                    backgroundColor: colors.white,
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+                      color: colors.black,
+                      flex: 1,
+                      fontWeight: '500',
+                    }}>
+                    {orderDetail?.deliveryMethod === 'pickup'
+                      ? 'Tự đến lấy hàng'
+                      : 'Giao hàng tận nơi'}
+                  </Text>
+
+                  <StatusText status={orderDetail.status} />
+                </Row>
+
+                <MerchantInfo data={orderDetail.store} />
+                <RecipientInfo data={orderDetail} />
+                <ProductsInfo orderItems={orderDetail.orderItems} />
+                <PaymentDetailsView
+                  detail={orderDetail}
+                  _id={orderDetail._id}
+                  shippingFee={orderDetail.shippingFee}
+                  voucher={orderDetail.voucher}
+                  paymentMethod={orderDetail.paymentMethod}
+                  orderItems={orderDetail.orderItems}
+                  totalPrice={orderDetail.totalPrice}
+                  status={orderDetail.status}
+                  createdAt={orderDetail.createdAt}
+                />
+                <PaymentDetails
+                  data={orderDetail}
+                  setIsModalOrderDetail={setIsModalOrderDetail}
+                  fetchOrders={fetchOrders}
+                  setIdOrder={setIdOrder}
+                  fetchOrderDetail={fetchOrderDetail}
+                />
+              </>
+            )}
           </ScrollView>
         </View>
         <TouchableOpacity

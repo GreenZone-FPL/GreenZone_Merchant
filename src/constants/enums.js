@@ -13,7 +13,6 @@ export const OrderStatus = Object.freeze({
   PENDING_CONFIRMATION: {label: 'Chờ xác nhận', value: 'pendingConfirmation'},
   PROCESSING: {label: 'Đang xử lý', value: 'processing'},
   READY_FOR_PICKUP: {label: 'Chờ lấy hàng', value: 'readyForPickup'},
-  // dành cho đơn delivery, sản phẩm đã được chuẩn bị xong, và đang đợi nhân viên đem đi giao
   SHIPPING_ORDER: {label: 'Đang giao hàng', value: 'shippingOrder'},
   COMPLETED: {label: 'Hoàn thành', value: 'completed'},
   CANCELLED: {label: 'Đã hủy', value: 'cancelled'},
@@ -25,6 +24,11 @@ export const OrderStatus = Object.freeze({
 
   getValues() {
     return Object.values(this).map(status => status.value);
+  },
+
+  getLabelByValue(value) {
+    const status = Object.values(this).find(status => status.value === value);
+    return status ? status.label : 'Không xác định';
   },
 });
 

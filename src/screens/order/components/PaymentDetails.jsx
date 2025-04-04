@@ -22,15 +22,20 @@ const PaymentDetails = ({
 }) => {
   const [selectedShipper, setSelectedShipper] = useState(null);
   const [shipperModalVisible, setShipperModalVisible] = useState(false);
-  const getPaymentStatus = (status, paymentMethod) => {
-    if (status === 'completed') {
+
+  const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
+    if (
+      status === 'completed' ||
+      (deliveryMethod === 'pickup' &&
+        (status == 'processing' || status == 'readyForPickup'))
+    ) {
       return {text: 'Đã thanh toán', color: colors.primary};
     }
     if (paymentMethod === 'cod') {
-      return {text: 'Chưa thanh toán', color: colors.orange700};
+      return {text: 'Chưa thanh toán', color: 'red'};
     }
     if (status === 'awaitingPayment') {
-      return {text: 'Chờ thanh toán', color: colors.pink500};
+      return {text: 'Chờ thanh toán', color: 'orange'};
     }
     return {text: 'Đã thanh toán', color: colors.primary};
   };
@@ -41,7 +46,11 @@ const PaymentDetails = ({
       ? data?.voucher
       : null;
   const discountAmount = calculateVoucher(totalPrice, voucher);
-  const paymentStatus = getPaymentStatus(data?.status, data?.paymentMethod);
+  const paymentStatus = getPaymentStatus(
+    data?.status,
+    data?.paymentMethod,
+    data?.deliveryMethod,
+  );
 
   function calculateTotalPrice(items) {
     if (!Array.isArray(items)) return 0;
@@ -79,7 +88,7 @@ const PaymentDetails = ({
 
   const showAlert = ({notification, message, onPress}) => {
     Alert.alert(notification, message, [
-      {text: 'Huỷ Đơn', style: 'cancel'},
+      {text: 'Đóng', style: 'cancel'},
       {text: 'Xác Nhận', onPress},
     ]);
   };
@@ -258,8 +267,8 @@ const PaymentDetails = ({
 
   return (
     <View style={styles.container}>
-      <DualTextRow
-        leftText="CHI TIẾT THANH TOÁN"
+      {/* <DualTextRow
+        leftText="Chi tiết thanh toán"
         leftTextStyle={styles.dualTextLeftHeader}
       />
       <View style={styles.oderIdContainer}>
@@ -296,7 +305,7 @@ const PaymentDetails = ({
           rightTextStyle: {
             color: colors.primary,
             fontWeight: '700',
-            fontSize: 18,
+            fontSize: 20,
           },
           leftTextStyle: {color: colors.primary, fontWeight: '700'},
         },
@@ -327,7 +336,7 @@ const PaymentDetails = ({
         },
       ].map((item, index) => (
         <DualTextRow key={index} {...item} />
-      ))}
+      ))} */}
       {data?.status !== OrderStatus.CANCELLED.value &&
         data?.status !== OrderStatus.FAILED_DELIVERY.value && (
           <View style={styles.buttonContainer}>
@@ -345,8 +354,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dualTextLeftHeader: {
-    color: colors.primary,
+    color: colors.black2,
     fontWeight: 'bold',
+    fontSize: 20,
   },
   buttonContainer: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import axiosInstance from '../axiosInstance';
-import {OrderStatus} from '../../constants';
+
 export const createPickUpOrder = async order => {
   try {
     const request = {
@@ -31,32 +31,18 @@ export const createPickUpOrder = async order => {
 
 export const getOrders = async status => {
   try {
-
     const response = await axiosInstance.get(`/v1/order/store/all`, {
       params: {
         status: status,
       },
     });
-    console.log('getOrders')
+    console.log('getOrders');
     return response.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
     throw error;
   }
 };
-// export const getOrders = async status => {
-//   try {
-//     const url = status
-//       ? `/v1/order/store/all?status=${status}`
-//       : '/v1/order/store/all';
-
-//     const response = await axiosInstance.get(url);
-//     return response.data;
-//   } catch (error) {
-//     console.log('error', error);
-//     throw error;
-//   }
-// };
 
 export const getOrderDetail = async orderId => {
   try {
@@ -93,21 +79,3 @@ export const updateOrderStatus = async (
     throw error;
   }
 };
-
-// export const updateStatusOrder = async (orderId, status, shipper) => {
-//   try {
-//     const response = await axiosInstance.patch(`/v1/order/${orderId}/status`, {
-//       status,
-//       shipper,
-//     });
-
-//     console.log('Cập nhật trạng thái đơn hàng thành công:', response.data);
-//     return response.data;
-//   } catch (error) {
-//     console.(
-//       'Lỗi khi cập nhật trạng thái đơn hàng:',
-//       error.response ? error.response.data : error.message,
-//     );
-//     throw error;
-//   }
-// };

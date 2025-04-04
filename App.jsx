@@ -1,22 +1,17 @@
-import 'react-native-gesture-handler';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import React, {useEffect, useState} from 'react';
+import FlashMessage, {showMessage} from 'react-native-flash-message';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {AppContextProvider, useAppContext} from './src/context/appContext';
 import MainNavigation from './src/layouts/MainNavigation';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
-import Toast, { BaseToast } from 'react-native-toast-message';
-import { Dimensions, Platform } from 'react-native';
-import { colors } from './src/constants';
-import { AppAsyncStorage } from './src/utils';
-import { AppContextProvider } from './src/context/appContext';
-import FlashMessage, { showMessage } from 'react-native-flash-message';
-import { useAppContext } from './src/context/appContext';
+import {AppAsyncStorage} from './src/utils';
+import SplashScreen from './src/screens/auth/SplashScreen';
 
 const BaseStack = createNativeStackNavigator();
 
-// Hàm chính của ứng dụng
 function App() {
   return (
     <AppContextProvider>
@@ -24,56 +19,62 @@ function App() {
         <NavigationContainer>
           <AppNavigator />
         </NavigationContainer>
-        <FlashMessage position='top' />
+        <FlashMessage position="top" />
       </SafeAreaProvider>
     </AppContextProvider>
   );
 }
 
 const AppNavigator = () => {
-  const [isTokenValid, setIsTokenValid] = useState(false);
-  const { orderNew, setOrderNew } = useAppContext();
+  const {orderNew, setOrderNew, authState} = useAppContext();
+  const [isTokenValid, setIsTokenValid] = useState(null); // Start with null to show SplashScreen
+  const [isLoading, setIsLoading] = useState(true); // Loading state for SplashScreen
 
-  // Khởi tạo socket khi có storeId
+  // Initialize the socket
   useEffect(() => {
-    console.log('🛠 Initializing socket...');
-    MerchantSocketService.initialize((data) => {
-      console.log('📥 Data received in AppNavigator:', data);
-      setOrderNew(data);
+    console.log('Initializing socket...');
+    MerchantSocketService.initialize(newOrder => {
+      // console.log('Data received in AppNavigator:', newOrder);
+      setOrderNew(newOrder);
     });
+
+    return () => {
+      MerchantSocketService.disconnect();
+    };
   }, [setOrderNew]);
 
-  useEffect(() => {
-    if (orderNew) {
-      showMessage({
-        message: 'Đơn hàng mới', 
-        description: orderNew.message, 
-        type: 'success',
-        icon: 'success',
-        duration: 10000,
-        titleStyle: { fontSize: 18, fontWeight: 'bold' },
-        textStyle: { fontSize: 16, color: 'white' }, 
-      });
-    }
-  }, [orderNew]);
-
+  // Check token validity
   useEffect(() => {
     const checkToken = async () => {
       const tokenIsValid = await AppAsyncStorage.isTokenValid();
-      setIsTokenValid(tokenIsValid);
+      setIsTokenValid(tokenIsValid); // Update token validity state
+      setIsLoading(false); // Once token check is done, set loading to false
     };
     checkToken();
   }, []);
 
-  return (
-    <BaseStack.Navigator
-      screenOptions={{ headerShown: false }}
->
-          <BaseStack.Screen name="MainNavigation" component={MainNavigation} />
-      <BaseStack.Screen name="LoginScreen" component={LoginScreen} />
-    
-    </BaseStack.Navigator>
-  );
+  useEffect(() => {
+    // console.log('orderNew:', orderNew);
+    if (orderNew) {
+      showMessage({
+        message: 'Đơn hàng mới',
+        description: orderNew.message,
+        type: 'success',
+        icon: 'success',
+        duration: 1000,
+        titleStyle: {fontSize: 18, fontWeight: 'bold'},
+        textStyle: {fontSize: 16, color: 'white'},
+      });
+    }
+  }, [orderNew]);
+
+  // Show splash screen while loading or checking token
+  if (isLoading) {
+    return <SplashScreen />;
+  }
+
+  // After the token check, show the appropriate screen
+  return authState.needAuthen ? <LoginScreen /> : <MainNavigation />;
 };
 
 export default App;

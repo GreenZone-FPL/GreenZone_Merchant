@@ -9,19 +9,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {Icon} from 'react-native-paper';
 import {
   getAllCategories,
   getAllProducts,
-  getProductsById,
   getMerchant,
+  getProductsById,
 } from '../../axios/index';
-import {Ani_ModalLoading, ButtonGroup, CustomSearchBar} from '../../components';
+import {CustomSearchBar, NormalLoading, NormalText} from '../../components';
 import {colors, GLOBAL_KEYS} from '../../constants';
-import CartOrder from '../home-component/CartOrder';
-import ModalToping from '../home-component/ModalToping';
+import {useAppContext} from '../../context/appContext';
+import {AuthActionTypes} from '../../reducers/authReducer';
 import {AppAsyncStorage, TextFormatter} from '../../utils';
-import {Icon} from 'react-native-paper';
-
+import CartOrder from './home-component/CartOrder';
+import ModalToping from './home-component/ModalToping';
 const {width} = Dimensions.get('window');
 
 const HomeScreen = ({navigation}) => {
@@ -41,11 +42,12 @@ const HomeScreen = ({navigation}) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [merchant, setMerchant] = useState(null);
   const flatListRef = useRef(null);
+  const {authDispatch, authState} = useAppContext();
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await getAllCategories();
       const categoriesData = [
         {
@@ -53,7 +55,7 @@ const HomeScreen = ({navigation}) => {
           name: 'Tất cả',
           icon: 'https://greenzone.motcaiweb.io.vn/uploads/1cbc176f-2f59-4828-bcf7-5454044e3f26.png',
         },
-        ...response.data.docs,
+        ...response.docs,
       ];
       setCategories(categoriesData);
     } catch (error) {
@@ -65,10 +67,10 @@ const HomeScreen = ({navigation}) => {
 
   // Gọi danh sách sản phẩm từ API
   const fetchProducts = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const response = await getAllProducts();
-      setProducts(response.data);
+      setProducts(response);
     } catch (error) {
       console.log(error);
     } finally {
@@ -99,12 +101,19 @@ const HomeScreen = ({navigation}) => {
 
   // Cập nhật sản phẩm hiển thị khi tìm kiếm thay đổi
   useEffect(() => {
-    if (searchTerm.trim() === '') {
+    const removeAccents = str => {
+      return str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Removes accents
+    };
+    const normalizedSearchTerm = removeAccents(searchTerm.trim().toLowerCase());
+
+    if (normalizedSearchTerm === '') {
       setFilteredProducts(productsByCate);
     } else {
       setFilteredProducts(
         productsByCate.filter(product =>
-          product.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+          removeAccents(product.name?.toLowerCase()).includes(
+            normalizedSearchTerm,
+          ),
         ),
       );
     }
@@ -114,7 +123,7 @@ const HomeScreen = ({navigation}) => {
   const handleAddProduct = async id => {
     try {
       const response = await getProductsById(id);
-      setSelectedProduct(response.data);
+      setSelectedProduct(response);
       setOpenMenu(true);
     } catch (error) {
       console.log(error);
@@ -125,13 +134,18 @@ const HomeScreen = ({navigation}) => {
   useEffect(() => {
     const loadMerchant = async () => {
       try {
-        const storeId = await AppAsyncStorage.readData('storeId');
+        const storeId = await AppAsyncStorage.readData(
+          AppAsyncStorage.STORAGE_KEYS.storeId,
+        );
         if (storeId) {
           const response = await getMerchant(storeId);
-          setMerchant(response.data);
+          // console.log('response', response);
+          setMerchant(response);
         }
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -150,35 +164,49 @@ const HomeScreen = ({navigation}) => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <NormalLoading visible={loading} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
         <View style={{gap: GLOBAL_KEYS.GAP_SMALL}}>
-          <Text style={styles.headerText}>{merchant?.name}</Text>
-          <Text
-            style={
-              styles.titleText
-            }>{`${merchant?.specificAddress}, ${merchant?.ward}, ${merchant?.district}, ${merchant?.province}`}</Text>
-          <Pressable
-            onPress={async () => {
-              console.log('acb');
-              await AppAsyncStorage.clearAll();
-              navigation.navigate('LoginScreen');
-            }}
-            style={styles.logoutButton}>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                fontWeight: '500',
-              }}>
-              Đăng xuất
-            </Text>
-            <Icon
-              source="logout"
-              size={GLOBAL_KEYS.ICON_SIZE_SMALL}
-              color={colors.primary}
-            />
-          </Pressable>
+          {merchant && (
+            <>
+              <Text style={styles.headerText}>{merchant?.name}</Text>
+              <Text style={styles.titleText}>
+                {`${merchant.specificAddress}, ${merchant.ward}, ${merchant.district}, ${merchant.province}`}
+              </Text>
+            </>
+          )}
+
+          {!authState?.needLogin && (
+            <Pressable
+              onPress={async () => {
+                await AppAsyncStorage.removeData(
+                  AppAsyncStorage.STORAGE_KEYS.accessToken,
+                );
+                await AppAsyncStorage.removeData(
+                  AppAsyncStorage.STORAGE_KEYS.refreshToken,
+                );
+
+                authDispatch({type: AuthActionTypes.LOGOUT});
+
+                // navigation.navigate('LoginScreen')
+              }}
+              style={styles.logoutButton}>
+              <Icon
+                source="logout"
+                size={GLOBAL_KEYS.ICON_SIZE_LARGE}
+                color={colors.primary}
+              />
+            </Pressable>
+          )}
         </View>
         <CustomSearchBar
           placeholder="Tìm kiếm sản phẩm..."
@@ -252,22 +280,15 @@ const HomeScreen = ({navigation}) => {
                 <Text numberOfLines={2} style={styles.productName}>
                   {item.name}
                 </Text>
-                {/* <TouchableOpacity
-                  style={styles.addButton}
-                  onPress={() => handleAddProduct(item._id)}>
-                  <Icon
-                    source={'plus'}
-                    size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity> */}
               </View>
             </TouchableOpacity>
           )}
           contentContainerStyle={styles.flatListContainer}
         />
       </View>
+
       <CartOrder cart={cart} setCart={setCart} />
+
       <ModalToping
         openMenu={openMenu}
         setOpenMenu={setOpenMenu}
@@ -280,7 +301,6 @@ const HomeScreen = ({navigation}) => {
         selectedToppings={selectedToppings}
         setSelectedToppings={setSelectedToppings}
       />
-      <Ani_ModalLoading loading={loading} />
     </View>
   );
 };
