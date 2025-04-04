@@ -23,6 +23,7 @@ import {AuthActionTypes} from '../../reducers/authReducer';
 import {AppAsyncStorage, TextFormatter} from '../../utils';
 import CartOrder from './home-component/CartOrder';
 import ModalToping from './home-component/ModalToping';
+import merchantSocketService from '../../sevices/merchantSocketService';
 const {width} = Dimensions.get('window');
 
 const HomeScreen = ({navigation}) => {
@@ -194,9 +195,10 @@ const HomeScreen = ({navigation}) => {
                 await AppAsyncStorage.removeData(
                   AppAsyncStorage.STORAGE_KEYS.refreshToken,
                 );
-
+                merchantSocketService.disconnect()
                 authDispatch({type: AuthActionTypes.LOGOUT});
 
+       
                 // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>

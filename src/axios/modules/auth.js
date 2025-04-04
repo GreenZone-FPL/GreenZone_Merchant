@@ -2,7 +2,7 @@ import axiosInstance from '../axiosInstance';
 import { AppAsyncStorage } from '../../utils';
 
 
-export const login = async ({ phoneNumber, password }) => {
+export const login = async ( phoneNumber, password ) => {
   try {
     const response = await axiosInstance.post('/auth/login', {
       phoneNumber,
