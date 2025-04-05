@@ -23,7 +23,6 @@ import ModalCheckout from './ModalCheckout';
 import ModalSelectedPaymentMethod from './ModalSelectedPaymentMethod';
 import ModalPayment from '../../order/ModalPayment';
 import {findCustomerByCode, findCustomerByPhone} from '../../../axios/index';
-import {Car} from 'iconsax-react-native';
 
 const {width} = Dimensions.get('window');
 
@@ -34,7 +33,7 @@ const CartOrder = ({cart, setCart}) => {
   const [isCheckout, setIsCheckout] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
-  const [label, setLabel] = useState('Nhập số điện thoại');
+  const [label, setLabel] = useState('Nhập SDT hoặc quét mã KH');
   const [isSelectedPaymentMethod, setIsSelectedPaymentMethod] = useState(false);
   const [isPayment, setIsPayment] = useState(false);
   const [orderResponse, setOrderResponse] = useState(null);
@@ -127,9 +126,6 @@ const CartOrder = ({cart, setCart}) => {
 
   const updateCustomer = customer => {
     setCart(prevOrder => {
-      if (!prevOrder) {
-        return null;
-      }
       // console.log(customer);
       if (customer) {
         return {
@@ -224,12 +220,9 @@ const CartOrder = ({cart, setCart}) => {
 
   // update
   useEffect(() => {
-    if (cart === null) {
-      setPhoneNumber('');
-      setCustomer(null);
-    } else {
-      setLabel('Nhập số điện thoại');
-    }
+    // setPhoneNumber('');
+    // setCustomer(null);
+    console.log('cart', JSON.stringify(cart, null, 2));
   }, [cart]);
 
   // console.log('cart', JSON.stringify(filterCart(cart), null, 2));
@@ -283,11 +276,6 @@ const CartOrder = ({cart, setCart}) => {
               placeholder="Số điện thoại"
               value={phoneNumber}
               setValue={text => {
-                if (cart === null) {
-                  setPhoneNumber('');
-                  setLabel('Chọn sản phẩm trước');
-                  return;
-                }
                 const formatted = text.replace(/[^0-9]/g, '');
                 if (formatted.length <= 10) {
                   setPhoneNumber(formatted);
@@ -301,11 +289,7 @@ const CartOrder = ({cart, setCart}) => {
                 top: '30%',
               }}
               onPress={() => {
-                // console.log('cameraCart', cart);
-                if (cart === null) setLabel('Chọn sản phẩm trước');
-                else {
-                  setIsScanning(true);
-                }
+                setIsScanning(true);
               }}>
               <Icon source="barcode-scan" size={24} color={colors.primary} />
             </TouchableOpacity>
@@ -316,9 +300,7 @@ const CartOrder = ({cart, setCart}) => {
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               }}>
               Khách hàng:{' '}
-              {cart === null
-                ? ''
-                : customer
+              {customer
                 ? `${customer?.firstName} ${customer?.lastName}`
                 : ' Vãng lai'}
             </Text>
@@ -326,8 +308,7 @@ const CartOrder = ({cart, setCart}) => {
               style={{
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               }}>
-              Số điện thoại:{' '}
-              {cart === null ? '' : customer ? customer?.phoneNumber : ''}
+              Số điện thoại: {customer ? customer?.phoneNumber : ''}
             </Text>
             {cart?.owner && (
               <View style={{position: 'absolute', end: 0}}>

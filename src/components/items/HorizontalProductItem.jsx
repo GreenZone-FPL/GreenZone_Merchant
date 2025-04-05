@@ -42,6 +42,8 @@ export const HorizontalProductItem = ({
       0,
     ) || 0;
   const totalPrice = (priceProduct + priceTopping) * item.quantity || 0;
+
+  console.log('item', JSON.stringify(item, null, 2));
   return (
     <View style={[styles.itemProduct, containerStyle]}>
       <View style={styles.imageWrapper}>

@@ -248,7 +248,8 @@ const ModalToping = ({
                             selectedSize?._id === item?._id &&
                               styles.selectedSizeText,
                           ]}>
-                          {item?.size} - {item?.sellingPrice} VNĐ
+                          {item?.size} -{' '}
+                          {TextFormatter.formatCurrency(item?.sellingPrice)}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -286,7 +287,8 @@ const ModalToping = ({
                               styles.sizeText,
                               isSelected && styles.selectedToppingText,
                             ]}>
-                            {item?.name} (+ {item?.extraPrice})
+                            {item?.name} (+
+                            {TextFormatter.formatCurrency(item?.extraPrice)})
                           </Text>
                         </TouchableOpacity>
                       );

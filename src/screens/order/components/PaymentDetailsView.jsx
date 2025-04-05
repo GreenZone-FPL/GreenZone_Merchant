@@ -26,8 +26,8 @@ const PaymentDetailsView = ({
   // Số tiền giảm giá từ voucher (nếu có)
   const discount = voucher
     ? voucher.discountType === 'percentage'
-      ? (subTotal * voucher.discountValue) / 100
-      : voucher.discountValue
+      ? (subTotal * voucher.value) / 100
+      : voucher.value
     : 0;
 
   // Chọn icon phù hợp với phương thức thanh toán

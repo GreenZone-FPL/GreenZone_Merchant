@@ -9,6 +9,7 @@ import LoginScreen from './src/screens/auth/LoginScreen';
 import MerchantSocketService from './src/sevices/merchantSocketService';
 import {AppAsyncStorage} from './src/utils';
 import SplashScreen from './src/screens/auth/SplashScreen';
+import {OrderStatus} from './src/constants';
 
 const BaseStack = createNativeStackNavigator();
 
@@ -54,8 +55,11 @@ const AppNavigator = () => {
   }, []);
 
   useEffect(() => {
-    // console.log('orderNew:', orderNew);
+    console.log('orderNew:', orderNew);
     if (orderNew) {
+      if (orderNew.status == OrderStatus.AWAITING_PAYMENT.value) {
+        return;
+      }
       showMessage({
         message: 'Đơn hàng mới',
         description: orderNew.message,
