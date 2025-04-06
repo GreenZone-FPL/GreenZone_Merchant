@@ -20,6 +20,9 @@ const ModalPayment = ({
   setIsPayment,
   orderResponse,
   setOrderResponse,
+  setCart,
+  setPhoneNumber,
+  setScannedCode,
 }) => {
   const [checkoutUrl, setCheckoutUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,11 +32,6 @@ const ModalPayment = ({
   const API_KEY = Config.API_KEY;
   const CHECKSUM_KEY = Config.CHECKSUM_KEY;
 
-  console.log('CLIENT_ID', CLIENT_ID);
-  console.log('API_KEY', API_KEY);
-  console.log('CHECKSUM_KEY', CHECKSUM_KEY);
-  console.log('orderResponse', JSON.stringify(orderResponse, null, 2));
-
   // Hàm tạo đơn hàng PayOS
   const createPayOSOrder = async () => {
     setLoading(true);
@@ -42,8 +40,8 @@ const ModalPayment = ({
     const orderCode = Date.now();
     const amount = 2000;
     const description = `${orderResponse._id}`;
-    const returnUrl = 'https://greenzone.motcaiweb.io.vn/v1/category/all';
-    const cancelUrl = 'https://greenzone.motcaiweb.io.vn/v1/product/all';
+    const returnUrl = `https://yourapp.com/payment-success?orderId=${orderResponse._id}`;
+    const cancelUrl = `https://yourapp.com/payment-cancel?orderId=${orderResponse._id}`;
 
     const expiredAt = Math.floor(Date.now() / 1000) + 120;
 
@@ -105,15 +103,24 @@ const ModalPayment = ({
   const handleWebViewNavigation = navState => {
     const {url} = navState;
 
-    if (url.includes('https://greenzone.motcaiweb.io.vn/v1/category/all')) {
+    if (
+      url.includes(
+        `https://yourapp.com/payment-success?orderId=${orderResponse._id}`,
+      )
+    ) {
       updateStatus(OrderStatus.PROCESSING.value);
       setOrderResponse(null);
       setIsPayment(false);
+      setCart(null);
+      setPhoneNumber('');
+      setScannedCode('');
       console.log('Thanh toán thành công');
     } else if (
-      url.includes('https://greenzone.motcaiweb.io.vn/v1/product/all')
+      url.includes(
+        `https://yourapp.com/payment-cancel?orderId=${orderResponse._id}`,
+      )
     ) {
-      updateStatus(OrderStatus.CANCELLED.value);
+      // updateStatus(OrderStatus.CANCELLED.value);
       setIsPayment(false);
       setOrderResponse(null);
       console.log('Hủy thanh toán');
@@ -152,6 +159,18 @@ const ModalPayment = ({
               onNavigationStateChange={handleWebViewNavigation}
               style={styles.webview}
               startInLoadingState
+              onError={syntheticEvent => {
+                const {nativeEvent} = syntheticEvent;
+                console.warn('Lỗi WebView:', nativeEvent);
+                setErrorMessage(
+                  'Lỗi khi tải trang thanh toán. Vui lòng thử lại.',
+                );
+              }}
+              onHttpError={syntheticEvent => {
+                const {nativeEvent} = syntheticEvent;
+                console.warn('HTTP error:', nativeEvent.statusCode);
+                setErrorMessage(`Lỗi HTTP ${nativeEvent.statusCode} từ PayOS.`);
+              }}
             />
           ) : (
             <Text style={styles.errorText}>

@@ -124,7 +124,7 @@ const HomeScreen = ({navigation}) => {
   const handleAddProduct = async id => {
     try {
       const response = await getProductsById(id);
-      setSelectedProduct(response);
+      setSelectedProduct({...response, quantity: 1});
       setOpenMenu(true);
     } catch (error) {
       console.log(error);
@@ -195,10 +195,9 @@ const HomeScreen = ({navigation}) => {
                 await AppAsyncStorage.removeData(
                   AppAsyncStorage.STORAGE_KEYS.refreshToken,
                 );
-                merchantSocketService.disconnect()
+                merchantSocketService.disconnect();
                 authDispatch({type: AuthActionTypes.LOGOUT});
 
-       
                 // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>

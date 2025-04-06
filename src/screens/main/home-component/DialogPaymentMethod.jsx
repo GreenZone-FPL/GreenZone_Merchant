@@ -11,7 +11,7 @@ import {
 import {colors, GLOBAL_KEYS, PaymentMethod} from '../../../constants';
 import {OverlayStatusBar, Row} from '../../../components';
 
-const ModalSelectedPaymentMethod = ({
+const DialogPaymentMethod = ({
   setIsSelectedPaymentMethod,
   isSelectedPaymentMethod,
   setIsCheckout,
@@ -91,7 +91,7 @@ const ModalSelectedPaymentMethod = ({
   );
 };
 
-export default React.memo(ModalSelectedPaymentMethod);
+export default React.memo(DialogPaymentMethod);
 
 const styles = StyleSheet.create({
   container: {

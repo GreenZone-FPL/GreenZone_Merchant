@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  Pressable,
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../../constants';
@@ -20,10 +21,11 @@ import {Icon, IconButton} from 'react-native-paper';
 import {TextFormatter} from '../../../utils';
 import {CustomFlatInput} from '../../../components';
 import ModalCheckout from './ModalCheckout';
-import ModalSelectedPaymentMethod from './ModalSelectedPaymentMethod';
+import ModalSelectedPaymentMethod from './DialogPaymentMethod';
 import ModalPayment from '../../order/ModalPayment';
 import {findCustomerByCode, findCustomerByPhone} from '../../../axios/index';
-import {Car} from 'iconsax-react-native';
+import ModalToppingUpdateProduct from './DialogUpdateTopping';
+import {updateTotalPrice} from '../../../utils/cartManager';
 
 const {width} = Dimensions.get('window');
 
@@ -34,10 +36,14 @@ const CartOrder = ({cart, setCart}) => {
   const [isCheckout, setIsCheckout] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customer, setCustomer] = useState(null);
-  const [label, setLabel] = useState('Nhập số điện thoại');
+  const [label, setLabel] = useState('Nhập SDT hoặc quét mã KH');
   const [isSelectedPaymentMethod, setIsSelectedPaymentMethod] = useState(false);
   const [isPayment, setIsPayment] = useState(false);
   const [orderResponse, setOrderResponse] = useState(null);
+  const [showSelectdTopping, setShowSelectdTopping] = useState(false);
+
+  // useStable ModalCheckout
+  const [orderItem, setOrderItem] = useState(null);
 
   // Lấy quyền camera
   const {hasPermission, requestPermission} = useCameraPermission();
@@ -80,7 +86,9 @@ const CartOrder = ({cart, setCart}) => {
         setPhoneNumber('');
         setScannedCode('');
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log('error', error);
+    }
   };
 
   const fetchCustomerByPhone = async phoneNumber => {
@@ -94,7 +102,9 @@ const CartOrder = ({cart, setCart}) => {
         setPhoneNumber('');
         setScannedCode('');
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log('error', error);
+    }
   };
 
   // gọi api lấy thông tin user qua code hoặc phone
@@ -127,9 +137,6 @@ const CartOrder = ({cart, setCart}) => {
 
   const updateCustomer = customer => {
     setCart(prevOrder => {
-      if (!prevOrder) {
-        return null;
-      }
       // console.log(customer);
       if (customer) {
         return {
@@ -164,6 +171,7 @@ const CartOrder = ({cart, setCart}) => {
         ? {...prevCart, orderItems: updatedOrderItems}
         : null; // Hoặc {} nếu muốn giữ trạng thái object
     });
+    updateTotalPrice(setCart);
   };
   // cập nhập số lượng
   const updateItemQuantity = (itemId, newQuantity) => {
@@ -173,7 +181,6 @@ const CartOrder = ({cart, setCart}) => {
           return {
             ...item,
             quantity: newQuantity,
-            totalPrice: newQuantity * item.totalProductPrice,
           };
         }
         return item;
@@ -181,7 +188,7 @@ const CartOrder = ({cart, setCart}) => {
 
       // Tính lại tổng giá của giỏ hàng từ các orderItem
       const updatedTotalPrice = updatedOrderItems.reduce(
-        (total, item) => total + item.totalPrice,
+        (total, item) => total + item.price,
         0,
       );
 
@@ -191,6 +198,7 @@ const CartOrder = ({cart, setCart}) => {
         totalPrice: updatedTotalPrice,
       };
     });
+    updateTotalPrice(setCart);
   };
   // Lọc lại cart để gửi oder
   const filterCart = cart => {
@@ -199,10 +207,10 @@ const CartOrder = ({cart, setCart}) => {
       variant: item.variant,
       quantity: item.quantity,
       price: item.price,
-      toppingItems: item?.toppingItems?.map(toppingItem => ({
-        topping: toppingItem.topping,
-        quantity: toppingItem.quantity,
-        price: toppingItem.price,
+      toppingItems: item.toppingItems.map(t => ({
+        topping: t._id,
+        quantity: t.quantity,
+        price: t.extraPrice,
       })),
     }));
 
@@ -222,17 +230,9 @@ const CartOrder = ({cart, setCart}) => {
     };
   };
 
-  // update
   useEffect(() => {
-    if (cart === null) {
-      setPhoneNumber('');
-      setCustomer(null);
-    } else {
-      setLabel('Nhập số điện thoại');
-    }
-  }, [cart]);
-
-  // console.log('cart', JSON.stringify(filterCart(cart), null, 2));
+    console.log('Cart', JSON.stringify(cart, null, 2));
+  }, [customer, cart]);
 
   return (
     <View style={styles.rightSection}>
@@ -283,11 +283,6 @@ const CartOrder = ({cart, setCart}) => {
               placeholder="Số điện thoại"
               value={phoneNumber}
               setValue={text => {
-                if (cart === null) {
-                  setPhoneNumber('');
-                  setLabel('Chọn sản phẩm trước');
-                  return;
-                }
                 const formatted = text.replace(/[^0-9]/g, '');
                 if (formatted.length <= 10) {
                   setPhoneNumber(formatted);
@@ -301,11 +296,7 @@ const CartOrder = ({cart, setCart}) => {
                 top: '30%',
               }}
               onPress={() => {
-                // console.log('cameraCart', cart);
-                if (cart === null) setLabel('Chọn sản phẩm trước');
-                else {
-                  setIsScanning(true);
-                }
+                setIsScanning(true);
               }}>
               <Icon source="barcode-scan" size={24} color={colors.primary} />
             </TouchableOpacity>
@@ -316,9 +307,7 @@ const CartOrder = ({cart, setCart}) => {
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               }}>
               Khách hàng:{' '}
-              {cart === null
-                ? ''
-                : customer
+              {customer
                 ? `${customer?.firstName} ${customer?.lastName}`
                 : ' Vãng lai'}
             </Text>
@@ -326,10 +315,9 @@ const CartOrder = ({cart, setCart}) => {
               style={{
                 fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
               }}>
-              Số điện thoại:{' '}
-              {cart === null ? '' : customer ? customer?.phoneNumber : ''}
+              Số điện thoại: {customer ? customer?.phoneNumber : ''}
             </Text>
-            {cart?.owner && (
+            {(cart?.owner || customer?.phoneNumber) && (
               <View style={{position: 'absolute', end: 0}}>
                 <IconButton
                   icon="close"
@@ -361,17 +349,22 @@ const CartOrder = ({cart, setCart}) => {
             keyExtractor={item => item._id}
             showsVerticalScrollIndicator={false}
             renderItem={({item}) => (
-              <View style={styles.cartItem}>
+              <Pressable
+                onPress={() => {
+                  setShowSelectdTopping(true);
+                  setOrderItem(item);
+                }}
+                style={styles.cartItem}>
                 <Image
                   style={styles.cartItemImage}
-                  source={{uri: item.product.image}}
+                  source={{uri: item.image}}
                 />
                 <View
                   style={{
                     flexDirection: 'column',
                     flex: 1,
                   }}>
-                  <Text style={styles.cartItemName}>{item.product.name} </Text>
+                  <Text style={styles.cartItemName}>{item.productName} </Text>
                   <View style={styles.cartItemTopping}>
                     <Text
                       style={{
@@ -379,12 +372,12 @@ const CartOrder = ({cart, setCart}) => {
                         fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
                         fontWeight: '500',
                       }}>
-                      {item.size.size}
+                      {item.variantName}
                     </Text>
                     <Text style={{color: colors.gray850}}>
-                      {item.topping &&
-                        item.topping.length > 0 &&
-                        item.topping.map((topping, index) => (
+                      {item.toppingItems &&
+                        item.toppingItems.length > 0 &&
+                        item.toppingItems.map((topping, index) => (
                           <Text
                             key={index}
                             style={{
@@ -393,7 +386,7 @@ const CartOrder = ({cart, setCart}) => {
                             }}>
                             <Text
                               style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
-                              x1{' '}
+                              x{topping.quantity}{' '}
                             </Text>
                             {topping.name}
                             {'\n'}
@@ -404,7 +397,7 @@ const CartOrder = ({cart, setCart}) => {
                 </View>
                 <View style={styles.itemContent}>
                   <Text style={styles.cartItemPrice}>
-                    {TextFormatter.formatCurrency(item.totalPrice)}
+                    {TextFormatter.formatCurrency(item.price * item.quantity)}
                   </Text>
                   <View
                     style={{
@@ -461,7 +454,7 @@ const CartOrder = ({cart, setCart}) => {
                     </TouchableOpacity>
                   </View>
                 </View>
-              </View>
+              </Pressable>
             )}
             contentContainerStyle={{
               gap: GLOBAL_KEYS.GAP_SMALL,
@@ -511,13 +504,12 @@ const CartOrder = ({cart, setCart}) => {
                 color: colors.pink500,
                 width: '100%',
               }}>
-              {TextFormatter.formatCurrency(
-                cart?.totalPrice ? cart.totalPrice : 0,
-              )}
+              {TextFormatter.formatCurrency(cart?.totalPrice || 0)}
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => {
+              updateCustomer(customer);
               if (cart == null) return;
               setIsSelectedPaymentMethod(true);
             }}>
@@ -568,6 +560,18 @@ const CartOrder = ({cart, setCart}) => {
           setIsPayment={setIsPayment}
           setOrderResponse={setOrderResponse}
           orderResponse={orderResponse}
+          setCart={setCart}
+          setPhoneNumber={setPhoneNumber}
+          setScannedCode={setScannedCode}
+        />
+      )}
+      {showSelectdTopping && (
+        <ModalToppingUpdateProduct
+          cart={cart}
+          setCart={setCart}
+          openMenu={showSelectdTopping}
+          setOpenMenu={setShowSelectdTopping}
+          orderItem={orderItem}
         />
       )}
     </View>

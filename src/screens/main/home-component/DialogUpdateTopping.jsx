@@ -6,57 +6,35 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
   Image,
   Pressable,
 } from 'react-native';
 
 import {colors, GLOBAL_KEYS} from '../../../constants';
-import {AppAsyncStorage, TextFormatter} from '../../../utils';
+import {TextFormatter} from '../../../utils';
 import {Row, Column, TitleText, OverlayStatusBar} from '../../../components';
 import {Icon} from 'react-native-paper';
-import {cartManager} from '../../../utils/cartManager';
+import {cartManager, updateTotalPrice} from '../../../utils/cartManager';
 
 const {width} = Dimensions.get('window').width;
 
-const ModalToping = ({
+const DialogUpdateTopping = ({
   openMenu,
   setOpenMenu,
   cart,
   setCart,
-  selectedProduct,
-  setSelectedProduct,
-  selectedSize,
-  setSelectedSize,
-  selectedToppings,
-  setSelectedToppings,
+  orderItem,
 }) => {
-  const [merchant, setMerchant] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState();
 
-  // lấy dữ liệu cửa hàng
+  const [selectedToppings, setSelectedToppings] = useState();
+  const [selectedSize, setSelectedSize] = useState();
+
   useEffect(() => {
-    const loadMerchant = async () => {
-      try {
-        const merchantData = await AppAsyncStorage.readData(
-          AppAsyncStorage.STORAGE_KEYS.storeId,
-        );
-        if (merchantData) {
-          setMerchant(merchantData);
-        }
-      } catch (error) {
-        console.log('error', error);
-      }
-    };
-
-    loadMerchant();
-  }, []);
-
-  //Chọn size đầu tiên
-  useEffect(() => {
-    if (selectedProduct?.variant?.length > 0) {
-      setSelectedSize(selectedProduct.variant[0]);
-    }
-  }, [selectedProduct]);
+    setSelectedProduct(orderItem?.selectedProduct);
+    setSelectedToppings(orderItem?.selectedToppings);
+    setSelectedSize(orderItem?.selectedSize);
+  }, [cart.orderItem]);
 
   // cập nhập số lượng product
   const updateProductQuantity = number => {
@@ -73,24 +51,36 @@ const ModalToping = ({
   };
 
   // thêm sản phẩm vào giỏ hàng
+  const updateProduct = () => {
+    // Tính tổng giá topping, nhân với số lượng topping
+    const totalToppingPrice = (selectedToppings || []).reduce(
+      (total, topping) =>
+        total + (topping.extraPrice || 0) * (topping.quantity || 1),
+      0,
+    );
 
-  const cartOrder = cartManager();
+    // Tổng giá sản phẩm = giá sản phẩm + tổng giá topping
+    const totalProductPrice = selectedSize.sellingPrice + totalToppingPrice;
 
-  const addToCart = () => {
-    if (merchant) {
-      cartOrder.confirmAddToCart(
-        selectedProduct,
-        selectedSize,
-        selectedToppings,
-        setSelectedProduct,
-        setSelectedToppings,
-        setSelectedSize,
-        setOpenMenu,
-        setCart,
-        merchant,
-        cart,
-      );
-    }
+    const orderItemUpdate = {
+      _id: orderItem._id,
+      variant: selectedSize._id,
+      quantity: selectedProduct.quantity,
+      price: totalProductPrice || 0,
+      toppingItems: selectedToppings || [],
+      productId: selectedProduct._id,
+      productName: selectedProduct.name,
+      variantName: selectedSize.size,
+      image: selectedProduct.image,
+      isVariantDefault: false,
+      selectedProduct: selectedProduct,
+      selectedSize: selectedSize,
+      selectedToppings: selectedToppings,
+    };
+
+    cartManager().updateProduct(orderItemUpdate, setCart);
+    updateTotalPrice(setCart);
+    setOpenMenu(false);
   };
 
   // useEffect(() => {
@@ -98,11 +88,18 @@ const ModalToping = ({
   // }, [cart]);
 
   // useEffect(() => {
-  //   console.log('selectedProduct', JSON.stringify(selectedProduct, null, 2));
-  // }, [selectedProduct]);
+  //   console.log('orderItem', JSON.stringify(orderItem, null, 2));
+  // }, [orderItem]);
   // useEffect(() => {
   //   console.log('selectedSize', JSON.stringify(selectedSize, null, 2));
   // }, [selectedSize]);
+
+  // useEffect(() => {
+  //   console.log('selectedProduct', JSON.stringify(selectedProduct, null, 2));
+  // }, [selectedProduct]);
+  // useEffect(() => {
+  //   console.log('selectedToppings', JSON.stringify(selectedToppings, null, 2));
+  // }, [selectedToppings]);
 
   return (
     <Modal visible={openMenu} transparent animationType="slide">
@@ -116,15 +113,15 @@ const ModalToping = ({
               <Row style={{gap: 16}}>
                 <Image
                   style={{width: 100, height: 100, borderRadius: 80}}
-                  source={{uri: selectedProduct?.image}}
+                  source={{uri: orderItem?.selectedProduct.image}}
                 />
                 <Column
                   style={{justifyContent: 'center', alignItems: 'center'}}>
                   <TitleText
-                    text={selectedProduct?.name}
+                    text={orderItem?.selectedProduct.name}
                     style={{color: colors.black2}}
                   />
-                  <Row>
+                  {/* <Row>
                     <Pressable
                       style={styles.button}
                       onPress={() => {
@@ -142,7 +139,7 @@ const ModalToping = ({
                       }}>
                       <Icon source={'plus'} size={24} color={colors.white} />
                     </Pressable>
-                  </Row>
+                  </Row> */}
                 </Column>
               </Row>
 
@@ -155,7 +152,7 @@ const ModalToping = ({
                 onPress={() => {
                   setSelectedToppings([]);
                   setSelectedSize(null);
-                  setSelectedProduct({quantity: 1});
+                  setSelectedProduct(null);
                   setOpenMenu(false);
                 }}>
                 <Icon source="close" color={colors.primary} size={24} />
@@ -175,7 +172,7 @@ const ModalToping = ({
                 <TitleText text="Size" style={{color: colors.orange700}} />
 
                 <Column style={{gap: 16}}>
-                  {selectedProduct?.variant
+                  {orderItem?.selectedProduct?.variant
                     ?.filter(item => item != null)
                     .map(item => (
                       <TouchableOpacity
@@ -199,7 +196,7 @@ const ModalToping = ({
                 </Column>
               </Column>
 
-              {selectedProduct?.topping?.length > 0 && (
+              {orderItem?.selectedProduct?.topping?.length > 0 && (
                 <Column
                   style={{
                     flex: 1,
@@ -211,13 +208,15 @@ const ModalToping = ({
                   <TitleText text="Topping" style={{color: colors.orange700}} />
 
                   <FlatList
-                    data={selectedProduct?.topping.filter(item => item != null)}
+                    data={orderItem?.selectedProduct?.topping.filter(
+                      item => item != null,
+                    )}
                     keyExtractor={item => item?._id}
                     renderItem={({item}) => {
-                      const isSelected = selectedToppings.some(
+                      const isSelected = selectedToppings?.some(
                         t => t?._id === item?._id,
                       );
-                      const selectedTopping = selectedToppings.find(
+                      const selectedTopping = selectedToppings?.find(
                         t => t?._id === item?._id,
                       );
                       const quantity = selectedTopping
@@ -304,7 +303,7 @@ const ModalToping = ({
                   {backgroundColor: colors.primary},
                 ]}
                 onPress={() => {
-                  addToCart();
+                  updateProduct();
                 }}>
                 <Text style={styles.confirmButtonText}>Xác nhận</Text>
               </TouchableOpacity>
@@ -404,4 +403,4 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
   },
 });
-export default React.memo(ModalToping);
+export default React.memo(DialogUpdateTopping);

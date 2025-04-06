@@ -36,7 +36,7 @@ const ModalCheckout = ({
     setLoading(true);
     try {
       let response;
-
+      console.log('data', JSON.stringify(data, null, 2));
       if (data.paymentMethod === PaymentMethod.ONLINE.value) {
         response = await createPickUpOrder({
           ...data,
@@ -48,15 +48,18 @@ const ModalCheckout = ({
 
       // Kiểm tra response có tồn tại không trước khi truy cập vào nó
       if (response) {
-        console.log('API trả về:', JSON.stringify(response, null, 2));
         setOrderResponse(response.data);
-        setMessage('Tạo đơn thành công');
-        setCart(null);
-        setPhoneNumber('');
-        setScannedCode('');
-        setIsCheckout(false);
+        if (response.data.paymentMethod === PaymentMethod.COD.value) {
+          console.log('API trả về:', JSON.stringify(response, null, 2));
+          setMessage('Tạo đơn thành công');
+          setCart(null);
+          setPhoneNumber('');
+          setScannedCode('');
+          setIsCheckout(false);
+        }
         if (response.data.paymentMethod === PaymentMethod.ONLINE.value) {
           setIsPayment(true);
+          setIsCheckout(false);
         }
       } else {
         throw new Error('API không trả về dữ liệu hợp lệ.');

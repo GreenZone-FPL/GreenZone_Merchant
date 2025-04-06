@@ -15,7 +15,13 @@ import {
   LightStatusBar,
   NormalText,
 } from '../../components';
-import {colors, GLOBAL_KEYS, OrderStatus, PaymentMethod} from '../../constants';
+import {
+  colors,
+  DeliveryMethod,
+  GLOBAL_KEYS,
+  OrderStatus,
+  PaymentMethod,
+} from '../../constants';
 import {TextFormatter} from '../../utils';
 import OrderDetailScreen from '../order/OrderDetailScreen';
 import {useAppContext} from '../../context/appContext';
@@ -294,7 +300,13 @@ const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
   if (
     status === 'completed' ||
     (deliveryMethod === 'pickup' &&
-      (status == 'processing' || status == 'readyForPickup'))
+      (status == 'processing' || status == 'readyForPickup')) ||
+    (deliveryMethod == 'delivery' &&
+      paymentMethod == 'online' &&
+      (status == 'processing' ||
+        status == 'readyForPickup' ||
+        status == 'shippingOrder' ||
+        status == 'failedDelivery'))
   ) {
     return {text: 'Đã thanh toán', color: colors.primary};
   }
@@ -307,6 +319,7 @@ const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
   if (status === 'cancelled') {
     return {text: 'Chưa thanh toán', color: 'red'};
   }
+  return {text: 'Trạng thái không xác định', color: 'gray'};
 };
 
 const ItemOrderType = ({item}) => {

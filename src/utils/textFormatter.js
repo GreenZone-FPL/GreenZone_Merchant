@@ -12,7 +12,7 @@ export const TextFormatter = {
   // Định dạng tiền tệ theo đơn vị VND.
   formatCurrency(amount) {
     return amount
-      .toLocaleString('vi-VN', {style: 'currency', currency: 'VND'})
+      ?.toLocaleString('vi-VN', {style: 'currency', currency: 'VND'})
       .replace(/\s₫/, '₫');
   },
 

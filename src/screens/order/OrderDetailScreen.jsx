@@ -65,11 +65,6 @@ const OrderDetailScreen = ({
     }
   }, [status]);
 
-  const getOrderStatusLabel = value => {
-    const statusEntry = Object.values(OrderStatus).find(s => s.value === value);
-    return statusEntry ? statusEntry.label : 'Trạng thái không xác định';
-  };
-
   if (loading) {
     return (
       <View style={styles.body}>

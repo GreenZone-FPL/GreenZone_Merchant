@@ -67,8 +67,8 @@ const PaymentDetails = ({
   function calculateVoucher(totalPrice, voucher) {
     if (!voucher) return 0;
     return voucher.discountType === 'percentage'
-      ? (voucher.discountValue * totalPrice) / 100
-      : voucher.discountValue || 0;
+      ? (voucher.value * totalPrice) / 100
+      : voucher.value || 0;
   }
 
   const updateStatus = async (status, deliveryMethod, shipperId = null) => {
