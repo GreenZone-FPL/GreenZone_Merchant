@@ -35,15 +35,7 @@ export const HorizontalProductItem = ({
   confirmDelete,
   oldPriceStyle,
 }) => {
-  const priceProduct = item.price || 0;
-  const priceTopping =
-    item?.toppingItems?.reduce(
-      (sum, topping) => sum + topping.price * topping.quantity,
-      0,
-    ) || 0;
-  const totalPrice = (priceProduct + priceTopping) * item.quantity || 0;
-
-  console.log('item', JSON.stringify(item, null, 2));
+  // console.log('item', JSON.stringify(item, null, 2));
   return (
     <View style={[styles.itemProduct, containerStyle]}>
       <View style={styles.imageWrapper}>

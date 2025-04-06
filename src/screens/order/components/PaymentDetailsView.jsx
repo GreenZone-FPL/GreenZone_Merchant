@@ -9,7 +9,6 @@ const PaymentDetailsView = ({
   detail,
   _id,
   shippingFee,
-  voucher,
   paymentMethod,
   orderItems,
   totalPrice,
@@ -24,11 +23,16 @@ const PaymentDetailsView = ({
   );
 
   // Số tiền giảm giá từ voucher (nếu có)
-  const discount = voucher
-    ? voucher.discountType === 'percentage'
-      ? (subTotal * voucher.value) / 100
-      : voucher.value
-    : 0;
+  console.log('detail', JSON.stringify(detail, null, 2));
+
+  let discount = 0;
+  if (detail?.voucher) {
+    if (detail?.voucher.discountType === 'percentage') {
+      discount = (subTotal * detail?.voucher.value) / 100;
+    } else {
+      discount = detail?.voucher.value;
+    }
+  }
 
   // Chọn icon phù hợp với phương thức thanh toán
   const getPaymentIcon = method => {
@@ -78,24 +82,6 @@ const PaymentDetailsView = ({
 
   const paymentStatus = getPaymentStatus();
 
-  const calculateTotalOrderPrice = orderItems => {
-    if (!Array.isArray(orderItems)) return 0;
-
-    return orderItems.reduce((total, item) => {
-      const productAndToppingTotal =
-        item.price +
-          item.toppingItems?.reduce((sum, topping) => {
-            if (topping?.price && topping?.quantity) {
-              return sum + topping.price * topping.quantity;
-            }
-            return sum;
-          }, 0) || 0;
-
-      const totalItemPrice = productAndToppingTotal * item.quantity;
-      return total + totalItemPrice;
-    }, 0);
-  };
-
   return (
     <View
       style={{
@@ -134,7 +120,10 @@ const PaymentDetailsView = ({
       <DualTextRow
         leftText={`Tạm tính (${orderItems.length} sản phẩm)`}
         rightText={`${(
-          calculateTotalOrderPrice(detail.orderItems) || 0
+          detail.orderItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0,
+          ) || 0
         ).toLocaleString('vi-VN')}đ`}
       />
 

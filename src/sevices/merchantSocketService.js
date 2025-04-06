@@ -1,5 +1,5 @@
-import { AppAsyncStorage } from "../utils";
-import io from 'socket.io-client'
+import {AppAsyncStorage} from '../utils';
+import io from 'socket.io-client';
 
 class MerchantSocketService {
   constructor() {
@@ -12,7 +12,9 @@ class MerchantSocketService {
         const token = await AppAsyncStorage.readData(
           AppAsyncStorage.STORAGE_KEYS.accessToken,
         );
-        const storeId = await AppAsyncStorage.readData(AppAsyncStorage.STORAGE_KEYS.storeId);
+        const storeId = await AppAsyncStorage.readData(
+          AppAsyncStorage.STORAGE_KEYS.storeId,
+        );
 
         console.log('Token:', token);
         console.log('storeId:', storeId);
@@ -27,7 +29,7 @@ class MerchantSocketService {
         this.socket = io('https://greenzone.motcaiweb.io.vn', {
           path: '/socket.io/',
           transports: ['websocket'],
-          auth: { token },
+          auth: {token},
         });
 
         this.socket.on('connect', () => {
@@ -36,17 +38,17 @@ class MerchantSocketService {
           console.log(`Merchant joined store room: ${storeId}`);
         });
 
-        this.socket.on('order.new', (data) => {
-          console.log('📩 Received new order:', data);
+        this.socket.on('order.new', data => {
+          console.log(' Received new order:', data);
           /**
-           New Order: {"message": "📦 Đơn hàng mới #67e036a784526a4a39d6509e cần xử lý trước
+           New Order: {"message": " Đơn hàng mới #67e036a784526a4a39d6509e cần xử lý trước
            3/18/2025, 9:28:15 PM", "orderId": "67e036a784526a4a39d6509e", "storeId": "67b68d7698c1fc822e49fabd"}
            */
-           if(callback){
+          if (callback) {
             callback(data);
-            console.log('✅ Callback executed');
+            console.log('Callback executed');
           } else {
-            console.log('⚠️ Callback is undefined');
+            console.log('Callback is undefined');
           }
         });
 
@@ -54,7 +56,7 @@ class MerchantSocketService {
           console.log('Disconnected');
         });
 
-        this.socket.on('connect_error', (error) => {
+        this.socket.on('connect_error', error => {
           console.log('Lỗi kết nối:', error);
         });
       } catch (error) {
@@ -76,7 +78,9 @@ class MerchantSocketService {
         this.socket.off(event);
       }
     } else {
-      console.log(`⚠️ Socket chưa được khởi tạo, không thể huỷ lắng nghe sự kiện: ${event}`);
+      console.log(
+        ` Socket chưa được khởi tạo, không thể huỷ lắng nghe sự kiện: ${event}`,
+      );
     }
   }
 
@@ -87,7 +91,7 @@ class MerchantSocketService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
-      console.log('❌ Socket đã ngắt kết nối');
+      console.log(' Socket đã ngắt kết nối');
     }
   }
 }
