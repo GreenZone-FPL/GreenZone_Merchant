@@ -564,6 +564,7 @@ const CartOrder = ({cart, setCart}) => {
           setCart={setCart}
           setPhoneNumber={setPhoneNumber}
           setScannedCode={setScannedCode}
+          setCustomer={setCustomer}
         />
       )}
       {showSelectdTopping && (

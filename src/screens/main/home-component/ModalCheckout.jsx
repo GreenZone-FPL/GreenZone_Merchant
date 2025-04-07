@@ -56,7 +56,7 @@ const ModalCheckout = ({
           setCart(null);
           setPhoneNumber('');
           setScannedCode('');
-          setCustomer('');
+          setCustomer(null);
           setIsCheckout(false);
         }
         if (response.data.paymentMethod === PaymentMethod.ONLINE.value) {
