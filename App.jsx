@@ -65,7 +65,7 @@ const AppNavigator = () => {
         description: orderNew.message,
         type: 'success',
         icon: 'success',
-        duration: 1000,
+        duration: 2000,
         titleStyle: {fontSize: 18, fontWeight: 'bold'},
         textStyle: {fontSize: 16, color: 'white'},
       });
