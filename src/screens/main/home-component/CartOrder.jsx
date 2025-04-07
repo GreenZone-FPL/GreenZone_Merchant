@@ -351,8 +351,8 @@ const CartOrder = ({cart, setCart}) => {
             renderItem={({item}) => (
               <Pressable
                 onPress={() => {
-                  setShowSelectdTopping(true);
                   setOrderItem(item);
+                  setShowSelectdTopping(true);
                 }}
                 style={styles.cartItem}>
                 <Image
@@ -574,6 +574,7 @@ const CartOrder = ({cart, setCart}) => {
           openMenu={showSelectdTopping}
           setOpenMenu={setShowSelectdTopping}
           orderItem={orderItem}
+          setOrderItem={setOrderItem}
         />
       )}
     </View>
@@ -691,4 +692,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(CartOrder);
+export default CartOrder;

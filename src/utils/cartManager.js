@@ -1,6 +1,6 @@
 import {DeliveryMethod, PaymentMethod} from '../constants';
 
-export const cartManager = () => {
+export const CartManager = (() => {
   return {
     // Hàm tạo giỏ hàng và orderItem
     createOrder: function (
@@ -122,9 +122,9 @@ export const cartManager = () => {
     ) {
       setCart(prevCart => {
         // Tính toán giá trị mới cho orderItem
-        const totalToppingPrice = (selectedToppings || []).reduce(
+        const totalToppingPrice = selectedToppings.reduce(
           (total, topping) =>
-            total + (topping.extraPrice || 0) * (topping.quantity || 1),
+            total + (topping.extraPrice || 0) * topping.quantity,
           0,
         );
         const totalProductPrice = selectedSize.sellingPrice + totalToppingPrice;
@@ -132,16 +132,16 @@ export const cartManager = () => {
         const newItem = {
           _id: Date.now().toString(),
           variant: selectedSize._id,
-          quantity: selectedProduct?.quantity || 1,
+          quantity: selectedProduct?.quantity,
           price: totalProductPrice,
-          toppingItems: (selectedToppings || []).map(item => ({
+          toppingItems: selectedToppings.map(item => ({
             topping: item?._id,
-            quantity: item?.quantity || 1,
+            quantity: item?.quantity,
             price: item.extraPrice,
           })),
           product: selectedProduct,
           size: selectedSize,
-          topping: selectedToppings || [],
+          topping: selectedToppings,
           totalToppingPrice,
           totalProductPrice,
           totalPrice: totalProductPrice * (selectedProduct?.quantity || 1),
@@ -187,8 +187,13 @@ export const cartManager = () => {
         const existing = prev.find(t => t._id === topping._id);
         if (existing) {
           const newQty = existing.quantity + number;
-          if (newQty < 1 || newQty > 99) {
+
+          if (newQty > 99) {
             return prev;
+          }
+          if (newQty === 0) {
+            const toppings = prev.filter(item => item._id !== topping._id);
+            return toppings;
           }
           return prev.map(t =>
             t._id === topping._id ? {...t, quantity: newQty} : t,
@@ -231,7 +236,7 @@ export const cartManager = () => {
       updateTotalPrice(setCart);
     },
   };
-};
+})();
 
 // ham cap nhap tong tien don hang
 export const updateTotalPrice = setCart => {
