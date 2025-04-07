@@ -542,6 +542,7 @@ const CartOrder = ({cart, setCart}) => {
           setIsSelectedPaymentMethod={setIsSelectedPaymentMethod}
           setIsPayment={setIsPayment}
           setOrderResponse={setOrderResponse}
+          setCustomer={setCustomer}
         />
       )}
       {isSelectedPaymentMethod && (
