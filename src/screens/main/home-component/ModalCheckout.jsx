@@ -27,6 +27,7 @@ const ModalCheckout = ({
   setIsSelectedPaymentMethod,
   setIsPayment,
   setOrderResponse,
+  setCustomer,
 }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -55,6 +56,7 @@ const ModalCheckout = ({
           setCart(null);
           setPhoneNumber('');
           setScannedCode('');
+          setCustomer(null);
           setIsCheckout(false);
         }
         if (response.data.paymentMethod === PaymentMethod.ONLINE.value) {

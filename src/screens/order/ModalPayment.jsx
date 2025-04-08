@@ -23,6 +23,7 @@ const ModalPayment = ({
   setCart,
   setPhoneNumber,
   setScannedCode,
+  setCustomer,
 }) => {
   const [checkoutUrl, setCheckoutUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -114,6 +115,7 @@ const ModalPayment = ({
       setCart(null);
       setPhoneNumber('');
       setScannedCode('');
+      setCustomer(null);
       console.log('Thanh toán thành công');
     } else if (
       url.includes(

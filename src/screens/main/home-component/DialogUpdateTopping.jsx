@@ -14,9 +14,7 @@ import {colors, GLOBAL_KEYS} from '../../../constants';
 import {TextFormatter} from '../../../utils';
 import {Row, Column, TitleText, OverlayStatusBar} from '../../../components';
 import {Icon} from 'react-native-paper';
-import {cartManager, updateTotalPrice} from '../../../utils/cartManager';
-
-const {width} = Dimensions.get('window').width;
+import {CartManager, updateTotalPrice} from '../../../utils/cartManager';
 
 const DialogUpdateTopping = ({
   openMenu,
@@ -24,21 +22,29 @@ const DialogUpdateTopping = ({
   cart,
   setCart,
   orderItem,
+  setOrderItem,
 }) => {
   const [selectedProduct, setSelectedProduct] = useState();
-
   const [selectedToppings, setSelectedToppings] = useState();
   const [selectedSize, setSelectedSize] = useState();
 
   useEffect(() => {
-    setSelectedProduct(orderItem?.selectedProduct);
+    console.log(
+      'DialogUpdateTopping - orderItem:',
+      JSON.stringify(orderItem, null, 2),
+    );
+
+    setSelectedProduct({
+      ...orderItem?.selectedProduct,
+      quantity: orderItem.quantity,
+    });
     setSelectedToppings(orderItem?.selectedToppings);
     setSelectedSize(orderItem?.selectedSize);
-  }, [cart.orderItem]);
+  }, [orderItem]);
 
   // cập nhập số lượng product
   const updateProductQuantity = number => {
-    cartManager().changeProductQuantity(
+    CartManager.changeProductQuantity(
       selectedProduct,
       number,
       setSelectedProduct,
@@ -47,7 +53,7 @@ const DialogUpdateTopping = ({
 
   // cập nhập số lượng topping
   const updateToppingQuantity = (item, number) => {
-    cartManager().changeToppingQuantity(item, number, setSelectedToppings);
+    CartManager.changeToppingQuantity(item, number, setSelectedToppings);
   };
 
   // thêm sản phẩm vào giỏ hàng
@@ -78,7 +84,7 @@ const DialogUpdateTopping = ({
       selectedToppings: selectedToppings,
     };
 
-    cartManager().updateProduct(orderItemUpdate, setCart);
+    CartManager.updateProduct(orderItemUpdate, setCart);
     updateTotalPrice(setCart);
     setOpenMenu(false);
   };
@@ -115,31 +121,30 @@ const DialogUpdateTopping = ({
                   style={{width: 100, height: 100, borderRadius: 80}}
                   source={{uri: orderItem?.selectedProduct.image}}
                 />
-                <Column
-                  style={{justifyContent: 'center', alignItems: 'center'}}>
+                <Column>
                   <TitleText
                     text={orderItem?.selectedProduct.name}
                     style={{color: colors.black2}}
                   />
-                  {/* <Row>
+                  <Row>
                     <Pressable
-                      style={styles.button}
+                      style={styles.bigQuantityButton}
                       onPress={() => {
                         updateProductQuantity(-1);
                       }}>
-                      <Icon source={'minus'} size={24} color={colors.white} />
+                      <Icon source={'minus'} size={20} color={colors.white} />
                     </Pressable>
-                    <Text style={styles.textQuantity}>
+                    <Text style={styles.bigTextQuantity}>
                       {selectedProduct?.quantity}
                     </Text>
                     <Pressable
-                      style={styles.button}
+                      style={styles.bigQuantityButton}
                       onPress={() => {
                         updateProductQuantity(1);
                       }}>
-                      <Icon source={'plus'} size={24} color={colors.white} />
+                      <Icon source={'plus'} size={20} color={colors.white} />
                     </Pressable>
-                  </Row> */}
+                  </Row>
                 </Column>
               </Row>
 
@@ -153,6 +158,7 @@ const DialogUpdateTopping = ({
                   setSelectedToppings([]);
                   setSelectedSize(null);
                   setSelectedProduct(null);
+                  setOrderItem(null);
                   setOpenMenu(false);
                 }}>
                 <Icon source="close" color={colors.primary} size={24} />
@@ -231,7 +237,7 @@ const DialogUpdateTopping = ({
                             isSelected && styles.selectedTopping,
                           ]}
                           onPress={() => {
-                            cartManager().toggleTopping(
+                            CartManager.toggleTopping(
                               item,
                               setSelectedToppings,
                             );
@@ -245,7 +251,7 @@ const DialogUpdateTopping = ({
                                 }}>
                                 <Icon
                                   source={'minus'}
-                                  size={24}
+                                  size={20}
                                   color={colors.white}
                                 />
                               </Pressable>
@@ -259,7 +265,7 @@ const DialogUpdateTopping = ({
                                 }}>
                                 <Icon
                                   source={'plus'}
-                                  size={24}
+                                  size={20}
                                   color={colors.white}
                                 />
                               </Pressable>
@@ -392,15 +398,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
   },
+  bigQuantityButton: {
+    borderRadius: 24,
+    padding: 8,
+    backgroundColor: colors.primary,
+  },
   button: {
     borderRadius: 24,
     backgroundColor: colors.primary,
+    padding: 4,
   },
-  textQuantity: {
+  bigTextQuantity: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
     width: 30,
     textAlign: 'center',
     textAlignVertical: 'center',
+    marginHorizontal: 6,
+  },
+  textQuantity: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    width: 30,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    marginHorizontal: 6,
   },
 });
-export default React.memo(DialogUpdateTopping);
+export default DialogUpdateTopping;
