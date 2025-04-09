@@ -116,6 +116,13 @@ const PaymentDetailsView = ({
         </Text>
         <StatusText status={status} />
       </Row>
+      {detail?.cancelReason && (
+        <DualTextRow
+          leftText="Lý do huỷ đơn"
+          rightText={detail?.cancelReason}
+          rightTextStyle={{color: paymentStatus.color}}
+        />
+      )}
 
       <DualTextRow
         leftText={`Tạm tính (${orderItems.length} sản phẩm)`}

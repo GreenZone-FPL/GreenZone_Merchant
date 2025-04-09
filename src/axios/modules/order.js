@@ -1,3 +1,4 @@
+import {OrderStatus} from '../../constants';
 import axiosInstance from '../axiosInstance';
 
 export const createPickUpOrder = async order => {
@@ -36,7 +37,6 @@ export const getOrders = async status => {
         status: status,
       },
     });
-    console.log('getOrders');
     return response.data;
   } catch (error) {
     console.log('Lỗi khi lấy lịch sử đơn hàng:', error);
@@ -58,13 +58,21 @@ export const updateOrderStatus = async (
   orderId,
   status,
   deliveryMethod,
-  shipperId,
+  shipperId = null,
+  cancelReason = null,
 ) => {
   try {
     const body = {status};
 
-    // Nếu là đơn "delivery" và chuyển sang "readyForPickup", thì cần shipper
-    if (deliveryMethod === 'delivery' && status === 'readyForPickup') {
+    if (status === OrderStatus.CANCELLED.value) {
+      body.cancelReason = cancelReason;
+    }
+
+    if (
+      deliveryMethod === 'delivery' &&
+      status === 'readyForPickup' &&
+      shipperId
+    ) {
       body.shipper = shipperId;
     }
 
@@ -75,7 +83,10 @@ export const updateOrderStatus = async (
 
     return response.data;
   } catch (error) {
-    console.log('Lỗi API:', error.response?.data || error.message);
+    console.error('Lỗi khi cập nhật trạng thái đơn hàng:', {
+      message: error.message,
+      response: error.response?.data,
+    });
     throw error;
   }
 };
