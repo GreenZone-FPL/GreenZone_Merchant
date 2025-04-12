@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import {GLOBAL_KEYS, colors} from '../../../constants';
+import {Column} from '../../../components';
 
 const CancelOrderModal = ({visible, onClose, onSelect}) => {
   const [cancelReasons, setCancelReasons] = useState([
@@ -23,10 +24,19 @@ const CancelOrderModal = ({visible, onClose, onSelect}) => {
   const handleConfirm = reason => {
     let finalText = reason.text;
     if (reason.id === 5) {
-      if (!customReason.trim()) {
-        Alert.alert('Vui lòng nhập lý do cụ thể');
-        return;
+      if (reason.id === 5) {
+        const trimmedReason = customReason.trim();
+        if (!trimmedReason) {
+          Alert.alert('Vui lòng nhập lý do cụ thể');
+          return;
+        }
+        if (trimmedReason.length > 100) {
+          Alert.alert('Lý do không được vượt quá 100 ký tự');
+          return;
+        }
+        finalText = trimmedReason;
       }
+
       finalText = customReason.trim();
     }
 
@@ -75,13 +85,19 @@ const CancelOrderModal = ({visible, onClose, onSelect}) => {
               </Pressable>
             ))}
             {selectedReason?.id === 5 && (
-              <TextInput
-                placeholder="Nhập lý do cụ thể..."
-                style={styles.input}
-                multiline
-                value={customReason}
-                onChangeText={setCustomReason}
-              />
+              <Column>
+                <TextInput
+                  maxLength={60}
+                  placeholder="Nhập lý do cụ thể..."
+                  style={styles.input}
+                  multiline
+                  value={customReason}
+                  onChangeText={setCustomReason}
+                />
+                <Text style={{alignSelf: 'flex-end', fontSize: 10}}>
+                  60 ký tự
+                </Text>
+              </Column>
             )}
           </ScrollView>
 
