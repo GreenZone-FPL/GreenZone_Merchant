@@ -204,7 +204,6 @@ const StatisticsScreen = () => {
         setModalVisible={setModalVisible}
         onSelectYear={handleSelectYear}
       />
-      <DialogSelectVouchers />
     </ScrollView>
   );
 };
