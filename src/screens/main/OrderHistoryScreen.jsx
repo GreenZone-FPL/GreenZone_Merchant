@@ -131,6 +131,9 @@ const OrderHistoryScreen = () => {
       const shippingAddressMatch = order.shippingAddress
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase());
+      const productNameMatch = order.orderItems?.some(item =>
+        item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
 
       return (
         orderIdMatch ||
@@ -139,7 +142,8 @@ const OrderHistoryScreen = () => {
         ownerLastNameMatch ||
         totalPriceMatch ||
         deliveryMethodMatch ||
-        shippingAddressMatch
+        shippingAddressMatch ||
+        productNameMatch
       );
     });
   };
