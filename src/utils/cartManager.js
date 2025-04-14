@@ -241,13 +241,27 @@ export const CartManager = (() => {
 // ham cap nhap tong tien don hang
 export const updateTotalPrice = setCart => {
   setCart(prev => {
-    const totalPrice = prev?.orderItems?.reduce(
+    const total = prev?.orderItems?.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0,
     );
+
+    let totalPrice = total;
+    let voucherDiscountAmount = 0;
+    if (prev?.voucherInfor) {
+      if (prev?.voucherInfor?.discountType === 'percentage') {
+        voucherDiscountAmount = total * (prev?.voucherInfor?.value / 100);
+        totalPrice = total - voucherDiscountAmount;
+      } else if (prev?.voucherInfor?.discountType === 'fixedAmount') {
+        voucherDiscountAmount = prev?.voucherInfor?.value;
+        totalPrice = total - voucherDiscountAmount;
+      }
+    }
+
     return {
       ...prev,
       totalPrice,
+      voucherDiscountAmount,
     };
   });
 };

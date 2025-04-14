@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -72,6 +72,10 @@ const ModalCheckout = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log('data', JSON.stringify(data, null, 2));
+  }, [data]);
 
   return (
     <Modal visible={isCheckout} transparent animationType="slide">

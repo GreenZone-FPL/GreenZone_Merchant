@@ -19,13 +19,14 @@ import {
 } from 'react-native-vision-camera';
 import {Icon, IconButton} from 'react-native-paper';
 import {TextFormatter} from '../../../utils';
-import {CustomFlatInput} from '../../../components';
+import {Column, CustomFlatInput, Row} from '../../../components';
 import ModalCheckout from './ModalCheckout';
 import ModalSelectedPaymentMethod from './DialogPaymentMethod';
 import ModalPayment from '../../order/ModalPayment';
 import {findCustomerByCode, findCustomerByPhone} from '../../../axios/index';
 import ModalToppingUpdateProduct from './DialogUpdateTopping';
 import {updateTotalPrice} from '../../../utils/cartManager';
+import DialogSelectVouchers from '../../order/DialogSelectVouchers';
 
 const {width} = Dimensions.get('window');
 
@@ -41,6 +42,7 @@ const CartOrder = ({cart, setCart}) => {
   const [isPayment, setIsPayment] = useState(false);
   const [orderResponse, setOrderResponse] = useState(null);
   const [showSelectdTopping, setShowSelectdTopping] = useState(false);
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
 
   // useStable ModalCheckout
   const [orderItem, setOrderItem] = useState(null);
@@ -230,9 +232,9 @@ const CartOrder = ({cart, setCart}) => {
     };
   };
 
-  useEffect(() => {
-    console.log('Cart', JSON.stringify(cart, null, 2));
-  }, [customer, cart]);
+  // useEffect(() => {
+  //   console.log('Cart', JSON.stringify(cart, null, 2));
+  // }, [cart]);
 
   return (
     <View style={styles.rightSection}>
@@ -240,7 +242,7 @@ const CartOrder = ({cart, setCart}) => {
         device ? (
           <View>
             <Camera
-              style={{width: '100%', height: 200, borderRadius: 10}}
+              style={styles.camera}
               device={device}
               isActive={isScanning}
               codeScanner={codeScanner}
@@ -267,15 +269,8 @@ const CartOrder = ({cart, setCart}) => {
         )
       ) : null}
 
-      {/* <Text style={styles.rightTitle}>Giỏ hàng</Text> */}
       <View style={styles.customerInfo}>
-        <View
-          style={{
-            flexDirection: 'column',
-            flex: 1,
-            gap: GLOBAL_KEYS.GAP_SMALL,
-            padding: GLOBAL_KEYS.PADDING_DEFAULT,
-          }}>
+        <View style={styles.customerContainer}>
           <Text style={styles.customerInfoTitle}>Thông tin khách hàng</Text>
           <View>
             <CustomFlatInput
@@ -290,42 +285,28 @@ const CartOrder = ({cart, setCart}) => {
               }}
             />
             <TouchableOpacity
-              style={{
-                position: 'absolute',
-                end: 10,
-                top: '30%',
-              }}
-              onPress={() => {
-                setIsScanning(true);
-              }}>
+              style={styles.cameraIcon}
+              onPress={() => setIsScanning(true)}>
               <Icon source="barcode-scan" size={24} color={colors.primary} />
             </TouchableOpacity>
           </View>
           <View>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-              }}>
+            <Text style={styles.customerDetails}>
               Khách hàng:{' '}
               {customer
                 ? `${customer?.firstName} ${customer?.lastName}`
                 : ' Vãng lai'}
             </Text>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-              }}>
+            <Text style={styles.customerDetails}>
               Số điện thoại: {customer ? customer?.phoneNumber : ''}
             </Text>
             {(cart?.owner || customer?.phoneNumber) && (
-              <View style={{position: 'absolute', end: 0}}>
+              <View style={styles.closeButtonContainer}>
                 <IconButton
                   icon="close"
                   size={24}
                   iconColor={colors.gray700}
-                  onPress={() => {
-                    updateCustomer(null);
-                  }}
+                  onPress={() => updateCustomer(null)}
                 />
               </View>
             )}
@@ -333,14 +314,7 @@ const CartOrder = ({cart, setCart}) => {
         </View>
       </View>
 
-      <View
-        style={{
-          flex: 1,
-          borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-          overflow: 'hidden',
-          backgroundColor: colors.fbBg,
-          marginVertical: GLOBAL_KEYS.PADDING_DEFAULT,
-        }}>
+      <View style={styles.cartContainer}>
         {cart && cart.orderItems?.length > 0 ? (
           <FlatList
             initialNumToRender={5}
@@ -359,34 +333,19 @@ const CartOrder = ({cart, setCart}) => {
                   style={styles.cartItemImage}
                   source={{uri: item.image}}
                 />
-                <View
-                  style={{
-                    flexDirection: 'column',
-                    flex: 1,
-                  }}>
-                  <Text style={styles.cartItemName}>{item.productName} </Text>
+                <View style={styles.cartItemDetails}>
+                  <Text style={styles.cartItemName}>{item.productName}</Text>
                   <View style={styles.cartItemTopping}>
-                    <Text
-                      style={{
-                        color: colors.pink500,
-                        fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                        fontWeight: '500',
-                      }}>
+                    <Text style={styles.cartItemVariant}>
                       {item.variantName}
                     </Text>
-                    <Text style={{color: colors.gray850}}>
+                    <Text style={styles.cartItemToppingText}>
                       {item.toppingItems &&
                         item.toppingItems.length > 0 &&
                         item.toppingItems.map((topping, index) => (
-                          <Text
-                            key={index}
-                            style={{
-                              marginBottom: 4,
-                              fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                            }}>
-                            <Text
-                              style={{fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT}}>
-                              x{topping.quantity}{' '}
+                          <Text key={index} style={styles.toppingText}>
+                            <Text style={styles.toppingQuantity}>
+                              x{topping.quantity}
                             </Text>
                             {topping.name}
                             {'\n'}
@@ -399,12 +358,7 @@ const CartOrder = ({cart, setCart}) => {
                   <Text style={styles.cartItemPrice}>
                     {TextFormatter.formatCurrency(item.price * item.quantity)}
                   </Text>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      gap: GLOBAL_KEYS.GAP_DEFAULT,
-                      alignItems: 'center',
-                    }}>
+                  <View style={styles.itemQuantityContainer}>
                     <View style={styles.itemQuantity}>
                       <TouchableOpacity
                         style={styles.buttonQuantity}
@@ -415,13 +369,7 @@ const CartOrder = ({cart, setCart}) => {
                         }}>
                         <Icon source={'minus'} color={colors.white} size={20} />
                       </TouchableOpacity>
-                      <Text
-                        style={{
-                          width: 26,
-                          textAlign: 'center',
-                          fontWeight: '400',
-                          fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                        }}>
+                      <Text style={styles.itemQuantityText}>
                         {item.quantity}
                       </Text>
                       <TouchableOpacity
@@ -435,100 +383,66 @@ const CartOrder = ({cart, setCart}) => {
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity
-                      style={{alignItems: 'center', justifyContent: 'center'}}
+                      style={styles.removeButton}
                       onPress={() => removeFromCart(item._id)}>
-                      {/* <Icon
-                        source={'delete'}
-                        color={colors.gray700}
-                        size={24}
-                      /> */}
-                      <Text
-                        style={{
-                          fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                          color: colors.pink500,
-                          textAlignVertical: 'center',
-                          textAlign: 'center',
-                        }}>
-                        Xoá
-                      </Text>
+                      <Text style={styles.removeText}>Xoá</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </Pressable>
             )}
-            contentContainerStyle={{
-              gap: GLOBAL_KEYS.GAP_SMALL,
-            }}
+            contentContainerStyle={styles.flatListContent}
           />
         ) : (
-          <View
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: GLOBAL_KEYS.GAP_DEFAULT,
-            }}>
+          <View style={styles.emptyCartContainer}>
             <Image
-              style={{
-                width: '80%',
-                height: '80%',
-                resizeMode: 'contain',
-              }}
+              style={styles.emptyCartImage}
               source={require('../../../assets/images/empty_box.png')}
             />
-            <Text style={styles.emptyCart}>Giỏ hàng trống</Text>
+            <Text style={styles.emptyCartText}>Giỏ hàng trống</Text>
           </View>
         )}
       </View>
+
       {cart && cart.orderItems?.length > 0 && (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: GLOBAL_KEYS.PADDING_DEFAULT,
-            backgroundColor: colors.white,
-          }}>
-          <View style={{flexDirection: 'column', flex: 1}}>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE - 4,
-                fontWeight: '500',
-                color: colors.black,
+        <Column>
+          {cart?.owner && (
+            <View style={styles.voucherContainer}>
+              <Pressable
+                style={styles.voucherPressable}
+                onPress={() => setShowVoucherModal(true)}>
+                <Text style={styles.voucherText}>Chọn phiếu giảm giá</Text>
+              </Pressable>
+              <Text style={styles.voucherName}>{cart?.voucherInfor?.name}</Text>
+            </View>
+          )}
+          <View style={styles.totalPriceContainer}>
+            {cart?.voucherInfor && (
+              <View style={styles.voucherDiscount}>
+                <Text style={styles.totalText}>Giảm giá:</Text>
+                <Text style={styles.totalAmountVoucher}>
+                  -{TextFormatter.formatCurrency(cart?.voucherDiscountAmount)}
+                </Text>
+              </View>
+            )}
+            <View style={styles.totalPrice}>
+              <Text style={styles.totalText}>Tổng tiền:</Text>
+              <Text style={styles.totalAmount}>
+                {TextFormatter.formatCurrency(cart?.totalPrice || 0)}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                updateCustomer(customer);
+                if (cart == null) return;
+                setIsSelectedPaymentMethod(true);
               }}>
-              Tổng tiền:
-            </Text>
-            <Text
-              style={{
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
-                fontWeight: 'bold',
-                color: colors.pink500,
-                width: '100%',
-              }}>
-              {TextFormatter.formatCurrency(cart?.totalPrice || 0)}
-            </Text>
+              <Text style={styles.paymentButton}>Thanh Toán</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            onPress={() => {
-              updateCustomer(customer);
-              if (cart == null) return;
-              setIsSelectedPaymentMethod(true);
-            }}>
-            <Text
-              style={{
-                padding: 8,
-                color: colors.pink500,
-                backgroundColor: colors.white,
-                fontWeight: 'bold',
-                fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-                borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
-                borderWidth: 1,
-                borderColor: colors.pink500,
-              }}>
-              Thanh Toán
-            </Text>
-          </TouchableOpacity>
-        </View>
+        </Column>
       )}
+
       {isCheckout && (
         <ModalCheckout
           data={filterCart(cart)}
@@ -545,6 +459,7 @@ const CartOrder = ({cart, setCart}) => {
           setCustomer={setCustomer}
         />
       )}
+
       {isSelectedPaymentMethod && (
         <ModalSelectedPaymentMethod
           cart={cart}
@@ -567,6 +482,7 @@ const CartOrder = ({cart, setCart}) => {
           setCustomer={setCustomer}
         />
       )}
+
       {showSelectdTopping && (
         <ModalToppingUpdateProduct
           cart={cart}
@@ -575,6 +491,15 @@ const CartOrder = ({cart, setCart}) => {
           setOpenMenu={setShowSelectdTopping}
           orderItem={orderItem}
           setOrderItem={setOrderItem}
+        />
+      )}
+
+      {showVoucherModal && (
+        <DialogSelectVouchers
+          cart={cart}
+          setCart={setCart}
+          showVoucherModal={showVoucherModal}
+          setShowVoucherModal={setShowVoucherModal}
         />
       )}
     </View>
@@ -588,6 +513,11 @@ const styles = StyleSheet.create({
     borderColor: colors.gray200,
     marginLeft: 20,
     backgroundColor: colors.fbBg,
+  },
+  camera: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
   },
   cameraControls: {
     position: 'absolute',
@@ -605,21 +535,40 @@ const styles = StyleSheet.create({
     padding: GLOBAL_KEYS.PADDING_SMALL,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
   },
-  rightTitle: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: colors.primary,
-  },
   customerInfo: {
     backgroundColor: colors.white,
     flexDirection: 'row',
     alignItems: 'center',
   },
+  customerContainer: {
+    flexDirection: 'column',
+    flex: 1,
+    gap: GLOBAL_KEYS.GAP_SMALL,
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+  },
   customerInfoTitle: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.gray850,
     fontWeight: 'bold',
+  },
+  cameraIcon: {
+    position: 'absolute',
+    end: 10,
+    top: '30%',
+  },
+  customerDetails: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
+  closeButtonContainer: {
+    position: 'absolute',
+    end: 0,
+  },
+  cartContainer: {
+    flex: 1,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    overflow: 'hidden',
+    backgroundColor: colors.fbBg,
+    marginVertical: GLOBAL_KEYS.GAP_SMALL,
   },
   cartItem: {
     flexDirection: 'row',
@@ -638,6 +587,35 @@ const styles = StyleSheet.create({
     height: width / 20,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 20,
   },
+  cartItemDetails: {
+    flexDirection: 'column',
+    flex: 1,
+  },
+  cartItemName: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+  },
+  cartItemTopping: {
+    flexDirection: 'column',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    fontWeight: '500',
+    color: colors.gray700,
+  },
+  cartItemVariant: {
+    color: colors.pink500,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+  },
+  cartItemToppingText: {
+    color: colors.gray850,
+  },
+  toppingText: {
+    marginBottom: 4,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
+  toppingQuantity: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
   itemContent: {
     flexDirection: 'column',
     padding: GLOBAL_KEYS.PADDING_SMALL,
@@ -646,6 +624,17 @@ const styles = StyleSheet.create({
     end: 0,
     bottom: 0,
     flex: 1,
+  },
+  cartItemPrice: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.black,
+    textAlign: 'right',
+  },
+  itemQuantityContainer: {
+    flexDirection: 'row',
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+    alignItems: 'center',
   },
   itemQuantity: {
     flexDirection: 'row',
@@ -660,35 +649,103 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     borderWidth: 1,
   },
-  cartItemName: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '500',
-  },
-  cartItemTopping: {
-    flexDirection: 'column',
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
-    fontWeight: '500',
-    color: colors.gray700,
-  },
-  cartItemPrice: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    fontWeight: '500',
-    color: colors.black,
-    textAlign: 'right',
-    // marginRight: 5,
-  },
-  buttonDelete: {
+  itemQuantityText: {
+    width: 26,
     textAlign: 'center',
+    fontWeight: '400',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
+  removeButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.pink500,
     textAlignVertical: 'center',
-    padding: GLOBAL_KEYS.PADDING_SMALL,
-    backgroundColor: colors.white,
-    color: colors.red900,
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    textAlign: 'center',
   },
-  emptyCart: {
+  flatListContent: {
+    gap: GLOBAL_KEYS.GAP_SMALL,
+  },
+  emptyCartContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: GLOBAL_KEYS.GAP_DEFAULT,
+  },
+  emptyCartImage: {
+    width: '80%',
+    height: '80%',
+    resizeMode: 'contain',
+  },
+  emptyCartText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
     textAlign: 'center',
+  },
+  voucherContainer: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    flexDirection: 'row',
+    padding: 8,
+  },
+  voucherPressable: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+  },
+  voucherText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    color: colors.primary,
+  },
+  voucherName: {
+    color: colors.yellow700,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
+  voucherDiscount: {
+    flexDirection: 'column',
+    flex: 1,
+  },
+  totalPriceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    backgroundColor: colors.white,
+  },
+  totalPrice: {
+    flexDirection: 'column',
+    flex: 1,
+  },
+  totalText: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE - 4,
+    fontWeight: '500',
+    color: colors.black,
+  },
+  totalAmount: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
+    fontWeight: 'bold',
+    color: colors.pink500,
+    width: '100%',
+  },
+  totalAmountVoucher: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
+    fontWeight: 'bold',
+    color: colors.yellow500,
+    width: '100%',
+  },
+  paymentButton: {
+    padding: 8,
+    color: colors.pink500,
+    backgroundColor: colors.white,
+    fontWeight: 'bold',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderWidth: 1,
+    borderColor: colors.pink500,
   },
 });
 

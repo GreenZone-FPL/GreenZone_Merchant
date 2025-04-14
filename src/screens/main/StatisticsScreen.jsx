@@ -15,6 +15,7 @@ import {TextFormatter} from '../../utils';
 import YearPicker from '../../constants/yearPicker/YearPicker';
 import {useAppContext} from '../../context/appContext';
 import {useFocusEffect} from '@react-navigation/native';
+import DialogSelectVouchers from '../order/DialogSelectVouchers';
 
 const StatisticsScreen = () => {
   const [statistics, setStatistics] = useState([]);
@@ -203,6 +204,7 @@ const StatisticsScreen = () => {
         setModalVisible={setModalVisible}
         onSelectYear={handleSelectYear}
       />
+      <DialogSelectVouchers />
     </ScrollView>
   );
 };

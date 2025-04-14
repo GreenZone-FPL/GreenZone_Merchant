@@ -17,8 +17,6 @@ import {Row, Column, TitleText, OverlayStatusBar} from '../../../components';
 import {Icon} from 'react-native-paper';
 import {CartManager} from '../../../utils/cartManager';
 
-const {width} = Dimensions.get('window').width;
-
 const ModalToping = ({
   openMenu,
   setOpenMenu,

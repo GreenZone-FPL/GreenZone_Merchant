@@ -7,3 +7,4 @@ export * from './modules/user';
 export * from './modules/employee';
 export * from './modules/merchant';
 export * from './modules/statistic';
+export * from './modules/voucher';

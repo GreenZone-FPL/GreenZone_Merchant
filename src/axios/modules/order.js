@@ -11,6 +11,7 @@ export const createPickUpOrder = async order => {
       paymentMethod: order.paymentMethod,
       store: order.store,
       owner: order.owner,
+      voucher: order.voucher,
       orderItems: order.orderItems.map(item => ({
         variant: item.variant,
         quantity: item.quantity,
