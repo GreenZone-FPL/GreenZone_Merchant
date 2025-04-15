@@ -441,6 +441,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.white,
   },
   emptyImage: {
     width: width / 3,
