@@ -288,7 +288,11 @@ const Item = ({item, handleRepeatOrder}) => {
       style={styles.itemOrder}>
       <ItemOrderType deliveryMethod={item.deliveryMethod} item={item} />
 
-      <Column style={{flex: 1, justifyContent: 'center'}}>
+      <Column
+        style={{
+          width: '30%',
+          justifyContent: 'center',
+        }}>
         <NormalText
           text={`#${item._id}`}
           style={{fontWeight: '500', textAlign: 'center'}}
@@ -299,7 +303,7 @@ const Item = ({item, handleRepeatOrder}) => {
         </Text>
       </Column>
 
-      <Column style={{flex: 1, alignItems: 'center'}}>
+      <Column style={{width: '30%', alignItems: 'center'}}>
         {item?.owner?.phoneNumber ? (
           <Column>
             <NormalText
@@ -316,7 +320,7 @@ const Item = ({item, handleRepeatOrder}) => {
         )}
       </Column>
 
-      <Column style={{justifyContent: 'center'}}>
+      <Column style={{width: (width / 10) * 2, justifyContent: 'center'}}>
         <NormalText
           style={{
             color: colors.pink500,
@@ -388,7 +392,8 @@ const ItemOrderType = ({item}) => {
   };
 
   return (
-    <Column style={{alignItems: 'center', backgroundColor: 'white'}}>
+    <Column
+      style={{width: '20%', alignItems: 'center', backgroundColor: 'white'}}>
       <NormalText
         text={new Date(item.fulfillmentDateTime).toLocaleString('vi-VN')}
       />
@@ -398,7 +403,6 @@ const ItemOrderType = ({item}) => {
             item.deliveryMethod === 'delivery'
               ? colors.brown700
               : colors.orange700,
-          textAlign: 'center',
         }}
         text={item.deliveryMethod === 'pickup' ? 'Mang đi' : 'Giao tận nơi'}
       />
@@ -417,9 +421,8 @@ const EmptyView = () => (
 );
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.white},
+  container: {width: width, backgroundColor: colors.white},
   itemOrder: {
-    paddingHorizontal: 24,
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -427,7 +430,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderColor: colors.gray200,
-    gap: 16,
+    width: width,
   },
   orderName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,

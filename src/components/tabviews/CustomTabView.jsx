@@ -1,8 +1,10 @@
 import {Tab, TabView} from '@rneui/themed';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, View, Text, Dimensions} from 'react-native';
 import {colors, GLOBAL_KEYS} from '../../constants';
+
+const width = Dimensions.get('window').width;
 
 const CustomTabViewPropTypes = {
   tabIndex: PropTypes.number.isRequired,
@@ -22,6 +24,7 @@ const CustomTabViewPropTypes = {
     tabViewItemStyle: PropTypes.object,
   }),
   children: PropTypes.node,
+  tabDescriptions: PropTypes.arrayOf(PropTypes.string), // Added prop for tab descriptions
 };
 
 export const CustomTabView = ({
@@ -89,7 +92,25 @@ export const CustomTabView = ({
             <TabView.Item
               key={`tab-view-${index}`}
               style={[styles.tabViewItem, tabViewConfig.tabViewItemStyle]}>
-              {index === tabIndex && child}
+              {index === tabIndex && (
+                <View style={{backgroundColor: colors.fbBg}}>
+                  <View style={styles.tabDescriptionContainer}>
+                    <Text style={[styles.tabDescriptionText, {width: '20%'}]}>
+                      Phương thức
+                    </Text>
+                    <Text style={[styles.tabDescriptionText, {width: '30%'}]}>
+                      Sản phẩm
+                    </Text>
+                    <Text style={[styles.tabDescriptionText, {width: '30%'}]}>
+                      Khách hàng
+                    </Text>
+                    <Text style={[styles.tabDescriptionText, {width: '20%'}]}>
+                      Trạng thái
+                    </Text>
+                  </View>
+                  {child}
+                </View>
+              )}
             </TabView.Item>
           ))}
       </TabView>
@@ -120,5 +141,20 @@ const styles = StyleSheet.create({
   titleStyle: {
     color: colors.black,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+  },
+  // Style for the description section
+  tabDescriptionContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    marginBottom: 16,
+    width: width,
+    alignItems: 'center',
+  },
+  tabDescriptionText: {
+    color: colors.black,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
+    textAlign: 'center',
+    padding: 16,
   },
 });
