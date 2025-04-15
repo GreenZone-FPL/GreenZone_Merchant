@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   textHeader: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
     fontWeight: '500',
   },
   image: {

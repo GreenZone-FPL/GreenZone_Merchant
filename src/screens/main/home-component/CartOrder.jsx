@@ -236,6 +236,18 @@ const CartOrder = ({cart, setCart}) => {
   //   console.log('Cart', JSON.stringify(cart, null, 2));
   // }, [cart]);
 
+  const clearCustomer = () => {
+    updateCustomer(null);
+    setCart(prev => ({
+      ...prev,
+      voucherDiscount: 0,
+      voucherDiscountAmount: 0,
+      voucher: null,
+      voucherInfor: null,
+    }));
+    updateTotalPrice(setCart);
+  };
+
   return (
     <View style={styles.rightSection}>
       {isScanning ? (
@@ -306,7 +318,9 @@ const CartOrder = ({cart, setCart}) => {
                   icon="close"
                   size={24}
                   iconColor={colors.gray700}
-                  onPress={() => updateCustomer(null)}
+                  onPress={() => {
+                    clearCustomer();
+                  }}
                 />
               </View>
             )}
