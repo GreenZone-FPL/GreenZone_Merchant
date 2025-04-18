@@ -3,9 +3,9 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import {getOrders} from '../../axios/index';
@@ -283,7 +283,7 @@ const Item = ({item, handleRepeatOrder}) => {
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={() => handleRepeatOrder(item._id)}
       style={styles.itemOrder}>
       <ItemOrderType deliveryMethod={item.deliveryMethod} item={item} />
@@ -355,7 +355,7 @@ const Item = ({item, handleRepeatOrder}) => {
           }
         />
       </Column>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

@@ -1,13 +1,5 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Dimensions,
-  StyleSheet,
-  Modal,
-  Pressable,
-} from 'react-native';
+import {View, Text, StyleSheet, Modal, Pressable} from 'react-native';
 import {colors, GLOBAL_KEYS, PaymentMethod} from '../../../constants';
 import {OverlayStatusBar, Row} from '../../../components';
 
@@ -76,14 +68,14 @@ const DialogPaymentMethod = ({
             </Pressable>
           </Row>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
+            <Pressable
               style={styles.cancelButton}
               onPress={() => setIsSelectedPaymentMethod(false)}>
               <Text style={styles.buttonText}>Quay lại</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.paymentButton} onPress={goCheckout}>
+            </Pressable>
+            <Pressable style={styles.paymentButton} onPress={goCheckout}>
               <Text style={styles.buttonText}>Tiếp tục</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Pressable>
       </Pressable>

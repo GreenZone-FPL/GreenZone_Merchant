@@ -4,7 +4,6 @@ import {
   Image,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   Dimensions,
   Pressable,
@@ -260,7 +259,7 @@ const CartOrder = ({cart, setCart}) => {
               codeScanner={codeScanner}
             />
             <View style={styles.cameraControls}>
-              <TouchableOpacity
+              <Pressable
                 style={styles.switchCameraButton}
                 onPress={() =>
                   setCameraPosition(prev =>
@@ -268,12 +267,12 @@ const CartOrder = ({cart, setCart}) => {
                   )
                 }>
                 <Icon source="camera-flip" size={32} color={colors.primary} />
-              </TouchableOpacity>
-              <TouchableOpacity
+              </Pressable>
+              <Pressable
                 style={styles.closeCameraButton}
                 onPress={() => setIsScanning(false)}>
                 <Icon source="close-circle" size={32} color={colors.primary} />
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         ) : (
@@ -296,11 +295,11 @@ const CartOrder = ({cart, setCart}) => {
                 }
               }}
             />
-            <TouchableOpacity
+            <Pressable
               style={styles.cameraIcon}
               onPress={() => setIsScanning(true)}>
               <Icon source="barcode-scan" size={24} color={colors.primary} />
-            </TouchableOpacity>
+            </Pressable>
           </View>
           <View>
             <Text style={styles.customerDetails}>
@@ -374,7 +373,7 @@ const CartOrder = ({cart, setCart}) => {
                   </Text>
                   <View style={styles.itemQuantityContainer}>
                     <View style={styles.itemQuantity}>
-                      <TouchableOpacity
+                      <Pressable
                         style={styles.buttonQuantity}
                         onPress={() => {
                           if (item.quantity > 1) {
@@ -382,11 +381,11 @@ const CartOrder = ({cart, setCart}) => {
                           }
                         }}>
                         <Icon source={'minus'} color={colors.white} size={20} />
-                      </TouchableOpacity>
+                      </Pressable>
                       <Text style={styles.itemQuantityText}>
                         {item.quantity}
                       </Text>
-                      <TouchableOpacity
+                      <Pressable
                         style={styles.buttonQuantity}
                         onPress={() => {
                           if (item.quantity < 99) {
@@ -394,13 +393,13 @@ const CartOrder = ({cart, setCart}) => {
                           }
                         }}>
                         <Icon source={'plus'} color={colors.white} size={20} />
-                      </TouchableOpacity>
+                      </Pressable>
                     </View>
-                    <TouchableOpacity
+                    <Pressable
                       style={styles.removeButton}
                       onPress={() => removeFromCart(item._id)}>
                       <Text style={styles.removeText}>Xoá</Text>
-                    </TouchableOpacity>
+                    </Pressable>
                   </View>
                 </View>
               </Pressable>
@@ -445,14 +444,14 @@ const CartOrder = ({cart, setCart}) => {
                 {TextFormatter.formatCurrency(cart?.totalPrice || 0)}
               </Text>
             </View>
-            <TouchableOpacity
+            <Pressable
               onPress={() => {
                 updateCustomer(customer);
                 if (cart == null) return;
                 setIsSelectedPaymentMethod(true);
               }}>
               <Text style={styles.paymentButton}>Thanh Toán</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Column>
       )}

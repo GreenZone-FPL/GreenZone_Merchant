@@ -1,13 +1,5 @@
 import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  FlatList,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
+import {View, Text, Modal, FlatList, StyleSheet, Pressable} from 'react-native';
 import {OverlayStatusBar} from '../../components';
 import {colors} from '../color';
 
@@ -37,7 +29,7 @@ const YearPicker = ({onSelectYear, setModalVisible, modalVisible}) => {
             showsVerticalScrollIndicator={false}
             keyExtractor={item => item.toString()}
             renderItem={({item}) => (
-              <TouchableOpacity
+              <Pressable
                 style={styles.yearItem}
                 onPress={() => handleSelectYear(item)}>
                 <Text
@@ -50,7 +42,7 @@ const YearPicker = ({onSelectYear, setModalVisible, modalVisible}) => {
                   ]}>
                   {item}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             )}
           />
         </View>

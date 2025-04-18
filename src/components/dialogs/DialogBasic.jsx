@@ -3,32 +3,27 @@ import React from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { Icon } from 'react-native-paper';
-import { GLOBAL_KEYS, colors } from '../../constants';
-import { OverlayStatusBar } from '../status-bars/OverlayStatusBar';
-import { Column } from '../containers/Column'
-import { Row } from '../containers/Row'
+import {Icon} from 'react-native-paper';
+import {GLOBAL_KEYS, colors} from '../../constants';
+import {OverlayStatusBar} from '../status-bars/OverlayStatusBar';
+import {Column} from '../containers/Column';
+import {Row} from '../containers/Row';
 
 const DialogBasicPropTypes = {
   isVisible: PropTypes.bool.isRequired,
   onHide: PropTypes.func.isRequired,
   title: PropTypes.string,
   children: PropTypes.node,
-  style: PropTypes.oneOfType([
-    PropTypes.object,
-    PropTypes.array,
-  ]),
+  style: PropTypes.oneOfType([PropTypes.object, PropTypes.array]),
 };
 
-
-export const DialogBasic = ({ isVisible, onHide, title, children, style }) => {
-
+export const DialogBasic = ({isVisible, onHide, title, children, style}) => {
   return (
     <Modal
       visible={isVisible}
@@ -43,17 +38,15 @@ export const DialogBasic = ({ isVisible, onHide, title, children, style }) => {
               <Row style={styles.header}>
                 <View style={styles.placeholderIcon} />
                 <Text style={styles.titleText}>{title}</Text>
-                <TouchableOpacity onPress={onHide}>
+                <Pressable onPress={onHide}>
                   <Icon
                     source="close"
                     size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
                     color={colors.primary}
                   />
-                </TouchableOpacity>
+                </Pressable>
               </Row>
-              <Column style={styles.body}>
-                {children}
-              </Column>
+              <Column style={styles.body}>{children}</Column>
             </KeyboardAvoidingView>
           </ScrollView>
         </Column>
@@ -75,7 +68,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 4,
@@ -108,5 +101,5 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     margin: 14,
     gap: GLOBAL_KEYS.GAP_SMALL,
-  }
+  },
 });

@@ -1,12 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {
-  Dimensions,
   Modal,
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
   Image,
   Pressable,
 } from 'react-native';
@@ -141,7 +138,7 @@ const ModalToping = ({
                 </Column>
               </Row>
 
-              <TouchableOpacity
+              <Pressable
                 style={{
                   borderRadius: 20,
                   backgroundColor: colors.green100,
@@ -154,7 +151,7 @@ const ModalToping = ({
                   setOpenMenu(false);
                 }}>
                 <Icon source="close" color={colors.primary} size={24} />
-              </TouchableOpacity>
+              </Pressable>
             </Row>
 
             <Row style={{gap: 30, flex: 1}}>
@@ -220,7 +217,7 @@ const ModalToping = ({
                         : 0;
 
                       return (
-                        <TouchableOpacity
+                        <Pressable
                           key={item?._id}
                           style={[
                             styles.toppingOption,
@@ -270,7 +267,7 @@ const ModalToping = ({
                             {item?.name} (+
                             {TextFormatter.formatCurrency(item?.extraPrice)})
                           </Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       );
                     }}
                     contentContainerStyle={{
@@ -293,7 +290,7 @@ const ModalToping = ({
                 paddingVertical: 16,
                 borderRadius: 6,
               }}>
-              <TouchableOpacity
+              <Pressable
                 style={[
                   styles.confirmButton,
                   {backgroundColor: colors.primary},
@@ -302,7 +299,7 @@ const ModalToping = ({
                   addToCart();
                 }}>
                 <Text style={styles.confirmButtonText}>Xác nhận</Text>
-              </TouchableOpacity>
+              </Pressable>
             </Row>
           </Column>
         </Pressable>

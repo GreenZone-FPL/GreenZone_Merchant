@@ -1,11 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {
-  Dimensions,
   Modal,
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   Image,
   Pressable,
 } from 'react-native';
@@ -148,7 +146,7 @@ const DialogUpdateTopping = ({
                 </Column>
               </Row>
 
-              <TouchableOpacity
+              <Pressable
                 style={{
                   borderRadius: 20,
                   backgroundColor: colors.green100,
@@ -162,7 +160,7 @@ const DialogUpdateTopping = ({
                   setOpenMenu(false);
                 }}>
                 <Icon source="close" color={colors.primary} size={24} />
-              </TouchableOpacity>
+              </Pressable>
             </Row>
 
             <Row style={{gap: 30, flex: 1}}>
@@ -181,7 +179,7 @@ const DialogUpdateTopping = ({
                   {orderItem?.selectedProduct?.variant
                     ?.filter(item => item != null)
                     .map(item => (
-                      <TouchableOpacity
+                      <Pressable
                         key={item?._id}
                         style={[
                           styles.sizeOption,
@@ -197,7 +195,7 @@ const DialogUpdateTopping = ({
                           {item?.size} -{' '}
                           {TextFormatter.formatCurrency(item?.sellingPrice)}
                         </Text>
-                      </TouchableOpacity>
+                      </Pressable>
                     ))}
                 </Column>
               </Column>
@@ -230,7 +228,7 @@ const DialogUpdateTopping = ({
                         : 0;
 
                       return (
-                        <TouchableOpacity
+                        <Pressable
                           key={item?._id}
                           style={[
                             styles.toppingOption,
@@ -280,7 +278,7 @@ const DialogUpdateTopping = ({
                             {item?.name} (+
                             {TextFormatter.formatCurrency(item?.extraPrice)})
                           </Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       );
                     }}
                     contentContainerStyle={{
@@ -303,7 +301,7 @@ const DialogUpdateTopping = ({
                 paddingVertical: 16,
                 borderRadius: 6,
               }}>
-              <TouchableOpacity
+              <Pressable
                 style={[
                   styles.confirmButton,
                   {backgroundColor: colors.primary},
@@ -312,7 +310,7 @@ const DialogUpdateTopping = ({
                   updateProduct();
                 }}>
                 <Text style={styles.confirmButtonText}>Xác nhận</Text>
-              </TouchableOpacity>
+              </Pressable>
             </Row>
           </Column>
         </Pressable>
