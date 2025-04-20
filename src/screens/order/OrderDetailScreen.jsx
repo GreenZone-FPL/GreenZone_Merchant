@@ -1,11 +1,11 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
   Modal,
-  TouchableOpacity,
   ScrollView,
   View,
   Text,
   StyleSheet,
+  Pressable,
 } from 'react-native';
 import {IconButton} from 'react-native-paper';
 import {getOrderDetail} from '../../axios/index';
@@ -76,7 +76,7 @@ const OrderDetailScreen = ({
     <Modal visible={isModalOrderDetail} transparent animationType="slide">
       <OverlayStatusBar />
       <View style={styles.body}>
-        <TouchableOpacity
+        <Pressable
           onPress={() => setIsModalOrderDetail(false)}
           style={styles.viewClose}
         />
@@ -153,7 +153,7 @@ const OrderDetailScreen = ({
             )}
           </ScrollView>
         </View>
-        <TouchableOpacity
+        <Pressable
           onPress={() => setIsModalOrderDetail(false)}
           style={styles.viewClose}
         />

@@ -6,22 +6,15 @@ import {
   DeliveryMethod,
   GLOBAL_KEYS,
   OrderStatus,
-  PaymentMethod,
   colors,
 } from '../../../constants';
-import {TextFormatter} from '../../../utils';
 import ShipperSelectModal from './ShipperSelectModal';
-import {Icon} from 'react-native-paper';
+import CancelOrderModal from './CancelOrderModal';
 
-const PaymentDetails = ({
-  data,
-  setIsModalOrderDetail,
-  fetchOrders,
-  setIdOrder,
-  fetchOrderDetail,
-}) => {
+const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
   const [selectedShipper, setSelectedShipper] = useState(null);
   const [shipperModalVisible, setShipperModalVisible] = useState(false);
+  const [isCancelOrdeModal, setIsCancelOrdeModal] = useState(false);
 
   const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
     if (
@@ -71,13 +64,19 @@ const PaymentDetails = ({
       : voucher.value || 0;
   }
 
-  const updateStatus = async (status, deliveryMethod, shipperId = null) => {
+  const updateStatus = async (
+    status,
+    deliveryMethod,
+    shipperId = null,
+    reason,
+  ) => {
     try {
       const response = await updateOrderStatus(
         data?._id,
         status,
         deliveryMethod,
         shipperId,
+        reason,
       );
       return response.data;
     } catch (error) {
@@ -93,16 +92,13 @@ const PaymentDetails = ({
     ]);
   };
 
-  const handleStatusUpdate = async newStatus => {
+  const handleStatusUpdate = async (newStatus, reason = '') => {
     try {
-      await updateStatus(newStatus);
+      await updateStatus(newStatus, data?.deliveryMethod, null, reason);
       await fetchOrders();
-      // await setIdOrder(null);
       await fetchOrderDetail();
     } catch (error) {
       console.log('Cập nhật trạng thái đơn hàng thất bại:', error);
-    } finally {
-      // setIsModalOrderDetail(false);
     }
   };
 
@@ -126,15 +122,15 @@ const PaymentDetails = ({
           <>
             <Pressable
               style={styles.button1}
-              onPress={() =>
-                showAlert({
-                  notification: 'Huỷ đơn hàng',
-                  message: 'Bạn có chắc chắn muốn huỷ đơn hàng này?',
-                  onPress: () =>
-                    handleStatusUpdate(OrderStatus.CANCELLED.value),
-                })
-              }>
+              onPress={() => setIsCancelOrdeModal(true)}>
               <NormalText text="Huỷ Đơn" style={styles.buttonTextWhite} />
+              <CancelOrderModal
+                visible={isCancelOrdeModal}
+                onClose={() => setIsCancelOrdeModal(false)}
+                onSelect={reason =>
+                  handleStatusUpdate(OrderStatus.CANCELLED.value, reason.text)
+                }
+              />
             </Pressable>
 
             <Pressable

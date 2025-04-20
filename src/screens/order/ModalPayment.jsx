@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
-  TouchableOpacity,
+  Pressable,
 } from 'react-native';
 import Config from 'react-native-config';
 import axios from 'axios';
@@ -181,19 +181,19 @@ const ModalPayment = ({
           )}
         </View>
         <Row style={{gap: 20}}>
-          {/* <TouchableOpacity
+          {/* <Pressable
             style={styles.closeButton}
             onPress={() => setIsPayment(false)}>
             <Text style={styles.closeText}>Đóng</Text>
-          </TouchableOpacity> */}
-          <TouchableOpacity
+          </Pressable> */}
+          <Pressable
             style={styles.closeButton}
             onPress={() => {
               console.log('Tạo lại mã thanh toán');
               createPayOSOrder();
             }}>
             <Text style={styles.closeText}>Tạo lại mã thanh toán</Text>
-          </TouchableOpacity>
+          </Pressable>
         </Row>
       </View>
     </Modal>

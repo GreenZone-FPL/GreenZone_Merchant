@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import {Icon} from 'react-native-paper';
@@ -270,7 +269,7 @@ const HomeScreen = ({navigation}) => {
           removeClippedSubviews={false}
           showsVerticalScrollIndicator={false}
           renderItem={({item}) => (
-            <TouchableOpacity
+            <Pressable
               style={styles.productCard}
               onPress={() => handleAddProduct(item._id)}>
               <Image source={{uri: item.image}} style={styles.productImage} />
@@ -282,7 +281,7 @@ const HomeScreen = ({navigation}) => {
                   {item.name}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </Pressable>
           )}
           contentContainerStyle={styles.flatListContainer}
         />

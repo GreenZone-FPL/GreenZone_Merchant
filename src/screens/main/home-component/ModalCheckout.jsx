@@ -1,13 +1,5 @@
-import React, {useState} from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Dimensions,
-  StyleSheet,
-  Modal,
-  Pressable,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, Modal, Pressable} from 'react-native';
 import {
   colors,
   GLOBAL_KEYS,
@@ -73,6 +65,10 @@ const ModalCheckout = ({
     }
   };
 
+  useEffect(() => {
+    console.log('data', JSON.stringify(data, null, 2));
+  }, [data]);
+
   return (
     <Modal visible={isCheckout} transparent animationType="slide">
       <OverlayStatusBar />
@@ -84,19 +80,17 @@ const ModalCheckout = ({
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
+            <Pressable
               style={styles.cancelButton}
               onPress={() => {
                 setIsCheckout(false);
                 setIsSelectedPaymentMethod(true);
               }}>
               <Text style={styles.buttonText}>Quay lại</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.paymentButton}
-              onPress={createOrder}>
+            </Pressable>
+            <Pressable style={styles.paymentButton} onPress={createOrder}>
               <Text style={styles.buttonText}>Đồng ý</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
         </Pressable>
       </Pressable>

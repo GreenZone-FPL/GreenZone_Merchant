@@ -3,14 +3,15 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import {getOrders} from '../../axios/index';
 import {
   Column,
+  CustomSearchBar,
   CustomTabView,
   LightStatusBar,
   NormalText,
@@ -35,6 +36,8 @@ const OrderHistoryScreen = () => {
   const [completed, setCompleted] = useState([]);
   const [cancelled, setCancelled] = useState([]);
   const [failedDelivery, setFailedDelivery] = useState([]);
+
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -88,6 +91,8 @@ const OrderHistoryScreen = () => {
     try {
       const responseOrder = await getOrders(status);
       if (responseOrder) {
+        // console.log('responseOrder', JSON.stringify(responseOrder, null, 2));
+
         setOrder(responseOrder);
       }
     } catch (error) {
@@ -103,8 +108,47 @@ const OrderHistoryScreen = () => {
     fetchOrdersByStatus(status, setter);
   }, [tabIndex, orderStatusConfig, fetchOrdersByStatus]);
 
-  // Cập nhật đơn hàng nếu có đơn hàng mới từ socket
+  // tim kiem
+  const filterOrders = orders => {
+    if (!searchTerm) return orders;
 
+    return orders.filter(order => {
+      // Ensure that the fields exist before calling .includes()
+      const orderIdMatch = order._id
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const ownerPhoneMatch = order.owner?.phoneNumber?.includes(searchTerm);
+      const ownerFirstNameMatch = order.owner?.firstName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const ownerLastNameMatch = order.owner?.lastName
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const totalPriceMatch = order.totalPrice?.toString().includes(searchTerm);
+      const deliveryMethodMatch = order.deliveryMethod
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const shippingAddressMatch = order.shippingAddress
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const productNameMatch = order.orderItems?.some(item =>
+        item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+
+      return (
+        orderIdMatch ||
+        ownerPhoneMatch ||
+        ownerFirstNameMatch ||
+        ownerLastNameMatch ||
+        totalPriceMatch ||
+        deliveryMethodMatch ||
+        shippingAddressMatch ||
+        productNameMatch
+      );
+    });
+  };
+
+  // Cập nhật đơn hàng nếu có đơn hàng mới từ socket
   const handleRepeatOrder = id => {
     setIsModalOrderDetail(true);
     setIdOrder(id);
@@ -113,65 +157,78 @@ const OrderHistoryScreen = () => {
   return (
     <View style={{flex: 1, backgroundColor: colors.fbBg, gap: 16}}>
       <LightStatusBar />
-      <CustomTabView
-        tabIndex={tabIndex}
-        setTabIndex={setTabIndex}
-        tabBarConfig={{
-          titles: [
-            'Chờ xác nhận',
-            'Đang xử lý',
-            'Chờ lấy hàng',
-            'Đang giao hàng',
-            'Hoàn thành',
-            'Giao hàng thất bại',
-            'Đã huỷ',
-          ],
-          titleActiveColor: colors.primary,
-          titleInActiveColor: colors.gray700,
-        }}>
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={pendingConfirmation}
-          loading={loading}
-          status="pendingConfirmation"
-        />
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={processing}
-          loading={loading}
-          status="processing"
-        />
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={readyForPickup}
-          loading={loading}
-          status="readyForPickup"
-        />
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={shippingOrder}
-          loading={loading}
-          status="shippingOrder"
-        />
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={completed}
-          loading={loading}
-          status="completed"
-        />
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={failedDelivery}
-          loading={loading}
-          status="failedDelivery"
-        />
-        <OrderListView
-          handleRepeatOrder={handleRepeatOrder}
-          orders={cancelled}
-          loading={loading}
-          status="cancelled"
-        />
-      </CustomTabView>
+      <CustomSearchBar
+        placeholder="Tìm kiếm sản phẩm..."
+        searchQuery={searchTerm}
+        setSearchQuery={setSearchTerm}
+        onClearIconPress={() => setSearchTerm('')}
+        style={{
+          backgroundColor: colors.white,
+          borderWidth: 1,
+          borderColor: colors.gray200,
+        }}
+      />
+      <View style={{gap: 16, flex: 1}}>
+        <CustomTabView
+          tabIndex={tabIndex}
+          setTabIndex={setTabIndex}
+          tabBarConfig={{
+            titles: [
+              'Chờ xác nhận',
+              'Đang xử lý',
+              'Chờ lấy hàng',
+              'Đang giao hàng',
+              'Hoàn thành',
+              'Giao hàng thất bại',
+              'Đã huỷ',
+            ],
+            titleActiveColor: colors.primary,
+            titleInActiveColor: colors.gray700,
+          }}>
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(pendingConfirmation)}
+            loading={loading}
+            status="pendingConfirmation"
+          />
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(processing)}
+            loading={loading}
+            status="processing"
+          />
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(readyForPickup)}
+            loading={loading}
+            status="readyForPickup"
+          />
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(shippingOrder)}
+            loading={loading}
+            status="shippingOrder"
+          />
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(completed)}
+            loading={loading}
+            status="completed"
+          />
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(failedDelivery)}
+            loading={loading}
+            status="failedDelivery"
+          />
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(cancelled)}
+            loading={loading}
+            status="cancelled"
+          />
+        </CustomTabView>
+      </View>
 
       <OrderDetailScreen
         setIsModalOrderDetail={setIsModalOrderDetail}
@@ -188,6 +245,8 @@ const OrderHistoryScreen = () => {
 };
 
 const OrderListView = ({orders, handleRepeatOrder}) => {
+  // console.log('order', JSON.stringify(orders, null, 2));
+
   return (
     <View>
       {orders.length > 0 ? (
@@ -224,12 +283,16 @@ const Item = ({item, handleRepeatOrder}) => {
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={() => handleRepeatOrder(item._id)}
       style={styles.itemOrder}>
       <ItemOrderType deliveryMethod={item.deliveryMethod} item={item} />
 
-      <Column style={{flex: 1, justifyContent: 'center'}}>
+      <Column
+        style={{
+          width: '30%',
+          justifyContent: 'center',
+        }}>
         <NormalText
           text={`#${item._id}`}
           style={{fontWeight: '500', textAlign: 'center'}}
@@ -240,7 +303,7 @@ const Item = ({item, handleRepeatOrder}) => {
         </Text>
       </Column>
 
-      <Column style={{flex: 1, alignItems: 'center'}}>
+      <Column style={{width: '30%', alignItems: 'center'}}>
         {item?.owner?.phoneNumber ? (
           <Column>
             <NormalText
@@ -257,7 +320,7 @@ const Item = ({item, handleRepeatOrder}) => {
         )}
       </Column>
 
-      <Column style={{justifyContent: 'center'}}>
+      <Column style={{width: (width / 10) * 2, justifyContent: 'center'}}>
         <NormalText
           style={{
             color: colors.pink500,
@@ -292,7 +355,7 @@ const Item = ({item, handleRepeatOrder}) => {
           }
         />
       </Column>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -329,9 +392,10 @@ const ItemOrderType = ({item}) => {
   };
 
   return (
-    <Column style={{alignItems: 'center', backgroundColor: 'white'}}>
+    <Column
+      style={{width: '20%', alignItems: 'center', backgroundColor: 'white'}}>
       <NormalText
-        text={TextFormatter.formatDateTime(item.fulfillmentDateTime)}
+        text={new Date(item.fulfillmentDateTime).toLocaleString('vi-VN')}
       />
       <NormalText
         style={{
@@ -339,7 +403,6 @@ const ItemOrderType = ({item}) => {
             item.deliveryMethod === 'delivery'
               ? colors.brown700
               : colors.orange700,
-          textAlign: 'center',
         }}
         text={item.deliveryMethod === 'pickup' ? 'Mang đi' : 'Giao tận nơi'}
       />
@@ -358,9 +421,8 @@ const EmptyView = () => (
 );
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: colors.white},
+  container: {width: width, backgroundColor: colors.white},
   itemOrder: {
-    paddingHorizontal: 24,
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
@@ -368,7 +430,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderColor: colors.gray200,
-    gap: 16,
+    width: width,
   },
   orderName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -379,6 +441,7 @@ const styles = StyleSheet.create({
   emptyContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.white,
   },
   emptyImage: {
     width: width / 3,

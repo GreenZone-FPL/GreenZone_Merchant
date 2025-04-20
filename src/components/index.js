@@ -12,6 +12,7 @@ export * from './containers/Row';
 
 // dialogs
 export * from './dialogs/DialogBasic';
+export * from './dialogs/ActionDialog';
 
 // inputs
 export * from './inputs/CustomSearchBar';

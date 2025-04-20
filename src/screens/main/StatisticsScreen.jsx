@@ -14,8 +14,10 @@ import {getStatisticByYear} from '../../axios';
 import {TextFormatter} from '../../utils';
 import YearPicker from '../../constants/yearPicker/YearPicker';
 import {useAppContext} from '../../context/appContext';
+import {useFocusEffect} from '@react-navigation/native';
+import DialogSelectVouchers from '../order/DialogSelectVouchers';
 
-const StatisticsScreen = ({navigation}) => {
+const StatisticsScreen = () => {
   const [statistics, setStatistics] = useState([]);
   const [totalOrders, setTotalOrders] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState([]);
@@ -25,8 +27,6 @@ const StatisticsScreen = ({navigation}) => {
   const [isTotalOrders, setIsTotalOrders] = useState(false);
   const {orderNew} = useAppContext();
   const currentMonth = new Date().getMonth();
-
-  const [showModal, setShowModal] = useState(false);
 
   // Hàm lấy dữ liệu thống kê (dùng useCallback để tránh render lại không cần thiết)
   const getStatistics = useCallback(async selectedYear => {
@@ -55,6 +55,11 @@ const StatisticsScreen = ({navigation}) => {
     getStatistics(year);
   }, [year, orderNew, getStatistics]);
 
+  useFocusEffect(
+    useCallback(() => {
+      getStatistics(year);
+    }, [year, getStatistics]),
+  );
   const handleSelectYear = selectedYear => {
     setYear(selectedYear);
   };
