@@ -350,21 +350,20 @@ const CartOrder = ({cart, setCart}) => {
                   <Text style={styles.cartItemName}>{item.productName}</Text>
                   <View style={styles.cartItemTopping}>
                     <Text style={styles.cartItemVariant}>
-                      {item.variantName}
+                      Size: {item.variantName}
                     </Text>
-                    <Text style={styles.cartItemToppingText}>
+                    <View style={styles.cartItemToppingText}>
                       {item.toppingItems &&
                         item.toppingItems.length > 0 &&
                         item.toppingItems.map((topping, index) => (
-                          <Text key={index} style={styles.toppingText}>
+                          <Row key={index} style={styles.toppingText}>
                             <Text style={styles.toppingQuantity}>
                               x{topping.quantity}
                             </Text>
-                            {topping.name}
-                            {'\n'}
-                          </Text>
+                            <Text>{topping.name}</Text>
+                          </Row>
                         ))}
-                    </Text>
+                    </View>
                   </View>
                 </View>
                 <View style={styles.itemContent}>
@@ -395,10 +394,20 @@ const CartOrder = ({cart, setCart}) => {
                         <Icon source={'plus'} color={colors.white} size={20} />
                       </Pressable>
                     </View>
-                    <Pressable
+                    {/* <Pressable
                       style={styles.removeButton}
                       onPress={() => removeFromCart(item._id)}>
                       <Text style={styles.removeText}>Xoá</Text>
+                    </Pressable> */}
+
+                    <Pressable
+                      style={styles.removeButton}
+                      onPress={() => removeFromCart(item._id)}>
+                      <Icon
+                        source={'delete-outline'}
+                        size={28}
+                        color={colors.pink500}
+                      />
                     </Pressable>
                   </View>
                 </View>
@@ -450,7 +459,7 @@ const CartOrder = ({cart, setCart}) => {
                 if (cart == null) return;
                 setIsSelectedPaymentMethod(true);
               }}>
-              <Text style={styles.paymentButton}>Thanh Toán</Text>
+              <Text style={styles.paymentButton}>Thanh toán</Text>
             </Pressable>
           </View>
         </Column>
@@ -596,8 +605,8 @@ const styles = StyleSheet.create({
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
   },
   cartItemImage: {
-    width: width / 20,
-    height: width / 20,
+    width: width / 20 + 20,
+    height: width / 20 + 20,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 20,
   },
   cartItemDetails: {
@@ -616,18 +625,19 @@ const styles = StyleSheet.create({
   },
   cartItemVariant: {
     color: colors.pink500,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT - 2,
     fontWeight: '500',
+    marginBottom: 10,
   },
   cartItemToppingText: {
     color: colors.gray850,
   },
   toppingText: {
     marginBottom: 4,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
   },
   toppingQuantity: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
   },
   itemContent: {
     flexDirection: 'column',
@@ -655,12 +665,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   buttonQuantity: {
-    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 10,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.primary,
     borderColor: colors.primary,
     borderWidth: 1,
+    width: 24,
+    height: 24,
   },
   itemQuantityText: {
     width: 26,
@@ -751,14 +763,15 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   paymentButton: {
-    padding: 8,
-    color: colors.pink500,
-    backgroundColor: colors.white,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    color: colors.white,
+    backgroundColor: colors.primary,
     fontWeight: 'bold',
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     borderWidth: 1,
-    borderColor: colors.pink500,
+    borderColor: colors.primary,
   },
 });
 

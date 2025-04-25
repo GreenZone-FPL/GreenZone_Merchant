@@ -6,7 +6,7 @@ class MerchantSocketService {
     this.socket = null;
   }
 
-  async initialize(callback) {
+  async initialize(callback, updateStatusCallback) {
     if (!this.socket) {
       try {
         const token = await AppAsyncStorage.readData(
@@ -49,6 +49,15 @@ class MerchantSocketService {
             console.log('Callback executed');
           } else {
             console.log('Callback is undefined');
+          }
+        });
+
+        this.socket.on('order.updateStatus', data => {
+          console.log('order.updateStatus:', data);
+          if (updateStatusCallback) {
+            updateStatusCallback(data);
+          } else {
+            console.log('UpdateStatusCallback is undefined');
           }
         });
 

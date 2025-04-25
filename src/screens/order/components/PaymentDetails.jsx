@@ -123,7 +123,7 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
             <Pressable
               style={styles.button1}
               onPress={() => setIsCancelOrdeModal(true)}>
-              <NormalText text="Huỷ Đơn" style={styles.buttonTextWhite} />
+              <NormalText text="Huỷ đơn" style={styles.buttonTextWhite} />
               <CancelOrderModal
                 visible={isCancelOrdeModal}
                 onClose={() => setIsCancelOrdeModal(false)}
@@ -155,7 +155,10 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
                 <Pressable
                   style={styles.button}
                   onPress={() => setShipperModalVisible(true)}>
-                  <NormalText text="Chọn Shipper" style={styles.buttonText} />
+                  <NormalText
+                    text="Chọn nhân viên giao hàng"
+                    style={styles.buttonText}
+                  />
                 </Pressable>
                 <ShipperSelectModal
                   visible={shipperModalVisible}
@@ -163,7 +166,7 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
                   onSelect={shipper => {
                     showAlert({
                       notification: 'Xác nhận shipper',
-                      message: `Bạn có chắc chắn chọn shipper ${shipper.firstName} ${shipper.lastName}?`,
+                      message: `Bạn có chắc chắn chọn nhân viên ${shipper.firstName} ${shipper.lastName}?`,
                       onPress: () => {
                         setSelectedShipper(shipper);
                         handleStatusUpdateWithShipper(
@@ -193,24 +196,26 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
           </>
         );
       case OrderStatus.READY_FOR_PICKUP.value:
+        // case 1:
         return (
           <>
             {data.deliveryMethod === DeliveryMethod.DELIVERY.value ? (
-              <Pressable
-                style={styles.button}
-                onPress={() =>
-                  showAlert({
-                    notification: 'Giao cho shipper',
-                    message: 'Đơn giao cho shipper thành công?',
-                    onPress: () =>
-                      handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
-                  })
-                }>
-                <NormalText
-                  text="Giao thành công cho Shipper"
-                  style={styles.buttonText}
-                />
-              </Pressable>
+              // <Pressable
+              //   style={styles.button}
+              //   onPress={() =>
+              //     showAlert({
+              //       notification: 'Giao cho shipper',
+              //       message: 'Đơn giao cho shipper thành công?',
+              //       onPress: () =>
+              //         handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
+              //     })
+              //   }>
+              //   <NormalText
+              //     text="Giao thành công cho Shipper"
+              //     style={styles.buttonText}
+              //   />
+              // </Pressable>
+              <View></View>
             ) : (
               <Pressable
                 style={styles.button}
@@ -227,7 +232,8 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
             )}
           </>
         );
-      case OrderStatus.SHIPPING_ORDER.value:
+      // case OrderStatus.SHIPPING_ORDER.value:
+      case 2:
         return (
           <>
             <Pressable
@@ -263,76 +269,6 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
 
   return (
     <View style={styles.container}>
-      {/* <DualTextRow
-        leftText="Chi tiết thanh toán"
-        leftTextStyle={styles.dualTextLeftHeader}
-      />
-      <View style={styles.oderIdContainer}>
-        <NormalText text="Mã đơn hàng: " />
-        <Pressable style={styles.pressable} onPress={() => {}}>
-          <Text style={styles.orderIdText}>{data?._id}</Text>
-          <Icon source="content-copy" color={colors.teal900} size={18} />
-        </Pressable>
-      </View>
-      {[
-        {
-          leftText: `Tạm tính (${(data?.orderItems || []).reduce(
-            (sum, item) => sum + (item.quantity || 0),
-            0,
-          )} sản phẩm)`,
-          rightText: TextFormatter.formatCurrency(totalPrice),
-        },
-        {
-          leftText: 'Phí giao hàng',
-          rightText: TextFormatter.formatCurrency(
-            data?.deliveryMethod === DeliveryMethod.DELIVERY.value
-              ? data?.shippingFee || 0
-              : 0,
-          ),
-        },
-        {
-          leftText: 'Giảm giá',
-          rightText: `-${TextFormatter.formatCurrency(discountAmount)}`,
-          rightTextStyle: {color: colors.primary},
-        },
-        {
-          leftText: 'Tổng tiền',
-          rightText: `${totalPrice.toLocaleString('vi-VN')}đ`,
-          rightTextStyle: {
-            color: colors.primary,
-            fontWeight: '700',
-            fontSize: 20,
-          },
-          leftTextStyle: {color: colors.primary, fontWeight: '700'},
-        },
-        {
-          leftText: 'Trạng thái thanh toán',
-          rightText: paymentStatus.text,
-          leftTextStyle: {
-            paddingHorizontal: 4,
-            paddingVertical: 2,
-            borderWidth: 1,
-            borderRadius: 6,
-            borderColor: paymentStatus.color,
-            color: paymentStatus.color,
-          },
-          rightTextStyle: {color: paymentStatus.color},
-        },
-        {
-          leftText: 'Thời gian đặt hàng',
-          rightText: TextFormatter.formatDateTime(data?.fulfillmentDateTime),
-        },
-        {
-          leftText: 'Thanh toán',
-          rightText:
-            data?.paymentMethod === PaymentMethod.COD.value
-              ? 'Tiền mặt'
-              : 'Chuyển khoản',
-          rightTextStyle: {fontWeight: '700', color: colors.primary},
-        },
-      ].map((item, index) => (
-        <DualTextRow key={index} {...item} />
-      ))} */}
       {data?.status !== OrderStatus.CANCELLED.value &&
         data?.status !== OrderStatus.FAILED_DELIVERY.value && (
           <View style={styles.buttonContainer}>
@@ -368,26 +304,28 @@ const styles = StyleSheet.create({
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: colors.gray200,
-    borderWidth: 2,
-    minWidth: '15%',
+    borderColor: colors.primary,
+    borderWidth: 1.5,
+    minWidth: '20%',
     alignSelf: 'flex-start',
   },
   button1: {
-    backgroundColor: colors.gray400,
+    backgroundColor: colors.white,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT,
     padding: GLOBAL_KEYS.PADDING_DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: colors.gray200,
-    borderWidth: 2,
-    minWidth: '15%',
+    borderWidth: 1.5,
+    borderColor: colors.pink500,
+    minWidth: '20%',
   },
   buttonText: {
     color: colors.white,
+    fontWeight: '600',
   },
   buttonTextWhite: {
-    color: colors.white,
+    color: colors.pink500,
+    fontWeight: '600',
   },
   oderIdContainer: {
     flexDirection: 'row',

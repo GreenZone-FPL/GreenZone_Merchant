@@ -70,7 +70,7 @@ const ModalCheckout = ({
   }, [data]);
 
   return (
-    <Modal visible={isCheckout} transparent animationType="slide">
+    <Modal visible={isCheckout} transparent animationType="none">
       <OverlayStatusBar />
       <Pressable onPress={() => setIsCheckout(false)} style={styles.container}>
         <Pressable onPress={() => {}} style={styles.modalContent}>

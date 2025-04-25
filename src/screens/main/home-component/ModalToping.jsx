@@ -98,7 +98,7 @@ const ModalToping = ({
   // }, [selectedSize]);
 
   return (
-    <Modal visible={openMenu} transparent animationType="slide">
+    <Modal visible={openMenu} transparent animationType="none">
       <OverlayStatusBar />
       <Pressable
         onPress={() => setOpenMenu(false)}

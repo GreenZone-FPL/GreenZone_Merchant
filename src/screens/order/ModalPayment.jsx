@@ -39,10 +39,10 @@ const ModalPayment = ({
     setCheckoutUrl(null);
 
     const orderCode = Date.now();
-    const amount = 2000;
+    const amount = orderResponse.totalPrice;
     const description = `${orderResponse._id}`;
-    const returnUrl = `https://yourapp.com/payment-success?orderId=${orderResponse._id}`;
-    const cancelUrl = `https://yourapp.com/payment-cancel?orderId=${orderResponse._id}`;
+    const returnUrl = `https://drive.google.com/drive/folders/1dsPYorFABcGPvDm0COWKN82iy8GNHE2D`;
+    const cancelUrl = `https://motcaiweb.io.vn/`;
 
     const expiredAt = Math.floor(Date.now() / 1000) + 120;
 
@@ -106,7 +106,7 @@ const ModalPayment = ({
 
     if (
       url.includes(
-        `https://yourapp.com/payment-success?orderId=${orderResponse._id}`,
+        `https://drive.google.com/drive/folders/1dsPYorFABcGPvDm0COWKN82iy8GNHE2D`,
       )
     ) {
       updateStatus(OrderStatus.PROCESSING.value);
@@ -117,11 +117,7 @@ const ModalPayment = ({
       setScannedCode('');
       setCustomer(null);
       console.log('Thanh toán thành công');
-    } else if (
-      url.includes(
-        `https://yourapp.com/payment-cancel?orderId=${orderResponse._id}`,
-      )
-    ) {
+    } else if (url.includes(`https://motcaiweb.io.vn/`)) {
       // updateStatus(OrderStatus.CANCELLED.value);
       setIsPayment(false);
       setOrderResponse(null);
@@ -140,7 +136,7 @@ const ModalPayment = ({
   };
 
   return (
-    <Modal visible={isPayment} animationType="slide" transparent={false}>
+    <Modal visible={isPayment} animationType="none" transparent={false}>
       <LightStatusBar />
       <View style={styles.container}>
         <View style={{flex: 1}}>

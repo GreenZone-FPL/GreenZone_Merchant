@@ -58,7 +58,7 @@ const DialogSelectVouchers = ({
   }, [cart]);
 
   return (
-    <Modal visible={showVoucherModal} animationType="slide" transparent={true}>
+    <Modal visible={showVoucherModal} animationType="none" transparent={true}>
       <Pressable style={styles.body} onPress={() => cancelModal()}>
         <OverlayStatusBar />
         <Pressable style={styles.content} onPress={() => {}}>

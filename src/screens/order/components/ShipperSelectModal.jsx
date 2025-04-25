@@ -6,9 +6,14 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Dimensions,
+  Image,
 } from 'react-native';
 import {getEmployeesAllAvailable} from '../../../axios/index';
 import {GLOBAL_KEYS, colors} from '../../../constants';
+import {Column} from '../../../components';
+
+const {width} = Dimensions.get('window');
 
 const ShipperSelectModal = ({visible, onClose, onSelect}) => {
   const [shippers, setShippers] = useState([]);
@@ -38,11 +43,13 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
     onSelect(shipper);
   };
 
+  console.log(shippers);
+
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="none">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <Text style={styles.title}>Chọn Shipper</Text>
+          <Text style={styles.title}>Nhân viên hiện có</Text>
           <ScrollView contentContainerStyle={styles.shipperList}>
             {shippers?.length > 0 ? (
               shippers.map(shipper => (
@@ -50,13 +57,27 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
                   key={shipper._id}
                   onPress={() => handleSelectShipper(shipper)}
                   style={styles.shipperItem}>
-                  <Text style={styles.shipperName}>
-                    {`${shipper.firstName} ${shipper.lastName}`}
-                  </Text>
+                  <Image
+                    style={styles.cartItemImage}
+                    source={
+                      shipper.avatar
+                        ? {uri: shipper.avatar}
+                        : require('../../../assets/images/helmet.png')
+                    }
+                  />
+
+                  <Column>
+                    <Text style={styles.shipperName}>
+                      {`${shipper.firstName} ${shipper.lastName}`}
+                    </Text>
+                    <Text style={styles.shipperName}>
+                      {`${shipper.phoneNumber} `}
+                    </Text>
+                  </Column>
                 </Pressable>
               ))
             ) : (
-              <Text style={styles.noShipperText}>Không có shipper nào.</Text>
+              <Text style={styles.noShipperText}>Không có nhân viên nào.</Text>
             )}
           </ScrollView>
           <Pressable onPress={onClose} style={styles.closeButton}>
@@ -80,7 +101,7 @@ const styles = StyleSheet.create({
     height: '60%',
     backgroundColor: colors.white,
     borderRadius: GLOBAL_KEYS.BORDER_RADIUS_LARGE,
-    padding: GLOBAL_KEYS.PADDING_DEFAULT,
+    padding: 30,
   },
   title: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -96,6 +117,9 @@ const styles = StyleSheet.create({
     paddingVertical: GLOBAL_KEYS.PADDING_DEFAULT,
     borderBottomWidth: 2,
     borderColor: colors.gray200,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   shipperName: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -117,6 +141,11 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: colors.white,
     fontWeight: 'bold',
+  },
+  cartItemImage: {
+    width: width / 20 + 20,
+    height: width / 20 + 20,
+    borderRadius: GLOBAL_KEYS.BORDER_RADIUS_DEFAULT * 20,
   },
 });
 

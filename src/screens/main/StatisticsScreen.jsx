@@ -65,11 +65,23 @@ const StatisticsScreen = () => {
   };
 
   // Dữ liệu cho biểu đồ cột
+  const formattedValues = (isTotalOrders ? totalOrders : totalRevenue).map(
+    item => {
+      const y = typeof item === 'number' ? item : item.y;
+      return isTotalOrders
+        ? {y}
+        : {
+            y,
+            marker: `${y.toLocaleString('vi-VN')} ₫`,
+          };
+    },
+  );
+
   const data = {
     dataSets: [
       {
-        values: isTotalOrders ? totalOrders : totalRevenue,
-        label: `Doanh số ${year}`,
+        values: formattedValues,
+        label: isTotalOrders ? `Số đơn hàng ${year}` : `Doanh số ${year}`,
         config: {
           colors: Array(12).fill(processColor(colors.green200)),
           barShadowColor: processColor(colors.black),
@@ -78,7 +90,7 @@ const StatisticsScreen = () => {
           borderRadius: 8,
           valueTextSize: 14,
           valueTextColor: processColor(colors.black),
-          valueFormatter: '#',
+          valueFormatter: isTotalOrders ? '# đơn' : '###,###,### ₫',
         },
       },
     ],
@@ -151,21 +163,21 @@ const StatisticsScreen = () => {
       {/* Thông tin tổng quan */}
       <Column style={styles.card}>
         <Text style={styles.cardTitle}>
-          {isTotalOrders ? 'Tổng Số Đơn Cả Năm' : 'Tổng Doanh Thu Cả Năm'}
+          {isTotalOrders ? 'Tổng số đơn cả năm' : 'Tổng doanh thu cả năm'}
         </Text>
         <Text style={styles.cardValue}>
           {isTotalOrders
-            ? `${totalOrders.reduce((sum, value) => sum + value, 0)} Đơn`
+            ? `${totalOrders.reduce((sum, value) => sum + value, 0)} đơn`
             : TextFormatter.formatCurrency(
                 totalRevenue.reduce((sum, value) => sum + value, 0) || 0,
               )}
         </Text>
         <Text style={styles.cardTitle}>
-          {isTotalOrders ? 'Số Đơn Tháng Hiện Tại' : 'Doanh Thu Tháng Hiện Tại'}
+          {isTotalOrders ? 'Số đơn tháng hiện tại' : 'Doanh thu tháng hiện tại'}
         </Text>
         <Text style={styles.cardValue}>
           {isTotalOrders
-            ? `${currentValue} Đơn`
+            ? `${currentValue} đơn`
             : TextFormatter.formatCurrency(currentValue)}
         </Text>
         {/* Only render the "So với tháng trước" section if current month has valid data */}
@@ -195,7 +207,7 @@ const StatisticsScreen = () => {
           style={styles.buttonPressable2}
           onPress={() => setIsTotalOrders(!isTotalOrders)}>
           <Text style={styles.textButton}>
-            {isTotalOrders ? 'Doanh Thu' : 'Số Đơn'}
+            {isTotalOrders ? 'Doanh thu cửa hàng' : 'Tổng đơn hàng'}
           </Text>
         </Pressable>
       </Column>
@@ -233,10 +245,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: {width: 0, height: 4},
   },
-  cardTitle: {fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE, color: colors.black},
+  cardTitle: {fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE - 4, color: colors.black},
   cardValue: {
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
-    fontWeight: '700',
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontWeight: '500',
     color: colors.primary,
   },
   buttonPressable: {
@@ -257,9 +269,10 @@ const styles = StyleSheet.create({
     minWidth: 120,
   },
   textButton: {
-    fontSize: 20,
+    fontSize: 14,
     color: colors.white,
     textAlign: 'center',
+    padding: 4,
   },
 });
 

@@ -61,11 +61,11 @@ export const HorizontalProductItem = ({
           </Text>
         )}
 
-        {item.toppingItems?.map(topping => {
+        {item.toppingItems?.map((topping, index) => {
           if (topping.quantity > 0) {
             return (
               <Text
-                key={topping._id}
+                key={topping._id || `${topping.name}-${index}`}
                 style={[
                   styles.normalText,
                   {color: colors.gray850},
