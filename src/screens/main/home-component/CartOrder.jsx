@@ -22,7 +22,11 @@ import {Column, CustomFlatInput, Row} from '../../../components';
 import ModalCheckout from './ModalCheckout';
 import ModalSelectedPaymentMethod from './DialogPaymentMethod';
 import ModalPayment from '../../order/ModalPayment';
-import {findCustomerByCode, findCustomerByPhone} from '../../../axios/index';
+import {
+  findCustomerByCode,
+  findCustomerByPhone,
+  findVoucherByCode,
+} from '../../../axios/index';
 import ModalToppingUpdateProduct from './DialogUpdateTopping';
 import {updateTotalPrice} from '../../../utils/cartManager';
 import DialogSelectVouchers from '../../order/DialogSelectVouchers';
@@ -42,6 +46,7 @@ const CartOrder = ({cart, setCart}) => {
   const [orderResponse, setOrderResponse] = useState(null);
   const [showSelectdTopping, setShowSelectdTopping] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
+  const [isVoucher, setIsVoucher] = useState(false);
 
   // useStable ModalCheckout
   const [orderItem, setOrderItem] = useState(null);
@@ -63,12 +68,18 @@ const CartOrder = ({cart, setCart}) => {
     codeTypes: ['qr', 'ean-13', 'upc-a', 'code-128', 'code-39'],
     onCodeScanned: codes => {
       try {
-        if (codes.length > 0) {
+        if (isVoucher === true) {
+          if (codes.length > 0) {
+            const scannedText = codes[0].value;
+            addVoucher(scannedText);
+            setIsScanning(false);
+            setIsVoucher(false);
+          }
+        } else if (codes.length > 0) {
           const scannedText = codes[0].value;
           setScannedCode(scannedText);
-          setPhoneNumber(scannedText); // Cập nhật số điện thoại từ mã quét
-          setIsScanning(false); // Đóng camera sau khi quét
-          // console.log(`Scanned Code: ${scannedText}, Type: ${codes[0].type}`);
+          setPhoneNumber(scannedText);
+          setIsScanning(false);
         }
       } catch (error) {
         console.log(error);
@@ -81,6 +92,7 @@ const CartOrder = ({cart, setCart}) => {
     try {
       const response = await findCustomerByCode(code);
       if (response) {
+        clearCustomer();
         setCustomer(response.customer);
       } else {
         setCustomer(null);
@@ -95,8 +107,8 @@ const CartOrder = ({cart, setCart}) => {
   const fetchCustomerByPhone = async phoneNumber => {
     try {
       const response = await findCustomerByPhone(phoneNumber);
-      // console.log('phone', JSON.stringify(response.customer, null, 2));
       if (response.customer) {
+        clearCustomer();
         setCustomer(response.customer);
       } else {
         setCustomer(null);
@@ -133,12 +145,10 @@ const CartOrder = ({cart, setCart}) => {
     if (customer?._id) {
       updateCustomer(customer);
     }
-    // console.log('customer', JSON.stringify(customer, null, 2));
   }, [customer]);
 
   const updateCustomer = customer => {
     setCart(prevOrder => {
-      // console.log(customer);
       if (customer) {
         return {
           ...prevOrder,
@@ -170,7 +180,7 @@ const CartOrder = ({cart, setCart}) => {
       // Nếu không còn sản phẩm nào, xóa luôn giỏ hàng
       return updatedOrderItems.length > 0
         ? {...prevCart, orderItems: updatedOrderItems}
-        : null; // Hoặc {} nếu muốn giữ trạng thái object
+        : {}; // Hoặc {} nếu muốn giữ trạng thái object
     });
     updateTotalPrice(setCart);
   };
@@ -231,9 +241,9 @@ const CartOrder = ({cart, setCart}) => {
     };
   };
 
-  // useEffect(() => {
-  //   console.log('Cart', JSON.stringify(cart, null, 2));
-  // }, [cart]);
+  useEffect(() => {
+    console.log('Cart', JSON.stringify(cart, null, 2));
+  }, [cart]);
 
   const clearCustomer = () => {
     updateCustomer(null);
@@ -245,6 +255,30 @@ const CartOrder = ({cart, setCart}) => {
       voucherInfor: null,
     }));
     updateTotalPrice(setCart);
+  };
+
+  const addVoucher = async code => {
+    try {
+      const response = await findVoucherByCode(code, cart.consigneePhone);
+      if (response) {
+        console.log(
+          '>>>>>>>>>>>>. my voucher',
+          JSON.stringify(response, null, 2),
+        );
+        // if (response._id === cart.owner)
+        await setCart(prev => {
+          const updated = {
+            ...prev,
+            voucher: response.data._id,
+            voucherInfor: response.data,
+          };
+          return updated;
+        });
+        updateTotalPrice(setCart);
+      }
+    } catch (error) {
+      console.log('error', error);
+    }
   };
 
   return (
@@ -432,8 +466,12 @@ const CartOrder = ({cart, setCart}) => {
             <View style={styles.voucherContainer}>
               <Pressable
                 style={styles.voucherPressable}
-                onPress={() => setShowVoucherModal(true)}>
-                <Text style={styles.voucherText}>Chọn phiếu giảm giá</Text>
+                onPress={() => {
+                  setIsVoucher(true);
+                  setIsScanning(true);
+                }}>
+                <Icon source="qrcode-scan" size={24} color={colors.blue600} />
+                <Text style={styles.voucherText}>Scan QR</Text>
               </Pressable>
               <Text style={styles.voucherName}>{cart?.voucherInfor?.name}</Text>
             </View>
@@ -537,9 +575,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.fbBg,
   },
   camera: {
-    width: '100%',
-    height: 200,
+    width: '95%',
+    height: 150,
     borderRadius: 10,
+    alignSelf: 'center',
   },
   cameraControls: {
     position: 'absolute',
@@ -724,7 +763,7 @@ const styles = StyleSheet.create({
   voucherText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     fontWeight: '500',
-    color: colors.primary,
+    color: colors.blue600,
   },
   voucherName: {
     color: colors.yellow700,

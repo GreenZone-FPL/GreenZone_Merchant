@@ -200,23 +200,23 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
         return (
           <>
             {data.deliveryMethod === DeliveryMethod.DELIVERY.value ? (
-              // <Pressable
-              //   style={styles.button}
-              //   onPress={() =>
-              //     showAlert({
-              //       notification: 'Giao cho shipper',
-              //       message: 'Đơn giao cho shipper thành công?',
-              //       onPress: () =>
-              //         handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
-              //     })
-              //   }>
-              //   <NormalText
-              //     text="Giao thành công cho Shipper"
-              //     style={styles.buttonText}
-              //   />
-              // </Pressable>
-              <View></View>
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  showAlert({
+                    notification: 'Giao cho shipper',
+                    message: 'Đơn giao cho shipper thành công?',
+                    onPress: () =>
+                      handleStatusUpdate(OrderStatus.SHIPPING_ORDER.value),
+                  })
+                }>
+                <NormalText
+                  text="Giao thành công cho Shipper"
+                  style={styles.buttonText}
+                />
+              </Pressable>
             ) : (
+              // <View></View>
               <Pressable
                 style={styles.button}
                 onPress={() =>
@@ -232,8 +232,8 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
             )}
           </>
         );
-      // case OrderStatus.SHIPPING_ORDER.value:
-      case 2:
+      case OrderStatus.SHIPPING_ORDER.value:
+        // case 2:
         return (
           <>
             <Pressable

@@ -190,6 +190,14 @@ const ModalPayment = ({
             }}>
             <Text style={styles.closeText}>Tạo lại mã thanh toán</Text>
           </Pressable>
+          <Pressable
+            style={styles.closeButton2}
+            onPress={() => {
+              console.log('Quay lại');
+              setIsPayment(false);
+            }}>
+            <Text style={styles.closeText}>Quay lại</Text>
+          </Pressable>
         </Row>
       </View>
     </Modal>
@@ -209,6 +217,12 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 16,
     backgroundColor: colors.primary,
+    alignItems: 'center',
+    flex: 1,
+  },
+  closeButton2: {
+    padding: 16,
+    backgroundColor: colors.pink500,
     alignItems: 'center',
     flex: 1,
   },
