@@ -10,6 +10,7 @@ export const AppContextProvider = ({ children }) => {
 
   const [authState, authDispatch] = useReducer(authReducer, authInitialState);
   const [orderNew, setOrderNew] = useState(null)
+  const [orderUpdate, setOrderUpdate] = useState(null)
 
 
   useEffect(() => {
@@ -29,7 +30,14 @@ export const AppContextProvider = ({ children }) => {
     return () => { globalAuthDispatch = null; };
   }, [authState]);
   return (
-    <AppContext.Provider value={{ authState, authDispatch, orderNew, setOrderNew }}>
+    <AppContext.Provider value={{
+      authState,
+      authDispatch,
+      orderNew,
+      setOrderNew,
+      orderUpdate,
+      setOrderUpdate
+    }}>
       {children}
     </AppContext.Provider>
   );

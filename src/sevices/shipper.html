@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shipper Order Notifications</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Shipper Order Notifications</h1>
+
+    <label>Token:</label>
+    <input type="text" id="tokenInput" placeholder="Enter JWT Token" />
+    <br />
+
+    <label>Store ID:</label>
+    <input type="text" id="storeIdInput" placeholder="Enter Store ID" />
+
+    <br />
+
+    <button onclick="connectSocket()">Connect & Join Store</button>
+    <button onclick="disconnectSocket()">Disconnect</button>
+    <p>Status: <span id="status">Disconnected</span></p>
+
+    <h3>New Orders:</h3>
+    <ul id="orders"></ul>
+
+    <script>
+      let socket;
+
+      function connectSocket() {
+        const token = document.getElementById('tokenInput').value;
+        const storeId = document.getElementById('storeIdInput').value;
+
+        if (!token) return alert('Enter token!');
+        if (!storeId) return alert('Enter Store ID!');
+
+        // Kết nối WebSocket
+        socket = io('ws://localhost:3001', {
+          transports: ['websocket'],
+          auth: { token },
+        });
+
+        socket.on('connect', () => {
+          document.getElementById('status').textContent = 'Connected';
+          console.log('Connected to WebSocket');
+
+          // Shipper và Merchant đều vào phòng cửa hàng
+          socket.emit('store.join', storeId);
+          console.log(`User joined store room: ${storeId}`);
+        });
+
+        socket.on('order.assigned', (data) => {
+          console.log(`📦 Shipper joined order room: ${data.orderId}`);
+          socket.emit('order.join', data.orderId);
+        });
+
+        socket.on('disconnect', () => {
+          document.getElementById('status').textContent = 'Disconnected';
+          console.log('Disconnected');
+        });
+
+        socket.on('order.new', (data) => {
+          console.log('New Order:', data);
+
+          const orderItem = document.createElement('li');
+          orderItem.textContent = `📦 Order #${data.orderId} - ${data.message}`;
+          document.getElementById('orders').appendChild(orderItem);
+        });
+
+        socket.on('order.updateStatus', (data) => {
+          console.log('Order Status Update:', data);
+
+          const statusItem = document.createElement('li');
+          statusItem.textContent = `🚀 Order #${data.orderId} - Status: ${data.status}`;
+          document.getElementById('orders').appendChild(statusItem);
+        });
+      }
+
+      function disconnectSocket() {
+        if (socket) {
+          socket.disconnect();
+          document.getElementById('status').textContent = 'Disconnected';
+        }
+      }
+    </script>
+  </body>
+</html>

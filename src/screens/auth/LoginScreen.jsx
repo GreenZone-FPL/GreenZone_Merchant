@@ -18,6 +18,7 @@ import {
 import { login } from '../../axios/index';
 import { NormalLoading } from '../../components';
 import { colors, GLOBAL_KEYS } from '../../constants';
+import { useAppContainer } from '../../containers/useAppContainer';
 import { useAppContext } from '../../context/appContext';
 import { AuthActionTypes } from '../../reducers/authReducer';
 import MerchantSocketService from '../../sevices/merchantSocketService';
@@ -32,7 +33,8 @@ const LoginScreen = props => {
   const [loading, setLoading] = useState(false);
   const [phoneNumberMessage, setPhoneNumberMessage] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
-  const { orderNew, setOrderNew, authDispatch } = useAppContext();
+  const { authDispatch } = useAppContext();
+  const { orderNewCallBack, updateOrderCallBack } = useAppContainer()
 
   const loginHandle = async () => {
     let valid = true
@@ -50,12 +52,10 @@ const LoginScreen = props => {
 
     try {
       if (valid) {
-        await login( phoneNumber, password );
+        await login(phoneNumber, password);
 
         console.log(' Đăng nhập thành công, khởi tạo socket...');
-        await MerchantSocketService.initialize(newOrder => {
-          setOrderNew(newOrder);
-        });
+        await MerchantSocketService.initialize(orderNewCallBack, updateOrderCallBack);
 
         authDispatch({ type: AuthActionTypes.LOGIN });
       }

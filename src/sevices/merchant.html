@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merchant Order Notifications</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  </head>
+  <body>
+    <h1>Merchant Order Notifications</h1>
+
+    <label>Token:</label>
+    <input type="text" id="tokenInput" placeholder="Enter JWT Token" />
+    <br />
+
+    <label>Store ID:</label>
+    <input type="text" id="storeIdInput" placeholder="Enter Store ID" />
+    <br />
+
+    <label>User Role:</label>
+    <select id="roleSelect">
+      <option value="merchant">Merchant</option>
+      <option value="customer">Customer</option>
+    </select>
+    <br />
+
+    <button onclick="connectSocket()">Connect & Join Store</button>
+    <button onclick="disconnectSocket()">Disconnect</button>
+    <p>Status: <span id="status">Disconnected</span></p>
+
+    <h3>New Orders:</h3>
+    <ul id="orders"></ul>
+
+    <script>
+      let socket;
+
+      function connectSocket() {
+        const token = document.getElementById('tokenInput').value;
+        const storeId = document.getElementById('storeIdInput').value;
+        const role = document.getElementById('roleSelect').value;
+
+        if (!token) return alert('Enter token!');
+        if (!storeId) return alert('Enter Store ID!');
+
+        // Kết nối WebSocket
+        socket = io('https://greenzone.motcaiweb.io.vn', {
+          path: '/socket.io/',
+          transports: ['websocket'],
+          auth: { token },
+        });
+
+        socket.on('connect', () => {
+          document.getElementById('status').textContent = 'Connected';
+          console.log('Connected to WebSocket');
+
+          if (role === 'merchant') {
+            socket.emit('store.join', storeId);
+            console.log(`Merchant joined store room: ${storeId}`);
+          }
+        });
+
+        socket.on('disconnect', () => {
+          document.getElementById('status').textContent = 'Disconnected';
+          console.log('Disconnected');
+        });
+
+        socket.on('order.new', (data) => {
+          console.log('New Order:', data);
+
+          const orderItem = document.createElement('li');
+          orderItem.textContent = `📦 Order #${data.orderId} - ${data.message}`;
+          document.getElementById('orders').appendChild(orderItem);
+        });
+      }
+
+      function disconnectSocket() {
+        if (socket) {
+          socket.disconnect();
+          document.getElementById('status').textContent = 'Disconnected';
+        }
+      }
+    </script>
+  </body>
+</html>
