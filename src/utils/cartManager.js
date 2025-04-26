@@ -54,7 +54,7 @@ export const CartManager = (() => {
           paymentMethod: PaymentMethod.COD.value,
           shippingAddress: null,
           store: merchant,
-          owner: cart?._id,
+          owner: cart?.owner,
           voucher: null,
           orderItems: [newItem],
           consigneeName: cart?.consigneeName,

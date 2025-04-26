@@ -23,3 +23,14 @@ export const findCustomerByPhone = async phone => {
     throw error;
   }
 };
+
+export const findVoucherByCode = async (code, phoneNumber) => {
+  try {
+    const response = await axiosInstance.get('/v1/user/find-voucher', {
+      params: {code: code, phoneNumber: phoneNumber},
+    });
+    return response.data;
+  } catch (error) {
+    console.log('Lỗi khi tìm voucher theo code:', error);
+  }
+};

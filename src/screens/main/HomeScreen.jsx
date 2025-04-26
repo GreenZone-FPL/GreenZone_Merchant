@@ -49,13 +49,15 @@ const HomeScreen = ({navigation}) => {
     try {
       setLoading(true);
       const response = await getAllCategories();
+      const reversedDocs = [...response.docs].reverse();
+
       const categoriesData = [
         {
           _id: 'cate18-06',
           name: 'Tất cả',
           icon: 'https://greenzone.motcaiweb.io.vn/uploads/1cbc176f-2f59-4828-bcf7-5454044e3f26.png',
         },
-        ...response.docs,
+        ...reversedDocs,
       ];
       setCategories(categoriesData);
     } catch (error) {
@@ -70,6 +72,7 @@ const HomeScreen = ({navigation}) => {
     try {
       setLoading(true);
       const response = await getAllProducts();
+
       setProducts(response);
     } catch (error) {
       console.log(error);
@@ -179,9 +182,7 @@ const HomeScreen = ({navigation}) => {
           {merchant && (
             <>
               <Text style={styles.headerText}>{merchant?.name}</Text>
-              <Text style={styles.titleText}>
-                {`${merchant.specificAddress}, ${merchant.ward}, ${merchant.district}, ${merchant.province}`}
-              </Text>
+              <Text style={styles.titleText}>{`${merchant?.address}`}</Text>
             </>
           )}
 
@@ -196,8 +197,6 @@ const HomeScreen = ({navigation}) => {
                 );
                 merchantSocketService.disconnect();
                 authDispatch({type: AuthActionTypes.LOGOUT});
-
-                // navigation.navigate('LoginScreen')
               }}
               style={styles.logoutButton}>
               <Icon
