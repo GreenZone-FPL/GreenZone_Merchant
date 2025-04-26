@@ -2,7 +2,7 @@ import React from 'react';
 import {Image, Text, View} from 'react-native';
 import {StatusText} from '../../../components';
 import {DualTextRow, Row} from '../../../components';
-import {GLOBAL_KEYS, colors} from '../../../constants';
+import {GLOBAL_KEYS, OrderStatus, colors} from '../../../constants';
 import OrderId from './OrderId';
 
 const PaymentDetailsView = ({
@@ -10,6 +10,7 @@ const PaymentDetailsView = ({
   _id,
   shippingFee,
   paymentMethod,
+  deliveryMethod,
   orderItems,
   totalPrice,
   status,
@@ -64,23 +65,22 @@ const PaymentDetailsView = ({
   };
 
   // Xác định trạng thái thanh toán
-  const getPaymentStatus = () => {
+  const getPaymentStatus = (status, paymentMethod) => {
     if (status === 'completed') {
       return {text: 'Đã thanh toán', color: colors.primary};
-    }
-    if (paymentMethod === 'cod') {
-      return {text: 'Chưa thanh toán', color: colors.orange700};
-    }
-    if (status === 'awaitingPayment') {
+    } else if (
+      paymentMethod === 'online' &&
+      status !== OrderStatus.AWAITING_PAYMENT.value
+    ) {
+      return {text: 'Đã thanh toán', color: colors.primary};
+    } else if (status === 'awaitingPayment') {
       return {text: 'Chờ thanh toán', color: colors.pink500};
-    }
-    if (status === 'cancelled') {
+    } else {
       return {text: 'Chưa thanh toán', color: colors.orange700};
     }
-    return {text: 'Đã thanh toán', color: colors.primary};
   };
 
-  const paymentStatus = getPaymentStatus();
+  const paymentStatus = getPaymentStatus(status, paymentMethod);
 
   return (
     <View
@@ -99,7 +99,7 @@ const PaymentDetailsView = ({
           marginBottom: 8,
         }}
       />
-      <OrderId data={_id} />
+      <OrderId _id={_id} />
 
       <Row
         style={{
@@ -146,8 +146,8 @@ const PaymentDetailsView = ({
       <DualTextRow
         leftText={
           detail?.voucher?.name
-            ? `Giảm Giá (${detail.voucher.name})`
-            : `Giảm Giá`
+            ? `Giảm giá (${detail.voucher.name})`
+            : `Giảm giá`
         }
         rightText={`-${(discount || 0).toLocaleString('vi-VN')}đ`}
         rightTextStyle={{color: colors.primary}}
@@ -214,14 +214,24 @@ const PaymentDetailsView = ({
             color: colors.black,
             marginRight: 8,
           }}>
-          Phương thức thanh toán:
+          Phương thức thanh toán
         </Text>
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
           }}>
-          <View>{getPaymentIcon(paymentMethod)}</View>
+          {paymentMethod === 'online' ? (
+            <Image
+              source={require('../../../assets/images/onl.jpg')}
+              style={{width: 22, height: 22}}
+            />
+          ) : (
+            <Image
+              source={require('../../../assets/images/logo_vnd.png')}
+              style={{width: 22, height: 22}}
+            />
+          )}
           <Text
             style={{
               fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,

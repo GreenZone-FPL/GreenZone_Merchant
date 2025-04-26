@@ -57,9 +57,6 @@ const AppNavigator = () => {
   useEffect(() => {
     console.log('orderNew:', orderNew);
     if (orderNew) {
-      if (orderNew.status == OrderStatus.AWAITING_PAYMENT.value) {
-        return;
-      }
       showMessage({
         message: 'Đơn hàng mới',
         description: orderNew.message,

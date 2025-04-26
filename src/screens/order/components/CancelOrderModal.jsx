@@ -63,7 +63,7 @@ const CancelOrderModal = ({visible, onClose, onSelect}) => {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType="none">
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Chọn lý do huỷ đơn</Text>

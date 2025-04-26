@@ -94,20 +94,22 @@ export const CustomTabView = ({
               style={[styles.tabViewItem, tabViewConfig.tabViewItemStyle]}>
               {index === tabIndex && (
                 <View style={{backgroundColor: colors.fbBg}}>
-                  <View style={styles.tabDescriptionContainer}>
-                    <Text style={[styles.tabDescriptionText, {width: '20%'}]}>
-                      Phương thức
-                    </Text>
-                    <Text style={[styles.tabDescriptionText, {width: '30%'}]}>
-                      Sản phẩm
-                    </Text>
-                    <Text style={[styles.tabDescriptionText, {width: '30%'}]}>
-                      Khách hàng
-                    </Text>
-                    <Text style={[styles.tabDescriptionText, {width: '20%'}]}>
-                      Trạng thái
-                    </Text>
-                  </View>
+                  {child !== null && (
+                    <View style={styles.tabDescriptionContainer}>
+                      <Text style={[styles.tabDescriptionText, {width: '20%'}]}>
+                        Phương thức
+                      </Text>
+                      <Text style={[styles.tabDescriptionText, {width: '30%'}]}>
+                        Sản phẩm
+                      </Text>
+                      <Text style={[styles.tabDescriptionText, {width: '30%'}]}>
+                        Khách hàng
+                      </Text>
+                      <Text style={[styles.tabDescriptionText, {width: '20%'}]}>
+                        Trạng thái
+                      </Text>
+                    </View>
+                  )}
                   {child}
                 </View>
               )}
@@ -146,15 +148,16 @@ const styles = StyleSheet.create({
   tabDescriptionContainer: {
     flexDirection: 'row',
     backgroundColor: colors.white,
-    marginBottom: 16,
     width: width,
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderColor: colors.gray200,
   },
   tabDescriptionText: {
     color: colors.black,
-    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
     fontWeight: '500',
     textAlign: 'center',
-    padding: 16,
+    padding: 8,
   },
 });

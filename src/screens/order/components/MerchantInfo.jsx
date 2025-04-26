@@ -8,9 +8,7 @@ const MerchantInfo = ({data}) => {
     <View style={styles.container}>
       <TitleText text="Cửa hàng" style={{color: colors.primary}} />
       <Text style={styles.name}>{data?.name}</Text>
-      <Text style={styles.address}>
-        {`${data?.specificAddress}, ${data?.ward}, ${data?.district}, ${data?.province}`}
-      </Text>
+      <Text style={styles.address}>{`${data?.address}`}</Text>
     </View>
   );
 };

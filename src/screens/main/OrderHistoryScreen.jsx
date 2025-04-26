@@ -29,6 +29,7 @@ import {useAppContext} from '../../context/appContext';
 const width = Dimensions.get('window').width;
 
 const OrderHistoryScreen = () => {
+  const [awaitingPayment, setAwaitingPayment] = useState([]);
   const [pendingConfirmation, setPendingConfirmation] = useState([]);
   const [processing, setProcessing] = useState([]);
   const [readyForPickup, setReadyForPickup] = useState([]);
@@ -54,6 +55,10 @@ const OrderHistoryScreen = () => {
   const orderStatusConfig = useMemo(
     () => [
       {
+        status: OrderStatus.AWAITING_PAYMENT.value,
+        setter: setAwaitingPayment,
+      },
+      {
         status: OrderStatus.PENDING_CONFIRMATION.value,
         setter: setPendingConfirmation,
       },
@@ -72,10 +77,6 @@ const OrderHistoryScreen = () => {
       {
         status: OrderStatus.COMPLETED.value,
         setter: setCompleted,
-      },
-      {
-        status: OrderStatus.FAILED_DELIVERY.value,
-        setter: setFailedDelivery,
       },
       {
         status: OrderStatus.CANCELLED.value,
@@ -174,17 +175,23 @@ const OrderHistoryScreen = () => {
           setTabIndex={setTabIndex}
           tabBarConfig={{
             titles: [
+              'Chờ thanh toán',
               'Chờ xác nhận',
               'Đang xử lý',
               'Chờ lấy hàng',
               'Đang giao hàng',
               'Hoàn thành',
-              'Giao hàng thất bại',
               'Đã huỷ',
             ],
             titleActiveColor: colors.primary,
             titleInActiveColor: colors.gray700,
           }}>
+          <OrderListView
+            handleRepeatOrder={handleRepeatOrder}
+            orders={filterOrders(awaitingPayment)}
+            loading={loading}
+            status="awaitingPayment"
+          />
           <OrderListView
             handleRepeatOrder={handleRepeatOrder}
             orders={filterOrders(pendingConfirmation)}
@@ -215,12 +222,7 @@ const OrderHistoryScreen = () => {
             loading={loading}
             status="completed"
           />
-          <OrderListView
-            handleRepeatOrder={handleRepeatOrder}
-            orders={filterOrders(failedDelivery)}
-            loading={loading}
-            status="failedDelivery"
-          />
+
           <OrderListView
             handleRepeatOrder={handleRepeatOrder}
             orders={filterOrders(cancelled)}
@@ -359,30 +361,20 @@ const Item = ({item, handleRepeatOrder}) => {
   );
 };
 
-const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
-  if (
-    status === 'completed' ||
-    (deliveryMethod === 'pickup' &&
-      (status == 'processing' || status == 'readyForPickup')) ||
-    (deliveryMethod == 'delivery' &&
-      paymentMethod == 'online' &&
-      (status == 'processing' ||
-        status == 'readyForPickup' ||
-        status == 'shippingOrder' ||
-        status == 'failedDelivery'))
+// Xác định trạng thái thanh toán
+const getPaymentStatus = (status, paymentMethod) => {
+  if (status === 'completed') {
+    return {text: 'Đã thanh toán', color: colors.primary};
+  } else if (
+    paymentMethod === 'online' &&
+    status !== OrderStatus.AWAITING_PAYMENT.value
   ) {
     return {text: 'Đã thanh toán', color: colors.primary};
+  } else if (status === 'awaitingPayment') {
+    return {text: 'Chờ thanh toán', color: colors.pink500};
+  } else {
+    return {text: 'Chưa thanh toán', color: colors.orange700};
   }
-  if (paymentMethod === 'cod') {
-    return {text: 'Chưa thanh toán', color: 'red'};
-  }
-  if (status === 'awaitingPayment') {
-    return {text: 'Chờ thanh toán', color: 'orange'};
-  }
-  if (status === 'cancelled') {
-    return {text: 'Chưa thanh toán', color: 'red'};
-  }
-  return {text: 'Trạng thái không xác định', color: 'gray'};
 };
 
 const ItemOrderType = ({item}) => {
@@ -401,10 +393,14 @@ const ItemOrderType = ({item}) => {
         style={{
           color:
             item.deliveryMethod === 'delivery'
-              ? colors.brown700
+              ? colors.blue600
               : colors.orange700,
         }}
-        text={item.deliveryMethod === 'pickup' ? 'Mang đi' : 'Giao tận nơi'}
+        text={
+          item.deliveryMethod === 'pickup'
+            ? 'Tự đến lấy hàng'
+            : 'Giao hàng tận nơi'
+        }
       />
     </Column>
   );

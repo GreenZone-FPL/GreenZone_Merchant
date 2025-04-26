@@ -23,6 +23,7 @@ import ProductsInfo from './components/ProductsInfo';
 import PaymentDetails from './components/PaymentDetails';
 import ShipperInfo from './components/ShipperInfo';
 import PaymentDetailsView from './components/PaymentDetailsView';
+import {TimelineStatus} from './components/TinelineStatus';
 
 const OrderDetailScreen = ({
   idOrder,
@@ -46,6 +47,7 @@ const OrderDetailScreen = ({
       const response = await getOrderDetail(idOrder);
       setOrderDetail(response);
       setStatus(response.status);
+      console.log(JSON.stringify(response, 2, null));
     } catch (error) {
       console.log('Lỗi lấy chi tiết đơn hàng:', error);
     } finally {
@@ -72,8 +74,10 @@ const OrderDetailScreen = ({
       </View>
     );
   }
+
+  useEffect(() => {}, []);
   return (
-    <Modal visible={isModalOrderDetail} transparent animationType="slide">
+    <Modal visible={isModalOrderDetail} transparent animationType="none">
       <OverlayStatusBar />
       <View style={styles.body}>
         <Pressable
@@ -128,6 +132,8 @@ const OrderDetailScreen = ({
                   <StatusText status={orderDetail.status} />
                 </Row>
 
+                <TimelineStatus details={orderDetail} />
+
                 <MerchantInfo data={orderDetail.store} />
                 <RecipientInfo data={orderDetail} />
                 <ProductsInfo orderItems={orderDetail.orderItems} />
@@ -137,6 +143,7 @@ const OrderDetailScreen = ({
                   shippingFee={orderDetail.shippingFee}
                   voucher={orderDetail.voucher}
                   paymentMethod={orderDetail.paymentMethod}
+                  deliveryMethod={orderDetail.deliveryMethod}
                   orderItems={orderDetail.orderItems}
                   totalPrice={orderDetail.totalPrice}
                   status={orderDetail.status}

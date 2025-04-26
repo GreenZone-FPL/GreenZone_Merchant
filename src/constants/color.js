@@ -37,4 +37,5 @@ export const colors = Object.freeze({
   fbBg: '#F2F4F7',
   lightRed: '#FDF3F2', // Đỏ nhạt
   lightBlue: '#F1F9FC', // Xanh nhạt
+  lemon: '#50ad03',
 });
