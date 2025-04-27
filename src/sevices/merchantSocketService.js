@@ -38,12 +38,23 @@ class MerchantSocketService {
           console.log(`Merchant joined store room: ${storeId}`);
         });
 
+
+
+
+
+
+
+
+
+
+
         this.socket.on('order.new', data => {
           console.log(' Received new order:', data);
           /**
            New Order: {"message": " Đơn hàng mới #67e036a784526a4a39d6509e cần xử lý trước
            3/18/2025, 9:28:15 PM", "orderId": "67e036a784526a4a39d6509e", "storeId": "67b68d7698c1fc822e49fabd"}
            */
+           socket.emit('order.join', data.orderId);
           if (orderNewCallback) {
             orderNewCallback(data);
             console.log('Callback executed');
@@ -52,12 +63,48 @@ class MerchantSocketService {
           }
         });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         this.socket.on('order.updateStatus', data => {
           console.log(' Received new order:', data)
           if (updateOrderCallBack) {
             updateOrderCallBack(data);
           }
         });
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
         this.socket.on('disconnect', () => {
           console.log('Disconnected');

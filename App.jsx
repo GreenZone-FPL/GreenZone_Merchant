@@ -7,7 +7,8 @@ import { AppContextProvider, useAppContext } from './src/context/appContext';
 import MainNavigation from './src/layouts/MainNavigation';
 import LoginScreen from './src/screens/auth/LoginScreen';
 import SplashScreen from './src/screens/auth/SplashScreen';
-
+import { LogBox } from 'react-native';
+LogBox.ignoreAllLogs()
 function App() {
   return (
     <AppContextProvider>
