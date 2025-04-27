@@ -6,7 +6,7 @@ class MerchantSocketService {
     this.socket = null;
   }
 
-  async initialize(callback, updateStatusCallback) {
+  async initialize(orderNewCallback, updateOrderCallBack) {
     if (!this.socket) {
       try {
         const token = await AppAsyncStorage.readData(
@@ -44,8 +44,8 @@ class MerchantSocketService {
            New Order: {"message": " Đơn hàng mới #67e036a784526a4a39d6509e cần xử lý trước
            3/18/2025, 9:28:15 PM", "orderId": "67e036a784526a4a39d6509e", "storeId": "67b68d7698c1fc822e49fabd"}
            */
-          if (callback) {
-            callback(data);
+          if (orderNewCallback) {
+            orderNewCallback(data);
             console.log('Callback executed');
           } else {
             console.log('Callback is undefined');
@@ -53,11 +53,9 @@ class MerchantSocketService {
         });
 
         this.socket.on('order.updateStatus', data => {
-          console.log('order.updateStatus:', data);
-          if (updateStatusCallback) {
-            updateStatusCallback(data);
-          } else {
-            console.log('UpdateStatusCallback is undefined');
+          console.log(' Received new order:', data)
+          if (updateOrderCallBack) {
+            updateOrderCallBack(data);
           }
         });
 
