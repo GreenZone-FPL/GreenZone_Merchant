@@ -54,7 +54,8 @@ class MerchantSocketService {
            New Order: {"message": " Đơn hàng mới #67e036a784526a4a39d6509e cần xử lý trước
            3/18/2025, 9:28:15 PM", "orderId": "67e036a784526a4a39d6509e", "storeId": "67b68d7698c1fc822e49fabd"}
            */
-           socket.emit('order.join', data.orderId);
+           this.socket.emit('order.join', data.orderId);
+           console.log('emit order join')
           if (orderNewCallback) {
             orderNewCallback(data);
             console.log('Callback executed');
@@ -104,7 +105,7 @@ class MerchantSocketService {
 
 
 
-        
+
 
         this.socket.on('disconnect', () => {
           console.log('Disconnected');
