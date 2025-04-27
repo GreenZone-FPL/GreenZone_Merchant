@@ -47,7 +47,6 @@ const OrderDetailScreen = ({
       const response = await getOrderDetail(idOrder);
       setOrderDetail(response);
       setStatus(response.status);
-      console.log(JSON.stringify(response, 2, null));
     } catch (error) {
       console.log('Lỗi lấy chi tiết đơn hàng:', error);
     } finally {

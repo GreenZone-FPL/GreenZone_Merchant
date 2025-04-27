@@ -17,7 +17,7 @@ import {
   Camera,
 } from 'react-native-vision-camera';
 import {Icon, IconButton} from 'react-native-paper';
-import {TextFormatter} from '../../../utils';
+import {TextFormatter, Toaster} from '../../../utils';
 import {Column, CustomFlatInput, Row} from '../../../components';
 import ModalCheckout from './ModalCheckout';
 import ModalSelectedPaymentMethod from './DialogPaymentMethod';
@@ -78,7 +78,7 @@ const CartOrder = ({cart, setCart}) => {
         } else if (codes.length > 0) {
           const scannedText = codes[0].value;
           setScannedCode(scannedText);
-          setPhoneNumber(scannedText);
+          setPhoneNumber('');
           setIsScanning(false);
         }
       } catch (error) {
@@ -260,23 +260,20 @@ const CartOrder = ({cart, setCart}) => {
   const addVoucher = async code => {
     try {
       const response = await findVoucherByCode(code, cart.consigneePhone);
-      if (response) {
-        console.log(
-          '>>>>>>>>>>>>. my voucher',
-          JSON.stringify(response, null, 2),
-        );
-        // if (response._id === cart.owner)
+
+      if (response.user === cart.owner) {
         await setCart(prev => {
           const updated = {
             ...prev,
-            voucher: response.data._id,
-            voucherInfor: response.data,
+            voucher: response.voucher._id,
+            voucherInfor: response.voucher,
           };
           return updated;
         });
         updateTotalPrice(setCart);
       }
     } catch (error) {
+      Toaster.show('Voucher không khả dụng với khách hàng này!');
       console.log('error', error);
     }
   };
@@ -292,6 +289,7 @@ const CartOrder = ({cart, setCart}) => {
               isActive={isScanning}
               codeScanner={codeScanner}
             />
+
             <View style={styles.cameraControls}>
               <Pressable
                 style={styles.switchCameraButton}
@@ -337,13 +335,10 @@ const CartOrder = ({cart, setCart}) => {
           </View>
           <View>
             <Text style={styles.customerDetails}>
-              Khách hàng:{' '}
-              {customer
-                ? `${customer?.firstName} ${customer?.lastName}`
-                : ' Vãng lai'}
+              Khách hàng: {cart?.owner ? cart?.consigneeName : ' Vãng lai'}
             </Text>
             <Text style={styles.customerDetails}>
-              Số điện thoại: {customer ? customer?.phoneNumber : ''}
+              Số điện thoại: {cart?.owner ? cart?.consigneePhone : ''}
             </Text>
             {(cart?.owner || customer?.phoneNumber) && (
               <View style={styles.closeButtonContainer}>

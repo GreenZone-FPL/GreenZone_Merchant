@@ -8,7 +8,7 @@ export const getAllVoucher = async type => {
     });
     return response.data;
   } catch (error) {
-    console.error('getAllVoucher error:', error);
+    console.log('getAllVoucher error:', error);
     throw error;
   }
 };

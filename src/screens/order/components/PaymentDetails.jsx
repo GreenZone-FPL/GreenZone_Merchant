@@ -20,7 +20,9 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
     if (
       status === 'completed' ||
       (deliveryMethod === 'pickup' &&
-        (status == 'processing' || status == 'readyForPickup'))
+        (status == 'processing' || status == 'readyForPickup')) ||
+      (deliveryMethod == 'pickup' &&
+        (paymentMethod == 'cod' || paymentMethod == 'online'))
     ) {
       return {text: 'Đã thanh toán', color: colors.primary};
     }
@@ -117,6 +119,22 @@ const PaymentDetails = ({data, fetchOrders, fetchOrderDetail}) => {
 
   const handleOrderStatusButtons = () => {
     switch (data?.status) {
+      case OrderStatus.AWAITING_PAYMENT.value:
+        return (
+          <Pressable
+            style={styles.button1}
+            onPress={() => setIsCancelOrdeModal(true)}>
+            <NormalText text="Huỷ đơn" style={styles.buttonTextWhite} />
+            <CancelOrderModal
+              visible={isCancelOrdeModal}
+              onClose={() => setIsCancelOrdeModal(false)}
+              onSelect={reason =>
+                handleStatusUpdate(OrderStatus.CANCELLED.value, reason.text)
+              }
+            />
+          </Pressable>
+        );
+
       case OrderStatus.PENDING_CONFIRMATION.value:
         return (
           <>

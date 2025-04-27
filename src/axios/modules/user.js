@@ -29,8 +29,8 @@ export const findVoucherByCode = async (code, phoneNumber) => {
     const response = await axiosInstance.get('/v1/user/find-voucher', {
       params: {code: code, phoneNumber: phoneNumber},
     });
-    return response.data;
+    return response.data.data;
   } catch (error) {
-    console.log('Lỗi khi tìm voucher theo code:', error);
+    throw error;
   }
 };

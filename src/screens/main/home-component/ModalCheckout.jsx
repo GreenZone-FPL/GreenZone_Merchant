@@ -59,7 +59,7 @@ const ModalCheckout = ({
         throw new Error('API không trả về dữ liệu hợp lệ.');
       }
     } catch (error) {
-      console.error('Lỗi tạo đơn hàng:', error);
+      console.log('Lỗi tạo đơn hàng:', error);
     } finally {
       setLoading(false);
     }

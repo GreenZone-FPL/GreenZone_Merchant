@@ -30,11 +30,11 @@ const ShipperSelectModal = ({visible, onClose, onSelect}) => {
       if (Array.isArray(data)) {
         setShippers(data);
       } else {
-        console.error('Dữ liệu API không hợp lệ:', data);
+        console.log('Dữ liệu API không hợp lệ:', data);
         setShippers([]);
       }
     } catch (error) {
-      console.error('Lỗi khi lấy danh sách shipper:', error);
+      console.log('Lỗi khi lấy danh sách shipper:', error);
       setShippers([]);
     }
   };
