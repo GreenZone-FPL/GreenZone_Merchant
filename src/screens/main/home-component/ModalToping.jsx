@@ -155,41 +155,45 @@ const ModalToping = ({
             </Row>
 
             <Row style={{gap: 30, flex: 1}}>
-              <Column
-                style={{
-                  backgroundColor: colors.white,
-                  height: '100%',
-                  paddingHorizontal: 24,
-                  paddingVertical: 16,
-                  borderRadius: 6,
-                  width: '30%',
-                }}>
-                <TitleText text="Size" style={{color: colors.orange700}} />
+              {selectedProduct?.variant?.length > 1 && (
+                <Column
+                  style={{
+                    backgroundColor: colors.white,
+                    height: '100%',
+                    paddingHorizontal: 24,
+                    paddingVertical: 16,
+                    borderRadius: 6,
+                    width: '30%',
+                  }}>
+                  <TitleText text="Size" style={{color: colors.orange700}} />
 
-                <Column style={{gap: 16}}>
-                  {selectedProduct?.variant
-                    ?.filter(item => item != null)
-                    .map(item => (
-                      <Pressable
-                        key={item?._id}
-                        style={[
-                          styles.sizeOption,
-                          selectedSize?._id === item._id && styles.selectedSize,
-                        ]}
-                        onPress={() => setSelectedSize(item)}>
-                        <Text
+                  <Column style={{gap: 16}}>
+                    {selectedProduct?.variant
+                      ?.filter(item => item != null)
+                      .map(item => (
+                        <Pressable
+                          key={item?._id}
                           style={[
-                            styles.sizeText,
-                            selectedSize?._id === item?._id &&
-                              styles.selectedSizeText,
-                          ]}>
-                          {item?.size} -{' '}
-                          {TextFormatter.formatCurrency(item?.sellingPrice)}
-                        </Text>
-                      </Pressable>
-                    ))}
+                            styles.sizeOption,
+                            selectedSize?._id === item._id &&
+                              styles.selectedSize,
+                          ]}
+                          onPress={() => setSelectedSize(item)}>
+                          <Text
+                            style={[
+                              styles.sizeText,
+                              selectedSize?._id === item?._id &&
+                                styles.selectedSizeText,
+                            ]}>
+                            {selectedProduct?.variant?.length > 1 &&
+                              `${item?.size} - `}
+                            {TextFormatter.formatCurrency(item?.sellingPrice)}
+                          </Text>
+                        </Pressable>
+                      ))}
+                  </Column>
                 </Column>
-              </Column>
+              )}
 
               {selectedProduct?.topping?.length > 0 && (
                 <Column

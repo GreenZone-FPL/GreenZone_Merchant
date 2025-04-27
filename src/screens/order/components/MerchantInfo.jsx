@@ -6,7 +6,7 @@ import {TitleText} from '../../../components';
 const MerchantInfo = ({data}) => {
   return (
     <View style={styles.container}>
-      <TitleText text="Cửa hàng" style={{color: colors.primary}} />
+      <TitleText text="Cửa hàng" style={{color: colors.black, fontSize: 16}} />
       <Text style={styles.name}>{data?.name}</Text>
       <Text style={styles.address}>{`${data?.address}`}</Text>
     </View>
@@ -29,7 +29,8 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
-    color: colors.black,
+    color: colors.blue600,
+    fontWeight: '500',
   },
   address: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,

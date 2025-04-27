@@ -84,7 +84,7 @@ export const updateOrderStatus = async (
 
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi cập nhật trạng thái đơn hàng:', {
+    console.log('Lỗi khi cập nhật trạng thái đơn hàng:', {
       message: error.message,
       response: error.response?.data,
     });

@@ -47,7 +47,7 @@ const StatisticsScreen = () => {
         setMonths(Array(12).fill('-'));
       }
     } catch (error) {
-      console.error('Lỗi khi lấy dữ liệu thống kê:', error);
+      console.log('Lỗi khi lấy dữ liệu thống kê:', error);
     }
   }, []);
 

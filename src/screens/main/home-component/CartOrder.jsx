@@ -17,7 +17,7 @@ import {
   Camera,
 } from 'react-native-vision-camera';
 import {Icon, IconButton} from 'react-native-paper';
-import {TextFormatter} from '../../../utils';
+import {TextFormatter, Toaster} from '../../../utils';
 import {Column, CustomFlatInput, Row} from '../../../components';
 import ModalCheckout from './ModalCheckout';
 import ModalSelectedPaymentMethod from './DialogPaymentMethod';
@@ -78,7 +78,7 @@ const CartOrder = ({cart, setCart}) => {
         } else if (codes.length > 0) {
           const scannedText = codes[0].value;
           setScannedCode(scannedText);
-          setPhoneNumber(scannedText);
+          setPhoneNumber('');
           setIsScanning(false);
         }
       } catch (error) {
@@ -260,25 +260,30 @@ const CartOrder = ({cart, setCart}) => {
   const addVoucher = async code => {
     try {
       const response = await findVoucherByCode(code, cart.consigneePhone);
-      if (response) {
-        console.log(
-          '>>>>>>>>>>>>. my voucher',
-          JSON.stringify(response, null, 2),
-        );
-        // if (response._id === cart.owner)
+
+      if (response.user === cart.owner) {
         await setCart(prev => {
           const updated = {
             ...prev,
-            voucher: response.data._id,
-            voucherInfor: response.data,
+            voucher: response.voucher._id,
+            voucherInfor: response.voucher,
           };
           return updated;
         });
         updateTotalPrice(setCart);
       }
     } catch (error) {
+      Toaster.show('Voucher không khả dụng với khách hàng này!');
       console.log('error', error);
     }
+  };
+  const clearVoucher = () => {
+    setCart(prev => ({
+      ...prev,
+      voucher: null,
+      voucherInfor: null,
+    }));
+    updateTotalPrice(setCart);
   };
 
   return (
@@ -292,6 +297,7 @@ const CartOrder = ({cart, setCart}) => {
               isActive={isScanning}
               codeScanner={codeScanner}
             />
+
             <View style={styles.cameraControls}>
               <Pressable
                 style={styles.switchCameraButton}
@@ -337,13 +343,10 @@ const CartOrder = ({cart, setCart}) => {
           </View>
           <View>
             <Text style={styles.customerDetails}>
-              Khách hàng:{' '}
-              {customer
-                ? `${customer?.firstName} ${customer?.lastName}`
-                : ' Vãng lai'}
+              Khách hàng: {cart?.owner ? cart?.consigneeName : ' Vãng lai'}
             </Text>
             <Text style={styles.customerDetails}>
-              Số điện thoại: {customer ? customer?.phoneNumber : ''}
+              Số điện thoại: {cart?.owner ? cart?.consigneePhone : ''}
             </Text>
             {(cart?.owner || customer?.phoneNumber) && (
               <View style={styles.closeButtonContainer}>
@@ -383,9 +386,11 @@ const CartOrder = ({cart, setCart}) => {
                 <View style={styles.cartItemDetails}>
                   <Text style={styles.cartItemName}>{item.productName}</Text>
                   <View style={styles.cartItemTopping}>
-                    <Text style={styles.cartItemVariant}>
-                      Size: {item.variantName}
-                    </Text>
+                    {item?.selectedProduct?.variant?.length > 1 && (
+                      <Text style={styles.cartItemVariant}>
+                        Size: {item.variantName}
+                      </Text>
+                    )}
                     <View style={styles.cartItemToppingText}>
                       {item.toppingItems &&
                         item.toppingItems.length > 0 &&
@@ -471,9 +476,26 @@ const CartOrder = ({cart, setCart}) => {
                   setIsScanning(true);
                 }}>
                 <Icon source="qrcode-scan" size={24} color={colors.blue600} />
-                <Text style={styles.voucherText}>Scan QR</Text>
+                <Text style={styles.voucherText}>Voucher QR</Text>
               </Pressable>
-              <Text style={styles.voucherName}>{cart?.voucherInfor?.name}</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  flex: 1,
+                }}>
+                <Text style={styles.voucherName}>
+                  {cart?.voucherInfor?.name}
+                </Text>
+                {cart?.voucher && (
+                  <IconButton
+                    icon="close"
+                    size={24}
+                    iconColor={colors.gray700}
+                    onPress={clearVoucher}
+                  />
+                )}
+              </View>
             </View>
           )}
           <View style={styles.totalPriceContainer}>
@@ -752,13 +774,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.white,
     flexDirection: 'row',
-    padding: 8,
+    paddingLeft: 16,
   },
   voucherPressable: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    paddingVertical: 12,
   },
   voucherText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -768,6 +791,8 @@ const styles = StyleSheet.create({
   voucherName: {
     color: colors.yellow700,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    flex: 1,
+    textAlign: 'right',
   },
   voucherDiscount: {
     flexDirection: 'column',
@@ -798,7 +823,7 @@ const styles = StyleSheet.create({
   totalAmountVoucher: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
     fontWeight: 'bold',
-    color: colors.yellow500,
+    color: colors.primary,
     width: '100%',
   },
   paymentButton: {

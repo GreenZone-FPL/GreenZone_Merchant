@@ -92,8 +92,6 @@ const OrderHistoryScreen = () => {
     try {
       const responseOrder = await getOrders(status);
       if (responseOrder) {
-        // console.log('responseOrder', JSON.stringify(responseOrder, null, 2));
-
         setOrder(responseOrder);
       }
     } catch (error) {
@@ -362,8 +360,15 @@ const Item = ({item, handleRepeatOrder}) => {
 };
 
 // Xác định trạng thái thanh toán
-const getPaymentStatus = (status, paymentMethod) => {
-  if (status === 'completed') {
+// Xác định trạng thái thanh toán
+const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
+  if (
+    status === 'completed' ||
+    (deliveryMethod === 'pickup' &&
+      (status == 'processing' || status == 'readyForPickup')) ||
+    (deliveryMethod == 'pickup' &&
+      (paymentMethod == 'cod' || paymentMethod == 'online'))
+  ) {
     return {text: 'Đã thanh toán', color: colors.primary};
   } else if (
     paymentMethod === 'online' &&

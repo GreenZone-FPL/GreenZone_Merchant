@@ -65,8 +65,14 @@ const PaymentDetailsView = ({
   };
 
   // Xác định trạng thái thanh toán
-  const getPaymentStatus = (status, paymentMethod) => {
-    if (status === 'completed') {
+  const getPaymentStatus = (status, paymentMethod, deliveryMethod) => {
+    if (
+      status === 'completed' ||
+      (deliveryMethod === 'pickup' &&
+        (status == 'processing' || status == 'readyForPickup')) ||
+      (deliveryMethod == 'pickup' &&
+        (paymentMethod == 'cod' || paymentMethod == 'online'))
+    ) {
       return {text: 'Đã thanh toán', color: colors.primary};
     } else if (
       paymentMethod === 'online' &&
@@ -80,7 +86,7 @@ const PaymentDetailsView = ({
     }
   };
 
-  const paymentStatus = getPaymentStatus(status, paymentMethod);
+  const paymentStatus = getPaymentStatus(status, paymentMethod, deliveryMethod);
 
   return (
     <View
