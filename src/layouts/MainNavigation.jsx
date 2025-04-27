@@ -1,14 +1,17 @@
-import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React from 'react';
 import { Icon } from 'react-native-paper';
+import { colors, GLOBAL_KEYS } from '../constants';
+import { useAppContainer } from '../containers/useAppContainer';
 import HomeScreen from '../screens/main/HomeScreen';
 import OrderHistoryScreen from '../screens/main/OrderHistoryScreen';
 import StatisticsScreen from '../screens/main/StatisticsScreen';
-import { colors, GLOBAL_KEYS } from '../constants';
 
 const Tab = createBottomTabNavigator();
 
 const MainNavigation = () => {
+  useAppContainer()
+
   return (
     <Tab.Navigator
       initialRouteName="HomeScreen"
@@ -18,7 +21,7 @@ const MainNavigation = () => {
         tabBarInactiveTintColor: colors.gray700,
         tabBarStyle: {
           backgroundColor: colors.fbBg,
-          height: 70, 
+          height: 70,
         },
         tabBarLabelStyle: {
           fontSize: GLOBAL_KEYS.TEXT_SIZE_HEADER,

@@ -18,10 +18,8 @@ import {
 import { login } from '../../axios/index';
 import { NormalLoading } from '../../components';
 import { colors, GLOBAL_KEYS } from '../../constants';
-import { useAppContainer } from '../../containers/useAppContainer';
 import { useAppContext } from '../../context/appContext';
 import { AuthActionTypes } from '../../reducers/authReducer';
-import MerchantSocketService from '../../sevices/merchantSocketService';
 import { Toaster } from '../../utils';
 const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
@@ -34,7 +32,7 @@ const LoginScreen = props => {
   const [phoneNumberMessage, setPhoneNumberMessage] = useState('');
   const [passwordMessage, setPasswordMessage] = useState('');
   const { authDispatch } = useAppContext();
-  const { orderNewCallBack, updateOrderCallBack } = useAppContainer()
+
 
   const loginHandle = async () => {
     let valid = true
@@ -48,15 +46,12 @@ const LoginScreen = props => {
       setPasswordMessage('Mật khẩu phải có 6 ký tự');
       valid = false
     }
-    setLoading(true);
+
 
     try {
       if (valid) {
+        setLoading(true);
         await login(phoneNumber, password);
-
-        console.log(' Đăng nhập thành công, khởi tạo socket...');
-        await MerchantSocketService.initialize(orderNewCallBack, updateOrderCallBack);
-
         authDispatch({ type: AuthActionTypes.LOGIN });
       }
 

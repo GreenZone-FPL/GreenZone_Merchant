@@ -32,10 +32,6 @@ export const OrderStatus = Object.freeze({
   },
 });
 
-// Cách sử dụng:
-// console.log(OrderStatus.getLabels()); // Lấy toàn bộ label
-// console.log(OrderStatus.getValues()); // Lấy toàn bộ value
-
 export const checkPaymentStatus = order => {
   if (!order) return 'Không có đơn hàng';
 

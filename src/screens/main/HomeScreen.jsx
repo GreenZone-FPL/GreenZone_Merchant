@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   FlatList,
@@ -8,24 +8,25 @@ import {
   Text,
   View,
 } from 'react-native';
-import {Icon} from 'react-native-paper';
+import { Icon } from 'react-native-paper';
 import {
   getAllCategories,
   getAllProducts,
   getMerchant,
   getProductsById,
 } from '../../axios/index';
-import {CustomSearchBar, NormalLoading, NormalText} from '../../components';
-import {colors, GLOBAL_KEYS} from '../../constants';
-import {useAppContext} from '../../context/appContext';
-import {AuthActionTypes} from '../../reducers/authReducer';
-import {AppAsyncStorage, TextFormatter} from '../../utils';
+import { CustomSearchBar, NormalLoading, NormalText } from '../../components';
+import { colors, GLOBAL_KEYS } from '../../constants';
+import { useAppContext } from '../../context/appContext';
+import { AuthActionTypes } from '../../reducers/authReducer';
+import { AppAsyncStorage, TextFormatter } from '../../utils';
 import CartOrder from './home-component/CartOrder';
 import ModalToping from './home-component/ModalToping';
 import merchantSocketService from '../../sevices/merchantSocketService';
-const {width} = Dimensions.get('window');
+import { useAppContainer } from '../../containers/useAppContainer';
+const { width } = Dimensions.get('window');
 
-const HomeScreen = ({navigation}) => {
+const HomeScreen = ({ navigation }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState();
   const [selectedToppings, setSelectedToppings] = useState([]);
@@ -42,7 +43,8 @@ const HomeScreen = ({navigation}) => {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [merchant, setMerchant] = useState(null);
   const flatListRef = useRef(null);
-  const {authDispatch, authState} = useAppContext();
+  const { authDispatch, authState } = useAppContext();
+
 
   // Gọi danh sách danh mục từ API
   const fetchCategories = async () => {
@@ -126,7 +128,7 @@ const HomeScreen = ({navigation}) => {
   const handleAddProduct = async id => {
     try {
       const response = await getProductsById(id);
-      setSelectedProduct({...response, quantity: 1});
+      setSelectedProduct({ ...response, quantity: 1 });
       setOpenMenu(true);
     } catch (error) {
       console.log(error);
@@ -158,12 +160,12 @@ const HomeScreen = ({navigation}) => {
   // cuon flatlist
   const scrollToEnd = () => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({animated: true});
+      flatListRef.current.scrollToEnd({ animated: true });
     }
   };
   const scrollToStart = () => {
     if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({index: 0, animated: true});
+      flatListRef.current.scrollToIndex({ index: 0, animated: true });
     }
   };
 
@@ -178,7 +180,7 @@ const HomeScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
-        <View style={{gap: GLOBAL_KEYS.GAP_SMALL}}>
+        <View style={{ gap: GLOBAL_KEYS.GAP_SMALL }}>
           {merchant && (
             <>
               <Text style={styles.headerText}>{merchant?.name}</Text>
@@ -196,7 +198,7 @@ const HomeScreen = ({navigation}) => {
                   AppAsyncStorage.STORAGE_KEYS.refreshToken,
                 );
                 merchantSocketService.disconnect();
-                authDispatch({type: AuthActionTypes.LOGOUT});
+                authDispatch({ type: AuthActionTypes.LOGOUT });
               }}
               style={styles.logoutButton}>
               <Icon
@@ -224,7 +226,7 @@ const HomeScreen = ({navigation}) => {
             horizontal={true}
             data={categories.length > 0 && categories}
             keyExtractor={item => item._id.toString()}
-            renderItem={({item, index}) => (
+            renderItem={({ item, index }) => (
               <View>
                 <Pressable
                   style={[
@@ -240,8 +242,8 @@ const HomeScreen = ({navigation}) => {
                     }
                   }}>
                   <Image
-                    style={{width: 24, height: 24}}
-                    source={{uri: item.icon}}
+                    style={{ width: 24, height: 24 }}
+                    source={{ uri: item.icon }}
                   />
                   <Text
                     style={[
@@ -253,8 +255,8 @@ const HomeScreen = ({navigation}) => {
                 </Pressable>
               </View>
             )}
-            contentContainerStyle={{gap: GLOBAL_KEYS.GAP_DEFAULT}}
-            style={{width: '100%'}}
+            contentContainerStyle={{ gap: GLOBAL_KEYS.GAP_DEFAULT }}
+            style={{ width: '100%' }}
             showsHorizontalScrollIndicator={false}
           />
         </View>
@@ -267,11 +269,11 @@ const HomeScreen = ({navigation}) => {
           maxToRenderPerBatch={10}
           removeClippedSubviews={false}
           showsVerticalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <Pressable
               style={styles.productCard}
               onPress={() => handleAddProduct(item._id)}>
-              <Image source={{uri: item.image}} style={styles.productImage} />
+              <Image source={{ uri: item.image }} style={styles.productImage} />
               <View style={styles.productDetails}>
                 <Text style={styles.productPrice}>
                   {TextFormatter.formatCurrency(item.sellingPrice)}

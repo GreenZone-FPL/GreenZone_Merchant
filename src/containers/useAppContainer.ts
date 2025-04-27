@@ -16,8 +16,6 @@ export const useAppContainer = () => {
     }
     const updateOrderCallBack = (data: any) => {
 
-        // console.log('updateStatus', data);
-        // setOrderUpdate(data);
         if (data.status === OrderStatus.PENDING_CONFIRMATION.value) {
             console.log('newOrder', data);
             setOrderUpdate(data);
@@ -32,7 +30,7 @@ export const useAppContainer = () => {
         return () => {
             merchantSocketService.disconnect();
         };
-    }, [setOrderNew]);
+    }, []);
 
     // Check token validity
     useEffect(() => {
