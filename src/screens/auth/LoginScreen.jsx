@@ -27,7 +27,7 @@ const { width } = Dimensions.get('window');
 const isTablet = width >= 768;
 
 const LoginScreen = props => {
-  const [phoneNumber, setPhoneNumber] = useState('0711111111');
+  const [phoneNumber, setPhoneNumber] = useState('0322222222');
   const [password, setPassword] = useState('123456');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);

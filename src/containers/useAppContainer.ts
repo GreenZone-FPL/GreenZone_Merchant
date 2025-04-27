@@ -16,12 +16,12 @@ export const useAppContainer = () => {
     }
     const updateOrderCallBack = (data: any) => {
 
-        console.log('updateStatus', data);
-        setOrderUpdate(data);
-        // if (data.status === OrderStatus.PENDING_CONFIRMATION.value) {
-        //     console.log('newOrder', data);
-        //     setOrderUpdate(data);
-        // }
+        // console.log('updateStatus', data);
+        // setOrderUpdate(data);
+        if (data.status === OrderStatus.PENDING_CONFIRMATION.value) {
+            console.log('newOrder', data);
+            setOrderUpdate(data);
+        }
     }
 
     // Initialize the socket
