@@ -17,9 +17,12 @@ const RecipientInfo = ({data}) => {
 
   return (
     <View style={styles.container}>
-      <TitleText text="Người nhận" style={{color: colors.primary}} />
+      <TitleText
+        text="Người nhận"
+        style={{color: colors.black, fontSize: 16}}
+      />
 
-      <Text style={styles.info}>{recipientLabel}</Text>
+      <Text style={styles.info2}>{recipientLabel}</Text>
       <Text style={styles.info}>{deliveryLabel}</Text>
       <Text style={styles.info}>{data?.shippingAddress}</Text>
     </View>
@@ -43,6 +46,11 @@ const styles = StyleSheet.create({
   info: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
     color: colors.black,
+  },
+  info2: {
+    fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    color: colors.blue600,
+    fontWeight: '500',
   },
 });
 
