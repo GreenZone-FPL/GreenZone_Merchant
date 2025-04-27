@@ -192,7 +192,8 @@ const DialogUpdateTopping = ({
                             selectedSize?._id === item?._id &&
                               styles.selectedSizeText,
                           ]}>
-                          {item?.size} -{' '}
+                          {selectedProduct?.variant?.length > 1 &&
+                            `${item?.size} - `}
                           {TextFormatter.formatCurrency(item?.sellingPrice)}
                         </Text>
                       </Pressable>

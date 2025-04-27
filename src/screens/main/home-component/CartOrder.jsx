@@ -277,6 +277,14 @@ const CartOrder = ({cart, setCart}) => {
       console.log('error', error);
     }
   };
+  const clearVoucher = () => {
+    setCart(prev => ({
+      ...prev,
+      voucher: null,
+      voucherInfor: null,
+    }));
+    updateTotalPrice(setCart);
+  };
 
   return (
     <View style={styles.rightSection}>
@@ -378,9 +386,11 @@ const CartOrder = ({cart, setCart}) => {
                 <View style={styles.cartItemDetails}>
                   <Text style={styles.cartItemName}>{item.productName}</Text>
                   <View style={styles.cartItemTopping}>
-                    <Text style={styles.cartItemVariant}>
-                      Size: {item.variantName}
-                    </Text>
+                    {item?.selectedProduct?.variant?.length > 1 && (
+                      <Text style={styles.cartItemVariant}>
+                        Size: {item.variantName}
+                      </Text>
+                    )}
                     <View style={styles.cartItemToppingText}>
                       {item.toppingItems &&
                         item.toppingItems.length > 0 &&
@@ -466,9 +476,26 @@ const CartOrder = ({cart, setCart}) => {
                   setIsScanning(true);
                 }}>
                 <Icon source="qrcode-scan" size={24} color={colors.blue600} />
-                <Text style={styles.voucherText}>Scan QR</Text>
+                <Text style={styles.voucherText}>Voucher QR</Text>
               </Pressable>
-              <Text style={styles.voucherName}>{cart?.voucherInfor?.name}</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  flex: 1,
+                }}>
+                <Text style={styles.voucherName}>
+                  {cart?.voucherInfor?.name}
+                </Text>
+                {cart?.voucher && (
+                  <IconButton
+                    icon="close"
+                    size={24}
+                    iconColor={colors.gray700}
+                    onPress={clearVoucher}
+                  />
+                )}
+              </View>
             </View>
           )}
           <View style={styles.totalPriceContainer}>
@@ -747,13 +774,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: colors.white,
     flexDirection: 'row',
-    padding: 8,
+    paddingLeft: 16,
   },
   voucherPressable: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+    paddingVertical: 12,
   },
   voucherText: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
@@ -763,6 +791,8 @@ const styles = StyleSheet.create({
   voucherName: {
     color: colors.yellow700,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_DEFAULT,
+    flex: 1,
+    textAlign: 'right',
   },
   voucherDiscount: {
     flexDirection: 'column',
@@ -793,7 +823,7 @@ const styles = StyleSheet.create({
   totalAmountVoucher: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_TITLE,
     fontWeight: 'bold',
-    color: colors.yellow500,
+    color: colors.primary,
     width: '100%',
   },
   paymentButton: {
