@@ -80,7 +80,10 @@ const OrderDetailScreen = ({
       <OverlayStatusBar />
       <View style={styles.body}>
         <Pressable
-          onPress={() => setIsModalOrderDetail(false)}
+          onPress={() => {
+            setIsModalOrderDetail(false);
+            setIdOrder(null);
+          }}
           style={styles.viewClose}
         />
         <View style={styles.modalContainer}>
@@ -96,7 +99,10 @@ const OrderDetailScreen = ({
               size={GLOBAL_KEYS.ICON_SIZE_DEFAULT}
               iconColor={colors.primary}
               style={styles.closeButton}
-              onPress={() => setIsModalOrderDetail(false)}
+              onPress={() => {
+                setIsModalOrderDetail(false);
+                setIdOrder(null);
+              }}
             />
           </View>
           <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
@@ -160,7 +166,10 @@ const OrderDetailScreen = ({
           </ScrollView>
         </View>
         <Pressable
-          onPress={() => setIsModalOrderDetail(false)}
+          onPress={() => {
+            setIsModalOrderDetail(false);
+            setIdOrder(null);
+          }}
           style={styles.viewClose}
         />
       </View>

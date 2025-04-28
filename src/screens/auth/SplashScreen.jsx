@@ -1,15 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {Image, StyleSheet, Text, View} from 'react-native';
 
-
-
-const SplashScreen = ({ navigation }) => {
-
- 
-
+const SplashScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>SplashScreen</Text>
+      <Image source={require('../../assets/images/logo.png')} />
     </View>
   );
 };
