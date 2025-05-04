@@ -54,10 +54,10 @@ const OrderHistoryScreen = () => {
   // Sử dụng useMemo để khởi tạo mảng cấu hình một lần khi component mount
   const orderStatusConfig = useMemo(
     () => [
-      {
-        status: OrderStatus.AWAITING_PAYMENT.value,
-        setter: setAwaitingPayment,
-      },
+      // {
+      //   status: OrderStatus.AWAITING_PAYMENT.value,
+      //   setter: setAwaitingPayment,
+      // },
       {
         status: OrderStatus.PENDING_CONFIRMATION.value,
         setter: setPendingConfirmation,
@@ -157,7 +157,7 @@ const OrderHistoryScreen = () => {
     <View style={{flex: 1, backgroundColor: colors.fbBg, gap: 16}}>
       <LightStatusBar />
       <CustomSearchBar
-        placeholder="Tìm kiếm sản phẩm..."
+        placeholder="Tìm kiếm đơn hàng..."
         searchQuery={searchTerm}
         setSearchQuery={setSearchTerm}
         onClearIconPress={() => setSearchTerm('')}
@@ -167,13 +167,13 @@ const OrderHistoryScreen = () => {
           borderColor: colors.gray200,
         }}
       />
-      <View style={{gap: 16, flex: 1}}>
+      <View style={{gap: 16, flex: 1, marginBottom: -50}}>
         <CustomTabView
           tabIndex={tabIndex}
           setTabIndex={setTabIndex}
           tabBarConfig={{
             titles: [
-              'Chờ thanh toán',
+              // 'Chờ thanh toán',
               'Chờ xác nhận',
               'Đang xử lý',
               'Chờ lấy hàng',
@@ -184,12 +184,12 @@ const OrderHistoryScreen = () => {
             titleActiveColor: colors.primary,
             titleInActiveColor: colors.gray700,
           }}>
-          <OrderListView
+          {/* <OrderListView
             handleRepeatOrder={handleRepeatOrder}
             orders={filterOrders(awaitingPayment)}
             loading={loading}
             status="awaitingPayment"
-          />
+          /> */}
           <OrderListView
             handleRepeatOrder={handleRepeatOrder}
             orders={filterOrders(pendingConfirmation)}

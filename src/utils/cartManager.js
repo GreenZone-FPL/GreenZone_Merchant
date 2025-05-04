@@ -256,10 +256,10 @@ export const updateTotalPrice = setCart => {
     if (prev?.voucherInfor) {
       if (prev?.voucherInfor?.discountType === 'percentage') {
         voucherDiscountAmount = total * (prev?.voucherInfor?.value / 100);
-        totalPrice = total - voucherDiscountAmount;
+        totalPrice = Math.round(total - voucherDiscountAmount);
       } else if (prev?.voucherInfor?.discountType === 'fixedAmount') {
         voucherDiscountAmount = prev?.voucherInfor?.value;
-        totalPrice = total - voucherDiscountAmount;
+        totalPrice = Math.round(total - voucherDiscountAmount);
       }
     }
 

@@ -12,7 +12,10 @@ export const useAppContainer = () => {
 
     const orderNewCallBack = (newOrder: any) => {
         console.log('newOrder', newOrder);
-        setOrderNew(newOrder);
+        if(newOrder.status !== OrderStatus.AWAITING_PAYMENT.value){
+            setOrderNew(newOrder);
+        }
+       
     }
     const updateOrderCallBack = (data: any) => {
 
@@ -51,7 +54,7 @@ export const useAppContainer = () => {
                 description: orderNew.message,
                 type: 'success',
                 icon: 'success',
-                duration: 2000,
+                duration: 3000,
                 titleStyle: { fontSize: 18, fontWeight: 'bold' },
                 textStyle: { fontSize: 16, color: 'white' },
             });
@@ -63,11 +66,11 @@ export const useAppContainer = () => {
         if (orderUpdate) {
 
             showMessage({
-                message: 'Đơn hàng cập nhật',
+                message: 'Đơn hàng mới',
                 description: orderUpdate.message,
-                type: 'info',
-                icon: 'info',
-                duration: 2000,
+                type: 'success',
+                icon: 'success',
+                duration: 3000,
                 titleStyle: { fontSize: 18, fontWeight: 'bold' },
                 textStyle: { fontSize: 16, color: 'white' },
             });

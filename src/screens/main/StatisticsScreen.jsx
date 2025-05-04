@@ -139,7 +139,12 @@ const StatisticsScreen = () => {
       <Pressable
         style={styles.buttonPressable}
         onPress={() => setModalVisible(true)}>
-        <Text style={styles.title}>Biểu Đồ Doanh Số Cả Năm {year}</Text>
+        <Text style={styles.title}>
+          {!isTotalOrders
+            ? `Biểu Đồ Doanh Thu Năm `
+            : `Biểu Đồ Tổng Số Đơn Hàng Năm`}{' '}
+          {year}
+        </Text>
         <Icon source={'arrow-down-drop-circle-outline'} size={20} />
       </Pressable>
       {/* Biểu đồ cột */}

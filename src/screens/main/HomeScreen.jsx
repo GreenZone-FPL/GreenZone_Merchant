@@ -4,18 +4,24 @@ import {
   FlatList,
   Image,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import {Icon} from 'react-native-paper';
+import {Icon, IconButton} from 'react-native-paper';
 import {
   getAllCategories,
   getAllProducts,
   getMerchant,
   getProductsById,
 } from '../../axios/index';
-import {CustomSearchBar, NormalLoading, NormalText} from '../../components';
+import {
+  CustomSearchBar,
+  NormalLoading,
+  NormalText,
+  Row,
+} from '../../components';
 import {colors, GLOBAL_KEYS} from '../../constants';
 import {useAppContext} from '../../context/appContext';
 import {AuthActionTypes} from '../../reducers/authReducer';
@@ -52,15 +58,16 @@ const HomeScreen = ({navigation}) => {
       const response = await getAllCategories();
       const reversedDocs = [...response.docs].reverse();
 
-      const categoriesData = [
-        {
-          _id: 'cate18-06',
-          name: 'Tất cả',
-          icon: 'https://greenzone.motcaiweb.io.vn/uploads/8af3d87c-83a5-4605-bb73-a91972eb77f7.png',
-        },
-        ...reversedDocs,
-      ];
-      setCategories(categoriesData);
+      // const categoriesData = [
+      //   {
+      //     _id: 'cate18-06',
+      //     name: 'Tất cả',
+      //     icon: 'https://greenzone.motcaiweb.io.vn/uploads/8af3d87c-83a5-4605-bb73-a91972eb77f7.png',
+      //   },
+      //   ...reversedDocs,
+      // ];
+      // setCategories(categoriesData);
+      setCategories(reversedDocs);
     } catch (error) {
       console.log(error);
     } finally {
@@ -73,7 +80,6 @@ const HomeScreen = ({navigation}) => {
     try {
       setLoading(true);
       const response = await getAllProducts();
-
       setProducts(response);
     } catch (error) {
       console.log(error);
@@ -85,10 +91,11 @@ const HomeScreen = ({navigation}) => {
   // Gọi sản phẩm theo danh mục theo index
   const getProductsByCategory = index => {
     if (!products || products.length === 0) return [];
-    if (index === 0) {
-      return products.flatMap(category => category?.products || []);
-    }
-    return products[index - 1]?.products || [];
+    // if (index === 0) {
+    //   return products.flatMap(category => category?.products || []);
+    // }
+    // return products[index - 1]?.products || [];
+    return products[index]?.products || [];
   };
 
   // Gọi danh mục & sản phẩm từ API
@@ -168,16 +175,17 @@ const HomeScreen = ({navigation}) => {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <NormalLoading visible={loading} />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <NormalLoading visible={loading} />
+  //     </View>
+  //   );
+  // }
 
   return (
     <View style={styles.container}>
+      {loading && <NormalLoading visible={loading} />}
       <View style={styles.leftSection}>
         <View style={{gap: GLOBAL_KEYS.GAP_SMALL}}>
           {merchant && (
@@ -208,17 +216,27 @@ const HomeScreen = ({navigation}) => {
             </Pressable>
           )}
         </View>
-        <CustomSearchBar
-          placeholder="Tìm kiếm sản phẩm..."
-          searchQuery={searchTerm}
-          setSearchQuery={setSearchTerm}
-          onClearIconPress={() => setSearchTerm('')}
-          style={{
-            backgroundColor: colors.white,
-            borderWidth: 1,
-            borderColor: colors.gray200,
-          }}
-        />
+        <Row>
+          <CustomSearchBar
+            placeholder="Tìm kiếm sản phẩm..."
+            searchQuery={searchTerm}
+            setSearchQuery={setSearchTerm}
+            onClearIconPress={() => setSearchTerm('')}
+            style={{
+              backgroundColor: colors.white,
+              borderWidth: 1,
+              borderColor: colors.gray200,
+              flex: 1,
+            }}
+          />
+          {/* <IconButton
+            icon={'reload'}
+            size={24}
+            iconColor={colors.primary}
+            onPress={fetchProducts}
+          /> */}
+        </Row>
+
         <View>
           <FlatList
             ref={flatListRef}
@@ -268,6 +286,13 @@ const HomeScreen = ({navigation}) => {
           maxToRenderPerBatch={10}
           removeClippedSubviews={false}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              onRefresh={fetchProducts}
+              refreshing={loading}
+              colors={[colors.primary]}
+            />
+          }
           renderItem={({item}) => (
             <Pressable
               style={styles.productCard}

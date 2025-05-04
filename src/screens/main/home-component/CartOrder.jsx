@@ -229,7 +229,7 @@ const CartOrder = ({cart, setCart}) => {
       deliveryMethod: cart.deliveryMethod,
       fulfillmentDateTime: new Date().toISOString(),
       note: cart.note,
-      totalPrice: cart.totalPrice,
+      totalPrice: Math.round(cart.totalPrice),
       paymentMethod: cart.paymentMethod,
       shippingAddress: cart.shippingAddress,
       store: cart.store,
@@ -696,6 +696,8 @@ const styles = StyleSheet.create({
   toppingText: {
     marginBottom: 4,
     fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
+    gap: 8,
+    alignItems: 'flex-end',
   },
   toppingQuantity: {
     fontSize: GLOBAL_KEYS.TEXT_SIZE_SMALL,
