@@ -260,17 +260,27 @@ const CartOrder = ({cart, setCart}) => {
   const addVoucher = async code => {
     try {
       const response = await findVoucherByCode(code, cart.consigneePhone);
-
       if (response.user === cart.owner) {
-        await setCart(prev => {
-          const updated = {
-            ...prev,
-            voucher: response.voucher._id,
-            voucherInfor: response.voucher,
-          };
-          return updated;
-        });
-        updateTotalPrice(setCart);
+        console.log('response voucher', JSON.stringify(response, null, 2));
+
+        if (
+          new Date(response.voucher.endDate) > Date.now() &&
+          response.voucher.status === 'active'
+        ) {
+          await setCart(prev => {
+            const updated = {
+              ...prev,
+              voucher: response.voucher._id,
+              voucherInfor: response.voucher,
+            };
+            return updated;
+          });
+          updateTotalPrice(setCart);
+        } else {
+          Toaster.show('Voucher đã hết hạn!');
+        }
+      } else {
+        Toaster.show('Voucher không khả dụng với khách hàng này!');
       }
     } catch (error) {
       Toaster.show('Voucher không khả dụng với khách hàng này!');
